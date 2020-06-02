@@ -1,0 +1,83 @@
+---
+title: "ocs-right-to-carry-case-study"
+author: "Michael Ontiveros, Carrie Wright, PhD."
+date: "4/16/2020"
+output:
+    html_document
+---
+
+output: 
+    html_document:
+        theme: cosmo 
+        toc: true
+        toc_float: true
+        highlight: tango
+        number_sections: false
+
+[Motivating paper: Donohue, et al.](https://www.nber.org/papers/w23510.pdf)
+
+[Motivating paper: Lott and Mustard](https://chicagounbound.uchicago.edu/cgi/viewcontent.cgi?article=1150&context=law_and_economics)
+
+Insert Table 2 into this case study
+
+- Question: How does the inclusion of different numbers of age groups influence the results of an analysis of right to carry laws and violence rates?
+- Description: We will evaluate how multicollinearity can influence linear regression results and resulted in different conclusions for Donohoe vs Lott on this very important topic. We will also discuss briefly how synthetic control methods can be used to assess the impact of policies by creating controls for comparison that did not have policy adoption but were otherwise similar.
+
+Statistics objectives: Linear regression analysis, discussion about the influence of multicollinearity, and synthetic control methods
+
+```{r}
+library(tidyverse)
+library(pdftools)
+```
+
+```{r}
+syn_control_paper <- pdf_text("w23510.pdf")
+
+syn_control_paper_p_62 <- syn_control_paper[[62]]
+
+test <- syn_control_paper_p_62 %>%
+    strsplit("\n") %>%
+    unlist() %>%
+    as.data.frame() %>%
+    slice(-(1:2))
+
+apply(test, 1, nchar)
+
+test[53,] #physcial page 60
+
+test <- test %>%
+    slice(-53)
+
+apply(test, 1, str_count, "\\s{5,}")
+apply(test, 1, str_count, "\\s{10,}")
+apply(test, 1, str_count, "\\s{20,}")
+apply(test, 1, str_count, "\\s{40,}")
+
+head(cbind(test, apply(test, 1, str_count, "\\s{40,}")))
+
+test <- test %>%
+    apply(1,str_replace_all, "\\s{40,}", "|N/A|") %>%
+    str_replace_all("\\s{2,15}", "|") %>%
+    as.data.frame()
+
+test <- sapply(test$., str_split, "\\|{1,}")
+
+sapply(test, nchar)
+
+test <- lapply(test, function(x) x[nchar(x) > 0]) 
+
+test <- as.data.frame(do.call(rbind, test))
+
+colnames(test) <- c("State",
+                    "E_Date_RTC",
+                    "Frac_Yr_Eff_Yr_Pass",
+                    "RTC_Date_SA")
+
+test
+```
+
+Will need to create a RTC dummy variable
+
+Will need to obtain data shown in appendix 
+
+Will need to produce two analysis dataframes
