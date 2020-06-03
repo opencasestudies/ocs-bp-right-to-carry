@@ -1,5 +1,5 @@
 ---
-title: "ocs-right-to-carry-case-study"
+title: "Right-to-carry Case Study"
 author: "Michael Ontiveros, Carrie Wright, PhD."
 date: "4/16/2020"
 output: 
@@ -11,20 +11,29 @@ output:
         number_sections: false
 ---
 
-[Motivating paper: Donohue, et al.](https://www.nber.org/papers/w23510.pdf)
+# RA Notes
 
-[Motivating paper: Lott and Mustard](https://chicagounbound.uchicago.edu/cgi/viewcontent.cgi?article=1150&context=law_and_economics)
+## Literature
 
-![](Donohue_Table2.png)
+This case study will focus on conflicting findings from two papers.
 
-![](Donohue_AppendixJ.png)
+[Donohue, et al.](https://www.nber.org/papers/w23510.pdf)
 
-Insert Table 2 into this case study
+[Lott and Mustard](https://chicagounbound.uchicago.edu/cgi/viewcontent.cgi?article=1150&context=law_and_economics)
 
-- Question: How does the inclusion of different numbers of age groups influence the results of an analysis of right to carry laws and violence rates?
-- Description: We will evaluate how multicollinearity can influence linear regression results and resulted in different conclusions for Donohoe vs Lott on this very important topic. We will also discuss briefly how synthetic control methods can be used to assess the impact of policies by creating controls for comparison that did not have policy adoption but were otherwise similar.
+## Question
 
-Statistics objectives: Linear regression analysis, discussion about the influence of multicollinearity, and synthetic control methods
+How does the inclusion of different numbers of age groups influence the results of an analysis of right to carry laws and violence rates?
+
+## Description
+
+We will evaluate how multicollinearity can influence linear regression results and resulted in different conclusions for Donohoe vs Lott on this very important topic. We will also discuss briefly how synthetic control methods can be used to assess the impact of policies by creating controls for comparison that did not have policy adoption but were otherwise similar.
+
+## Misc. 
+
+Will need to create a RTC dummy variable
+
+Will need to produce two analysis dataframes
 
 # Motivation
 
@@ -32,6 +41,7 @@ Statistics objectives: Linear regression analysis, discussion about the influenc
 
 How does the inclusion of different numbers of age groups influence the results of an analysis of right to carry laws and violence rates?
 
+**This needs to be fixed (to "et al.")**
 ![](Educational_Graphic1.png)
 
 ## Analysis goal
@@ -56,13 +66,15 @@ library(pdftools)
 
 # What is the data?
 
+![](Donohue_AppendixJ.png)
+
 ## Data source 1
 
-RTC law data table on page 62 of [this article](https://www.nber.org/papers/w23510)a
+Right-to-carry law data table on page 62 of [this article](https://www.nber.org/papers/w23510)a
 
 ## Data source 2
 
-state and regional gun violence data [available here](https://webappa.cdc.gov/sasweb/ncipc/mortrate.html)
+State and regional gun violence data [available here](https://webappa.cdc.gov/sasweb/ncipc/mortrate.html)
 
 ## Data source 3
 
@@ -73,6 +85,14 @@ Data on gun use and ownership [available here](Data on gun use and ownership)
 covariate data – population age, sex, race, poverty rates, land area, etc. [available here](https://www.census.gov/data/datasets/time-series/demo/cps/cps-asec.2016.html)
 
 # Data import 
+
+## Table 2, Donohue, et al. 
+
+![](Donohue_Table2.png)
+
+## RTC laws
+
+Extracted from table in paper **which paper?**
 
 ```{r}
 syn_control_paper <- pdf_text("w23510.pdf")
@@ -120,8 +140,80 @@ colnames(test) <- c("State",
 test
 ```
 
-Will need to create a RTC dummy variable
+## Crime 
 
-Will need to obtain data shown in appendix 
+Extracted from [Uniform Crime Reporting Statistics][https://www.ucrdatatool.gov/Search/Crime/State/StatebyState.cfm]
 
-Will need to produce two analysis dataframes
+```{r}
+read_csv("CrimeStatebyState.csv")
+```
+
+## Police Staffing
+
+Extracted from [Crime Data Explorer][https://crime-data-explorer.fr.cloud.gov/downloads-and-docs]
+
+```{r}
+read_csv("pe_1960_2018.csv")
+```
+
+## Population
+
+1970-1990 estimates extracted from [US Census Bureau](https://www.census.gov/data/tables/time-series/demo/popest/pre-1980-state.html)
+
+1990-2000 estimates extracted from [US Census Bureau](https://www.census.gov/data/datasets/time-series/demo/popest/intercensal-1990-2000-state-and-county-characteristics.html
+
+[Methodology](https://www2.census.gov/programs-surveys/popest/technical-documentation/methodology/intercensal/intercensal-nat-meth.pdf)
+
+[Technical Documentation](https://www2.census.gov/programs-surveys/popest/technical-documentation/file-layouts/1990-2000/stch-intercensal_layout.txt)
+
+2000-2010 estimates extracted from [US Census](https://www.census.gov/data/tables/time-series/demo/popest/intercensal-2000-2010-state.html)
+
+2010-2014 estimates
+
+Extracted from [US Census Bureau](https://data.census.gov/cedsci/)
+
+American Community Survey estimates
+
+## Income metrics
+
+### Personal income
+
+Extracted from [Bureau of Economic Analysis](https://apps.bea.gov/itable/iTable.cfm?ReqID=70&step=1#)
+
+### Unemployment insurance
+
+?
+
+### Retirement payments and other
+
+?
+
+### Income maintenance payments
+
+?
+
+## Consumer price index 
+
+Extracted from [Bureau of Labor Statistics](https://data.bls.gov/cgi-bin/dsrv?cu)
+
+## Incarceration
+
+https://www.bjs.gov/index.cfm?ty=nps
+
+## Land area
+
+Census 2010
+
+## Poverty rate
+
+Extracted from Table 21 from [US Census Bureau](https://www.census.gov/data/tables/time-series/demo/income-poverty/historical-poverty-people.html)
+
+## Unemployment rate
+
+## Arrests
+
+## Beer consumption
+
+Extracted from [NIH](https://pubs.niaaa.nih.gov/publications/surveillance115/pcyr1970-2018.txt)
+
+## Population in metropolitan statistical areas
