@@ -41,14 +41,19 @@ Will need to produce two analysis dataframes
 
 How does the inclusion of different numbers of age groups influence the results of an analysis of right to carry laws and violence rates?
 
-**This needs to be fixed (to "et al.")**
-![](Educational_Graphic1.png)
+```{r, echo=FALSE, out.height = '75%', out.width = '75%', fig.align='center'}
+knitr::include_graphics('Educational_Graphic1.jpg')
+```
 
 ## Analysis goal
 
 We will evaluate how multicollinearity can influence linear regression results and resulted in different conclusions for Donohoe vs Lott on this very important topic. We will also discuss briefly how synthetic control methods can be used to assess the impact of policies by creating controls for comparison that did not have policy adoption but were otherwise similar.
 
 This analysis will demonstrate how details about our methods can be critically influential for our overall conclusions  and can result in important policy related consequences. This report will provide a basis for the motivation:  https://www.nber.org/papers/w23510. As this is a historically controversial topic, we will focus on how different statistical methods can yield different results, but we will avoid making conclusions about right to carry laws.
+
+```{r, echo=FALSE, out.height = '75%', out.width = '75%', fig.align='center'}
+knitr::include_graphics('Educational_Graphic2.jpg')
+```
 
 ## Learning objectives
 
@@ -66,11 +71,21 @@ library(pdftools)
 
 # What is the data?
 
-![](Donohue_AppendixJ.png)
+The datasets below was available to the respective authors at the time of their analyses.
+
+```{r, echo=FALSE, out.height = '100%', out.width = '100%', fig.align='center'}
+knitr::include_graphics('Donohue_AppendixJ.png')
+```
+
+We were able to obtain the following datasets (or equivalent datasets):
+
+```{r, echo=FALSE, out.height = '100%', out.width = '100%', fig.align='center'}
+knitr::include_graphics('Educational_Graphic3.jpg')
+```
 
 ## Data source 1
 
-Right-to-carry law data table on page 62 of [this article](https://www.nber.org/papers/w23510)a
+Right-to-carry law data table on page 62 of [this article](https://www.nber.org/papers/w23510)
 
 ## Data source 2
 
@@ -88,7 +103,11 @@ covariate data – population age, sex, race, poverty rates, land area, etc. [av
 
 ## Table 2, Donohue, et al. 
 
-![](Donohue_Table2.png)
+**This screenshot needs to be taken again. Cursor highlight is showing**
+
+```{r, echo=FALSE, out.height = '100%', out.width = '100%', fig.align='center'}
+knitr::include_graphics('Donohue_Table2.png')
+```
 
 ## RTC laws
 
@@ -174,23 +193,15 @@ Extracted from [US Census Bureau](https://data.census.gov/cedsci/)
 
 American Community Survey estimates
 
+## Population by age, sex, and race
+
+Extracted from [US Census Bureau](https://www.census.gov/data/tables/time-series/demo/popest/pre-1980-national.html)
+
 ## Income metrics
 
-### Personal income
+### Real Personal income
 
 Extracted from [Bureau of Economic Analysis](https://apps.bea.gov/itable/iTable.cfm?ReqID=70&step=1#)
-
-### Unemployment insurance
-
-?
-
-### Retirement payments and other
-
-?
-
-### Income maintenance payments
-
-?
 
 ## Consumer price index 
 
@@ -202,7 +213,7 @@ https://www.bjs.gov/index.cfm?ty=nps
 
 ## Land area
 
-Census 2010
+Extracted from [](https://www.census.gov/cgi-bin/geo/shapefiles/index.php)
 
 ## Poverty rate
 
@@ -210,10 +221,22 @@ Extracted from Table 21 from [US Census Bureau](https://www.census.gov/data/tabl
 
 ## Unemployment rate
 
+Extracted from [Bureau of Labor Statistics](https://data.bls.gov/cgi-bin/dsrv?la)
+
 ## Arrests
+
+Data not found for ~period (1995? the earliest)
 
 ## Beer consumption
 
 Extracted from [NIH](https://pubs.niaaa.nih.gov/publications/surveillance115/pcyr1970-2018.txt)
 
-## Population in metropolitan statistical areas
+## Population in MSAs
+
+Extracted from [US Census Bureau](https://www.census.gov/geographies/reference-files/time-series/demo/metro-micro/historical-delineation-files.html)
+
+```{r}
+read_csv("99mfips.txt", skip=17)
+```
+
+
