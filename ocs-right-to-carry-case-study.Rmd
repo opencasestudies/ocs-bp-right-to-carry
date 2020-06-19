@@ -11,10 +11,6 @@ output:
         number_sections: false
 ---
 
-Write sentences about finding the 2000-2010 website finding process
-
-Epi paper on race reference
-
 # RA Notes
 
 ## Literature
@@ -31,99 +27,25 @@ How does the inclusion of different numbers of age groups influence the results 
 
 ## Description
 
-We will evaluate how multicollinearity can influence linear regression results and resulted in different conclusions for Donohoe vs Lott on this very important topic. We will also discuss briefly how synthetic control methods can be used to assess the impact of policies by creating controls for comparison that did not have policy adoption but were otherwise similar.
-
-## Misc. 
-
-Will need to create a RTC dummy variable
-
-Will need to produce two analysis dataframes
+We will evaluate how multicollinearity can influence linear regression results and resulted in different conclusions for Donohoe vs Lott on this very important topic. 
 
 ## Data Sources
-
-### Crime 
-
-Extracted from [Uniform Crime Reporting Statistics][https://www.ucrdatatool.gov/Search/Crime/State/StatebyState.cfm]
-
-read_csv("CrimeStatebyState.csv")
-
-### Police Staffing
-
-Extracted from [Crime Data Explorer][https://crime-data-explorer.fr.cloud.gov/downloads-and-docs]
-
-read_csv("pe_1960_2018.csv")
-
-### Population
-
-1970-1990 estimates extracted from [US Census Bureau](https://www.census.gov/data/tables/time-series/demo/popest/pre-1980-state.html)
-
-1990-2000 estimates extracted from [US Census Bureau](https://www.census.gov/data/datasets/time-series/demo/popest/intercensal-1990-2000-state-and-county-characteristics.html
-
-[Methodology](https://www2.census.gov/programs-surveys/popest/technical-documentation/methodology/intercensal/intercensal-nat-meth.pdf)
-
-[Technical Documentation](https://www2.census.gov/programs-surveys/popest/technical-documentation/file-layouts/1990-2000/stch-intercensal_layout.txt)
-
-2000-2010 estimates extracted from [US Census](https://www.census.gov/data/tables/time-series/demo/popest/intercensal-2000-2010-state.html)
-
-2010-2014 estimates
-
-Extracted from [US Census Bureau](https://data.census.gov/cedsci/)
-
-American Community Survey estimates
-
-### Population by age, sex, and race
-
-Extracted from [US Census Bureau](https://www.census.gov/data/tables/time-series/demo/popest/pre-1980-national.html)
-
-https://www2.census.gov/programs-surveys/popest/tables/1900-1980/state/asrh/
-
-https://www2.census.gov/programs-surveys/popest/tables/1980-1990/counties/asrh/
-
-https://www2.census.gov/programs-surveys/popest/tables/1990-2000/state/asrh/
-
-### Income metrics
-
-#### Real Personal income
-
-Extracted from [Bureau of Economic Analysis](https://apps.bea.gov/itable/iTable.cfm?ReqID=70&step=1#)
-
-#### Consumer price index 
-
-Extracted from [Bureau of Labor Statistics](https://data.bls.gov/cgi-bin/dsrv?cu)
-
-#### Incarceration
-
-https://www.bjs.gov/index.cfm?ty=nps
-
-#### Land area
-
-Extracted from [](https://www.census.gov/cgi-bin/geo/shapefiles/index.php)
-
-#### Poverty rate
-
-Extracted from Table 21 from [US Census Bureau](https://www.census.gov/data/tables/time-series/demo/income-poverty/historical-poverty-people.html)
-
-#### Unemployment rate
-
-Extracted from [Bureau of Labor Statistics](https://data.bls.gov/cgi-bin/dsrv?la)
-
-#### Arrests
-
-Data not found for ~period (1995? the earliest)
-
-#### Beer consumption
-
-Extracted from [NIH](https://pubs.niaaa.nih.gov/publications/surveillance115/pcyr1970-2018.txt)
-
-#### Population in MSAs
-
-Extracted from [US Census Bureau](https://www.census.gov/geographies/reference-files/time-series/demo/metro-micro/historical-delineation-files.html)
 
 # Motivation
 
 ## Background
 
+It is important that we do not treat race as an objective measure. Despite this, it can be used to advance scientific inquiry. For more information on this topic, we have included a link to a [paper on the use of race as a measure in epidemiology](https://academic.oup.com/epirev/article/22/2/187/456942). 
+
 How does the inclusion of different numbers of age groups influence the results of an analysis of right to carry laws and violence rates?
+
+## Table 2, Donohue, et al. 
+
+**This screenshot needs to be taken again. Cursor highlight is showing**
+
+```{r, echo=FALSE, out.height = '100%', out.width = '100%', fig.align='center'}
+knitr::include_graphics('Donohue_Table2.png')
+```
 
 ```{r, echo=FALSE, out.height = '75%', out.width = '75%', fig.align='center'}
 knitr::include_graphics('Educational_Graphic1.jpg')
@@ -131,7 +53,7 @@ knitr::include_graphics('Educational_Graphic1.jpg')
 
 ## Analysis goal
 
-We will evaluate how multicollinearity can influence linear regression results and resulted in different conclusions for Donohoe vs Lott on this very important topic. We will also discuss briefly how synthetic control methods can be used to assess the impact of policies by creating controls for comparison that did not have policy adoption but were otherwise similar.
+We will evaluate how multicollinearity can influence linear regression results and result in different conclusions for Donohoe vs Lott on this very important topic. We will also discuss briefly how synthetic control methods can be used to assess the impact of policies by creating controls for comparison that did not have policy adoption but were otherwise similar.
 
 This analysis will demonstrate how details about our methods can be critically influential for our overall conclusions  and can result in important policy related consequences. This report will provide a basis for the motivation:  https://www.nber.org/papers/w23510. As this is a historically controversial topic, we will focus on how different statistical methods can yield different results, but we will avoid making conclusions about right to carry laws.
 
@@ -141,7 +63,7 @@ knitr::include_graphics('Educational_Graphic2.jpg')
 
 ## Learning objectives
 
-Linear regression analysis, discussion about the influence of multicollinearity, and synthetic control methods
+Linear regression analysis, directed acyclic graphs, discussion about the influence of multicollinearity
 
 1) wrangling – joining data from multiple sources (dplyr)  and data reshaping (tidyr)
 2) visualizations (ggplot2)
@@ -152,82 +74,298 @@ Linear regression analysis, discussion about the influence of multicollinearity,
 library(car) # vif function
 library(MASS) # negative binomial regression
 library(plm)
-library(splines)
 library(broom) # tidy output
 library(tidyverse) # general wrangling functions
 library(pdftools) # read data from pdf 
 library(readxl) # importing excel sheets
+library(ggdag) # DAGs
+library(cowplot) # to produce plot of plots 
 ```
 
 # What is the data?
 
-
 ## Appendix J, Donohue, et al.
 
-The datasets below were available to the respective authors at the time of their analyses.
+Below is table from the [Donohue, et al.](https://www.nber.org/papers/w23510.pdf) paper.
+
+The datasets below were available to the respective authors at the time of their analyses. 
 
 ```{r, echo=FALSE, out.height = '100%', out.width = '100%', fig.align='center'}
 knitr::include_graphics('Donohue_AppendixJ.png')
 ```
 
-We were able to obtain the following datasets (or equivalent datasets):
-
-```{r, echo=FALSE, out.height = '100%', out.width = '100%', fig.align='center'}
-knitr::include_graphics('Educational_Graphic3.jpg')
-```
-
-## Table 2, Donohue, et al. 
-
-**This screenshot needs to be taken again. Cursor highlight is showing**
-
-```{r, echo=FALSE, out.height = '100%', out.width = '100%', fig.align='center'}
-knitr::include_graphics('Donohue_Table2.png')
-```
-
 # Data import 
 
-# DAG
+# Causal Inference
 
-```{r}
-library(ggdag)
-set.seed(999)
+<style>
+div.red { background-color:#ffcccc; border-radius: 5px; padding: 20px;}
+</style>
+<div class = "red">
+DISCLAIMER: The content in this case study was created solely for demonstrative purposes. Resultantly, the relationships shown may not be accurate.
+</div>
 
-coords <- tibble::tribble(
-  ~name,            ~x,  ~y,
-  "VC",    2,   0,
-  "RTC",          1,   0,
-  "Dem",      1.2,   1,
-  "Beer",     1.4,   0.25,
-  "UE",          1.8,   -1,
-  "Poverty",        1.6,   -0.25,
+## Directed acyclic graphs
+
+[**D**irected **A**cyclic **G**raphs](https://en.wikipedia.org/wiki/Directed_acyclic_graph?oldformat=true) are often used to identify adjustment sets, the sets of variables that need to be controlled for in an analysis.
+
+Arrows stemming from one variable to another represent causal relationships between the two. The paths of arrows never create a cycle. The relationships between the variables for a [graph](https://www.wikiwand.com/en/Graph_(discrete_mathematics). These, altogether, for a directed acyclic graph. 
+
+In scientific inquiry, directed acyclic graphs—as visual representations of the world—rarely encompass all relationships relevant to a question. Still, they are helpful at identifying flaws in our analytic methods. 
+
+Below is a labelled directed acyclic graph.
+
+```{r, echo=FALSE}
+COORDSX_1 <- tibble::tribble(
+  ~name, ~x, ~y,
+  "Y", 2, 0,
+  "X", 1, 0,
+  "A", 1.5, 2,
+  "B", 1.5, 0,
+  "C", 1.5, -2,
+  "R", 1, -2,
+  "S", 2, 2
 )
 
-dagify(VC ~ RTC,
-       VC ~ Dem,
-       RTC ~ Dem,
-       VC ~ Beer,
-       RTC ~ Beer,
-       Beer ~ Dem,
-       VC ~ UE,
-       RTC ~ UE,
-       VC ~ Poverty,
-       RTC ~ Poverty,
-       Poverty ~ UE,
-       labels = c("VC" = "Violent\nCrime", 
-                  "RTC" = "RTC\nLaw",
-                  "Beer" = "Beer",
-                  "Dem" = "Demographics",
-                  "UE" = "Unemployment",
-                  "Poverty" = "Poverty"),
-       exposure = "RCT",
-       outcome = "VC",
-       coords = coords) %>% 
-  ggdag(text = FALSE,use_labels = "label") + 
+DAGX_1 <- dagify(Y ~ A + S,
+               X ~ A + R, 
+               Y ~ B,
+               B ~ X,
+               C ~ Y,
+               C ~ X,
+       exposure = "X",
+       outcome = "Y",
+       coords = COORDSX_1) %>%
+  tidy_dagitty(seed = 1) %>%
+  ggdag(text = TRUE,
+        node = FALSE,
+        text_col = "black",
+        text_size = 8) +
+  xlim(c(0.5,2.5)) +
+  ylim(c(-2.5,2.5)) +
+  labs(title = "Variables that can be found of a directed acyclic graph",
+       subtitle = "X: Exposure\nY: Outcome\nA: Confounder\nB: Mediator\nC: Collider\nR: Instrument\nS: Extraneous variable associated only with outcome") +
   theme_void()
-  
 
-
+DAGX_1
 ```
+
+Below is a directed acyclic graph for the analysis we will conduct. 
+
+```{r, echo=FALSE}
+set.seed(999)
+
+COORDS1 <- tibble::tribble(
+  ~name, ~x, ~y,
+  "Crime", 2, 0,
+  "Law", 1, 0,
+  "Demographics", 1.5, 2,
+  "Alcohol", 1.75, 1,
+  "Unemployment", 1.5, -2,
+  "Poverty", 1.5, -1,
+  "Police", 2, 2
+)
+
+DAG1 <- dagify(Crime ~ Law + Alcohol + Unemployment + Poverty + Police,
+               Law ~ Demographics + Unemployment + Poverty, 
+               Alcohol ~ Demographics,
+               Poverty ~ Unemployment,
+       exposure = "Law",
+       outcome = "Crime",
+       coords = COORDS1) %>%
+  tidy_dagitty(seed = 1) %>%
+  ggdag(text = TRUE,
+        node = FALSE,
+        text_col = "black",
+        text_size = 4) +
+  xlim(c(0.5,2.5)) +
+  ylim(c(-2.5,2.5)) +
+  labs(title = "Directed acyclic graph",
+       subtitle = "We will assume this represents the mechanisms relevant to our question.") +
+  theme_void()
+
+DAG1
+```
+
+## Identifying Adjustment Sets
+
+Below we list a set of general rules for identifying adjustment sets in causal inference. These rules, while not exhaustive, provide a general framework for identifying adjustment sets with directed acyclic graphs
+
+<style>
+div.blue { background-color:#e6f0ff; border-radius: 5px; padding: 20px;}
+</style>
+<div class = "blue">
+**Rules for causal inference adjustment sets**
+
+1. Confounders should be adjusted for
+2. Instruments should not be adjusted for
+5. Extraneous variables only associated with outcome should be adjusted for
+3. Mediators should not be adjusted for 
+4. Colliders block paths
+
+**Gather information from the directed acyclic graph**
+
+1. List each pathway 
+2. Label each pathway as causal or non-causal
+3. Label each pathway as open or closed
+4. Identify important variable types
+    + Exposure
+    + Outcome
+    + Instruments
+    + Extraneous variables associated only with outcome
+    + Colliders
+    + Mediators
+    + Confounders
+5. Identify variables that can be adjusted for to block open, non-causal pathways
+</div>
+
+Let's see how we can use a DAG to guide our analysis.
+
+To get acquainted with how DAGs work, we will explore each pathway and make some comments on relationships we see. After exploring each pathway, we will use the rules above to define our adjustment set. 
+
+```{r, echo=FALSE}
+DAG1_explain <- dagify(Crime ~ Law + Alcohol + Unemployment + Poverty + Police,
+               Law ~ Demographics + Unemployment + Poverty, 
+               Alcohol ~ Demographics,
+               Poverty ~ Unemployment,
+       exposure = "Law",
+       outcome = "Crime",
+       coords = COORDS1) %>%
+  tidy_dagitty(seed = 1) %>%
+  ggdag(text = TRUE,
+        node = FALSE,
+        text_col = "black",
+        text_size = 4) +
+  xlim(c(0.5,2.5)) +
+  ylim(c(-2.5,2.5)) +
+  theme_void()
+
+DAG1_explain
+```
+
+This is the caual path we are interested in evaluating. As a causal path, we want to make sure this path is left open.
+
+```{r, echo=FALSE}
+CP1_1 <- dagify(Crime ~ Law,
+       exposure = "Law",
+       outcome = "Crime",
+       coords = COORDS1) %>%
+  tidy_dagitty() %>%
+  ggdag(text = TRUE,
+        node = FALSE,
+        text_col = "black",
+        text_size = 4) +
+  xlim(c(0.5,2.5)) +
+  ylim(c(-2.5,2.5)) +
+  theme_void()
+
+CP1_1 
+```
+
+This is a non-causal pathway. Alcohol consumption is a mediator on the pathway between demographics and the outcome meaning that, in the absense of any other relationships we should account for, we do not have have to control for it in our analysis. We can ignore the alcohol variable altogether in our analysis since the alcohol variable is a mediator on this pathway with no relationships to other variables. With that said, the demographics variable is a confounder; this variable must be adjusted for if we wish to close this pathway.
+
+```{r, echo=FALSE}
+NCP1_1 <- dagify(Crime ~ Alcohol,
+                 Alcohol ~ Demographics,
+                 Law ~ Demographics,
+                 exposure = "Law",
+                 outcome = "Crime",
+                 coords = COORDS1) %>%
+  tidy_dagitty() %>%
+  ggdag(text = TRUE,
+        node = FALSE,
+        text_col = "black",
+        text_size = 4) +
+  xlim(c(0.5,2.5)) +
+  ylim(c(-2.5,2.5)) +
+  theme_void()
+
+NCP1_1
+```
+
+This pathway is an open, non-causal pathway. The poverty variable influences both the exposure and outcome. This makes the variable a confounder. No other variables are in this pathway. We should close this pathway by adjusting for poverty. 
+
+```{r, echo=FALSE}
+NCP1_2 <- dagify(Crime ~ Poverty,
+                 Law ~ Poverty,
+                 exposure = "Law",
+                 outcome = "Crime",
+                 coords = COORDS1) %>%
+  tidy_dagitty() %>%
+  ggdag(text = TRUE,
+        node = FALSE,
+        text_col = "black",
+        text_size = 4) +
+  xlim(c(0.5,2.5)) +
+  ylim(c(-2.5,2.5)) +
+  theme_void()
+
+NCP1_2
+```
+
+This pathway is very similar to the pathway describe above. 
+
+This pathway is an open, non-causal pathway. The unemployment variable influences both the exposure and outcome. This makes the variable a confounder. No other variables are in this pathway. We should close this pathway by adjusting for unemployment. 
+
+```{r, echo=FALSE}
+NCP1_3 <- dagify(Crime ~ Unemployment,
+                 Law ~ Unemployment,
+                 exposure = "Law",
+                 outcome = "Crime",
+                 coords = COORDS1) %>%
+  tidy_dagitty() %>%
+  ggdag(text = TRUE,
+        node = FALSE,
+        text_col = "black",
+        text_size = 4) +
+  xlim(c(0.5,2.5)) +
+  ylim(c(-2.5,2.5)) +
+  theme_void()
+
+NCP1_3
+```
+
+This is a non-causal pathway. Poverty is a mediator on the pathway between the unemployment variable and the outcome meaning that, in the absense of any other relationships we should account for, we do not have have to control for it in our analysis. Unlike the alcohol variable, we can not yet ignore the poverty variable altogether in our analysis since the variable has a relationship with another variable, our exposure. With that said, the unemployment variable is a confounder; this variable must be adjusted for if we wish to close this pathway.
+
+```{r, echo=FALSE}
+NCP1_4 <- dagify(Crime ~  Poverty,
+                 Poverty ~ Unemployment,
+                 Law ~ Unemployment,
+                 exposure = "Law",
+                 outcome = "Crime",
+                 coords = COORDS1) %>%
+  tidy_dagitty() %>%
+  ggdag(text = TRUE,
+        node = FALSE,
+        text_col = "black",
+        text_size = 4) +
+  xlim(c(0.5,2.5)) +
+  ylim(c(-2.5,2.5)) +
+  theme_void()
+
+NCP1_4
+```
+
+This is a non-causal pathway. The police variable only influences the outcome. Adjusting for this variable may increase the precision of our estimate. 
+
+```{r}
+NCP1_5 <- dagify(Crime ~ Police + Law,
+                 exposure = "Law",
+                 outcome = "Crime",
+                 coords = COORDS1) %>%
+  tidy_dagitty() %>%
+  ggdag(text = TRUE,
+        node = FALSE,
+        text_col = "black",
+        text_size = 4) +
+  xlim(c(0.5,2.5)) +
+  ylim(c(-2.5,2.5)) +
+  theme_void()
+
+NCP1_5
+```
+
+Click [here to learn more about biases introduced by adjustment ](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2744485/), [here to learn more about the consequences instrumental variable adjustment](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3254160/), or [here to learn about M-bias and butterfly bias](https://arxiv.org/abs/1408.0324#:~:text=%22M%2DBias%2C%22%20as,when%20the%20treatment%20and%20the).
 
 # Data wrangling
 
@@ -235,7 +373,7 @@ dagify(VC ~ RTC,
 
 ### State FIPS codes
 
-Extracted from [US Census Bureau](https://www.census.gov/geographies/reference-files/2014/demo/popest/2014-geocodes-state.html)
+The following data was downloaded from the [US Census Bureau](https://www.census.gov/geographies/reference-files/2014/demo/popest/2014-geocodes-state.html)
 
 ```{r}
 STATE_FIPS <- read_xls("Data/State_FIPS_codes/state-geocodes-v2014.xls", skip = 5)
@@ -254,64 +392,11 @@ STATE_FIPS <- STATE_FIPS %>%
     dplyr::select(STATEFP, STATE)
 ```
 
-### Beer 
-
-```{r}
-beer_df <- read_table2("Data/Beer/pcyr1970-2018.txt", col_names = FALSE, skip = 131)
-colnames(beer_df)
-
-head(beer_df)
-
-columns_beer <- c("YEAR",
-                  "STATEFP",
-                  "Beverage",
-                  "Gal_bev",
-                  "Gal_eth",
-                  "Pop_least_14",
-                  "Gal_eth_cap_least_14",
-                  "Cap_decile_least_14",
-                  "Pop_least_21",
-                  "Gal_eth_cap_least_21",
-                  "Cap_decile_least_21",
-                  "Data_source",
-                  "TV_ABV",
-                  "Gal_eth_TV_ABV")
-
-colnames(beer_df) <- columns_beer
-
-class(beer_df$Beverage)
-
-beer_df <- beer_df %>%
-    mutate(STATEFP = str_pad(STATEFP, 2, pad = "0"),
-           Beverage = as.character(Beverage)) %>%
-    mutate(Beverage = recode_factor(Beverage,
-                                    `1`="Spirits",
-                                    `2`="Wine",
-                                    `3` = "Beer",
-                                    `4` = "All beverages")) %>%
-    filter(Beverage == "Beer",
-           !STATEFP %in% c("91","92","93","94","99")) %>%
-    dplyr::select(YEAR, STATEFP, Gal_eth_cap_least_21) %>%
-    rename("Gal_beer_cap"=Gal_eth_cap_least_21) %>%
-    mutate(Gal_beer_cap = Gal_beer_cap/10000) %>% # /10000 for correct value (see df)
-    left_join(STATE_FIPS, by = "STATEFP")
-
-beer_df <- beer_df %>%
-  dplyr::select(-STATEFP) %>%
-  pivot_longer(cols="Gal_beer_cap",
-               names_to = "VARIABLE",
-               values_to = "VALUE")
-```
-
 ### Demographics
 
-https://www2.census.gov/programs-surveys/popest/tables/1900-1980/state/asrh/
-
-https://www2.census.gov/programs-surveys/popest/tables/1980-1990/counties/asrh/
-
-https://www2.census.gov/programs-surveys/popest/tables/1990-2000/state/asrh/
-
 #### 1977-1979
+
+The following data was downloaded from the [US Census Bureau](https://www2.census.gov/programs-surveys/popest/tables/1900-1980/state/asrh/).
 
 ```{r}
 dem_77_79 <- read_csv("Data/Demographics/Decade_1970/pe-19.csv", skip = 5)
@@ -356,7 +441,9 @@ dem_77_79 <- dem_77_79 %>%
 
 #### 1980-1989
 
-This is county data
+The following data was downloaded from the [US Census Bureau](https://www2.census.gov/programs-surveys/popest/tables/1980-1990/counties/asrh/).
+
+County data was used for this decade. 
 
 ```{r}
 dem_80_89 <- list.files(recursive = TRUE,
@@ -409,6 +496,8 @@ dem_80_89 <- dem_80_89 %>%
 ```
 
 #### 1990-1999
+
+The following data was downloaded from the [US Census Bureau](https://www2.census.gov/programs-surveys/popest/tables/1990-2000/state/asrh/).
 
 ```{r}
 dem_90_99 <- list.files(recursive = TRUE,
@@ -545,9 +634,9 @@ dem_90_99 <- dem_90_99 %>%
 
 #### 2000-2010
 
-https://www.census.gov/data/datasets/time-series/demo/popest/intercensal-2000-2010-state.html
+The following data was downloaded from the [US Census Bureau](https://www.census.gov/data/datasets/time-series/demo/popest/intercensal-2000-2010-state.html).
 
-https://www2.census.gov/programs-surveys/popest/technical-documentation/file-layouts/2000-2010/intercensal/state/st-est00int-alldata.pdf
+[Click here for relevant technical documentation](https://www2.census.gov/programs-surveys/popest/technical-documentation/file-layouts/2000-2010/intercensal/state/st-est00int-alldata.pdf)
 
 ```{r}
 dem_00_10 <- list.files(recursive = TRUE,
@@ -760,11 +849,83 @@ population_data <- population_data %>%
   rename("VALUE"=TOT_POP)
 ```
 
+### Police staffing
+
+The following data was downloaded from the [Federal Bureau of Investigation](https://crime-data-explorer.fr.cloud.gov/downloads-and-docs).
+
+```{r}
+ps_data <- read_csv("Data/Police_staffing/pe_1960_2018.csv",
+                    col_types = cols(male_total_ct = "n",
+                                     female_total_ct = "n"))
+
+colnames(ps_data)
+
+ps_data <- ps_data %>%
+  filter(data_year >= 1977, 
+         data_year <= 2014) %>%
+  mutate(male_total_ct = case_when(is.na(male_total_ct) ~ 0,
+                                   TRUE ~ male_total_ct),
+         female_total_ct = case_when(is.na(female_total_ct) ~ 0,
+                                   TRUE ~ female_total_ct)) %>%
+  mutate(officer_total = male_total_ct + female_total_ct) %>%
+  dplyr::select(data_year,
+                pub_agency_name,
+                state_abbr,
+                officer_total)
+
+ps_data <- ps_data %>%
+  group_by(data_year, state_abbr) %>%
+  summarise(officer_state_total=sum(officer_total), .groups = "drop")
+
+ps_data %>%
+  group_by(state_abbr) %>%
+  tally() %>%
+  print(n = dim(.)[1])
+
+# NB is Nebraska. This was changed to NE to avoid confusions with NB in Canada. This dataset uses NB
+
+state_of_interest_NULL <- c("AS",
+                            "GM",
+                            "CZ",
+                            "FS",
+                            "MP",
+                            "OT",
+                            "PR",
+                            "VI")
+
+state_abb_df <- as.data.frame(cbind(state.abb, state.name))
+
+colnames(state_abb_df) <- c("state_abbr", "STATE")
+
+print(state_abb_df)
+
+state_abb_df <- state_abb_df %>%
+  add_row(state_abbr="DC",
+          STATE="District of Columbia")
+
+denominator_temp <- population_data %>%
+  dplyr::select(-VARIABLE) %>%
+  rename("Population_temp"=VALUE)
+
+ps_data <- ps_data %>%
+  filter(!(state_abbr %in% state_of_interest_NULL)) %>%
+  mutate(state_abbr = case_when(state_abbr == "NB" ~ "NE",
+                                TRUE ~ state_abbr)) %>%
+  left_join(state_abb_df, by = "state_abbr") %>%
+  dplyr::select(-state_abbr) %>%
+  rename(YEAR = "data_year",
+         VALUE = "officer_state_total") %>%
+  mutate(VARIABLE = "officer_state_total") %>%
+  left_join(denominator_temp, by=c("STATE","YEAR")) %>%
+  mutate(VALUE = (VALUE*100000) / Population_temp) %>%
+  mutate(VALUE = lag(VALUE)) %>%
+  mutate(VARIABLE = "police_per_100k_lag") %>%
+  dplyr::select(-Population_temp)
+```
+
 ### Unemployment
 
 https://data.bls.gov/cgi-bin/dsrv?la
-
-*Needs STATEFP*
 
 ```{r}
 ue_rate_data <- list.files(recursive = TRUE,
@@ -899,6 +1060,8 @@ colnames(poverty_rate_data)
 
 ### Violent crime
 
+https://www.ucrdatatool.gov/Search/Crime/State/StatebyState.cfm
+
 ```{r}
 crime_data <- read_lines("Data/Crime/CrimeStatebyState.csv", skip = 2, skip_empty_rows = TRUE)
 
@@ -963,7 +1126,7 @@ crime_data <- crime_data %>%
 
 ### RTC laws
 
-Extracted from table in paper **which paper?**
+Extracted from table in [Donohue paper](https://www.nber.org/papers/w23510.pdf)
 
 ```{r}
 syn_control_paper <- pdf_text("w23510.pdf")
@@ -1026,16 +1189,12 @@ sapply(test, class)
 ## Checkpoint
 
 ```{r}
-#"YEAR"     "STATE"    "Variable" "Value" 
+colnames(dem_DONOHUE)
+colnames(dem_LOTT)
+colnames(ue_rate_data)
+colnames(poverty_rate_data)
+colnames(crime_data)
 
-colnames(beer_df)
-colnames(dem_DONOHUE) # need to fix
-colnames(dem_LOTT) # need to fix
-colnames(ue_rate_data) # need to fix
-colnames(poverty_rate_data) # need to fix
-colnames(crime_data) # need to fix
-
-head(beer_df)
 head(dem_DONOHUE)
 head(dem_LOTT)
 head(ue_rate_data)
@@ -1048,12 +1207,12 @@ head(crime_data)
 ### Donohue, et al.
 
 ```{r}
-DONOHUE_DF <- bind_rows(beer_df,
-                        dem_DONOHUE,
+DONOHUE_DF <- bind_rows(dem_DONOHUE,
                         ue_rate_data,
                         poverty_rate_data,
                         crime_data,
-                        population_data) %>%
+                        population_data,
+                        ps_data) %>%
   pivot_wider(names_from = "VARIABLE",
               values_from = "VALUE") %>%
   left_join(test , by = c("STATE")) %>%
@@ -1095,7 +1254,9 @@ DONOHUE_DF <- DONOHUE_DF %>%
   filter(RTC_LAW_YEAR > TIME_0)
 
 DONOHUE_DF <- DONOHUE_DF %>%
-  mutate(Viol_crime_rate_1k = (Viol_crime_count*1000)/Population)
+  mutate(Viol_crime_rate_1k = (Viol_crime_count*1000)/Population,
+         Viol_crime_rate_1k_log = log(Viol_crime_rate_1k),
+         Population_log = log(Population))
 
 summary(droplevels(as.factor(DONOHUE_DF$STATE)))
 
@@ -1105,12 +1266,12 @@ length(summary(droplevels(as.factor(DONOHUE_DF$STATE))))
 ### Lott and Mustard
 
 ```{r}
-LOTT_DF <- bind_rows(beer_df,
-                     dem_LOTT,
+LOTT_DF <- bind_rows(dem_LOTT,
                      ue_rate_data,
                      poverty_rate_data,
                      crime_data,
-                     population_data) %>%
+                     population_data,
+                     ps_data) %>%
   pivot_wider(names_from = "VARIABLE",
               values_from = "VALUE") %>%
   left_join(test , by = c("STATE")) %>%
@@ -1152,7 +1313,9 @@ LOTT_DF <- LOTT_DF %>%
   filter(RTC_LAW_YEAR > TIME_0)
 
 LOTT_DF <- LOTT_DF %>%
-  mutate(Viol_crime_rate_1k = (Viol_crime_count*1000)/Population)
+  mutate(Viol_crime_rate_1k = (Viol_crime_count*1000)/Population,
+         Viol_crime_rate_1k_log = log(Viol_crime_rate_1k),
+         Population_log = log(Population))
 
 summary(droplevels(as.factor(LOTT_DF$STATE)))
 
@@ -1178,9 +1341,12 @@ DONOHUE_DF %>%
   theme_minimal()
 ```
 
+Some code taken from http://karthur.org/2019/implementing-fixed-effects-panel-models-in-r.html
+
 ```{r}
 d_panel <- pdata.frame(DONOHUE_DF, index=c("STATE", "YEAR"))
-DONOHUE_OUTPUT <- plm(Viol_crime_rate_1k ~
+
+DONOHUE_OUTPUT <- plm(Viol_crime_rate_1k_log ~
                         RTC_LAW +
                         White_Male_15_to_19_years +
                         White_Male_20_to_39_years +
@@ -1188,24 +1354,22 @@ DONOHUE_OUTPUT <- plm(Viol_crime_rate_1k ~
                         Black_Male_20_to_39_years +
                         Other_Male_15_to_19_years +
                         Other_Male_20_to_39_years +
-                        Gal_beer_cap +
                         Unemployment_rate +
-                        Poverty_rate,
+                        Poverty_rate + 
+                        Population_log + 
+                        police_per_100k_lag,
+                      effect = "twoways",
                       model = "within",
                       data=d_panel)
 
 summary(DONOHUE_OUTPUT)
 
-# taken from http://karthur.org/2019/implementing-fixed-effects-panel-models-in-r.html
-
 design.matrix <- as.data.frame(model.matrix(DONOHUE_OUTPUT))
 
-# Get the time-demeaned response variable, lifeExp
-design.matrix$Viol_crime_rate_1k <- plm::Within(
-  d_panel$Viol_crime_rate_1k)
+design.matrix$Viol_crime_rate_1k_log <- plm::Within(
+  d_panel$Viol_crime_rate_1k_log)
 
-# Fit the OLS model on the demeaned dataset
-m3.ols <- lm(Viol_crime_rate_1k ~
+lm_DONOHUE <- lm(Viol_crime_rate_1k_log ~
                         RTC_LAWTRUE + # logical class changes variable name after inital model
                         White_Male_15_to_19_years +
                         White_Male_20_to_39_years +
@@ -1213,27 +1377,31 @@ m3.ols <- lm(Viol_crime_rate_1k ~
                         Black_Male_20_to_39_years +
                         Other_Male_15_to_19_years +
                         Other_Male_20_to_39_years +
-                        Gal_beer_cap +
                         Unemployment_rate +
-                        Poverty_rate,
+                        Poverty_rate + 
+                        Population_log +
+               police_per_100k_lag,
              data = design.matrix)
 
-# Calculate VIF scores
-car::vif(m3.ols)
+
+vif(lm_DONOHUE)
 ```
 
-### Lott and Mustard
+## Lott and Mustard
+
+Some code taken from http://karthur.org/2019/implementing-fixed-effects-panel-models-in-r.html
 
 ```{r}
 LOTT_variables <- LOTT_DF %>%
   dplyr::select(RTC_LAW,
                 contains(c("White","Black","Other")),
-                Gal_beer_cap,
                 Unemployment_rate,
-                Poverty_rate) %>%
+                Poverty_rate,
+                Population_log,
+                police_per_100k_lag) %>%
   colnames()
 
-LOTT_fmla <- as.formula(paste("Viol_crime_rate_1k ~",
+LOTT_fmla <- as.formula(paste("Viol_crime_rate_1k_log ~",
                               paste(LOTT_variables, collapse = " + ")
                               )
                         )
@@ -1242,44 +1410,140 @@ d_panel <- pdata.frame(LOTT_DF, index=c("STATE", "YEAR"))
 
 LOTT_OUTPUT <- plm(LOTT_fmla,
                       model = "within",
+                   effect = "twoways",
                       data=d_panel)
 
 summary(LOTT_OUTPUT)
 
-# taken from http://karthur.org/2019/implementing-fixed-effects-panel-models-in-r.html
-
 design.matrix <- as.data.frame(model.matrix(LOTT_OUTPUT))
 
-# Get the time-demeaned response variable, lifeExp
-design.matrix$Viol_crime_rate_1k <- plm::Within(
-  d_panel$Viol_crime_rate_1k)
+design.matrix$Viol_crime_rate_1k_log <- plm::Within(
+  d_panel$Viol_crime_rate_1k_log)
 
 LOTT_variables_ols <- LOTT_DF %>%
   dplyr::select(RTC_LAW,
                 contains(c("White","Black","Other")),
-                Gal_beer_cap,
                 Unemployment_rate,
-                Poverty_rate) %>%
+                Poverty_rate,
+                Population_log,
+                police_per_100k_lag) %>%
   colnames() %>%
-  str_replace("RTC_LAW", "RTC_LAWTRUE")
+  str_replace("RTC_LAW", "RTC_LAWTRUE") # logical class changes variable name after inital model
 
-LOTT_fmla_ols <- as.formula(paste("Viol_crime_rate_1k ~",
+LOTT_fmla_ols <- as.formula(paste("Viol_crime_rate_1k_log ~",
                               paste(LOTT_variables_ols, collapse = " + ")
                               )
                         )
 
-# Fit the OLS model on the demeaned dataset
-# logical class changes variable name after inital model
-
-m3.ols <- lm(LOTT_fmla_ols,
+lm_LOTT <- lm(LOTT_fmla_ols,
              data = design.matrix)
 
-# Calculate VIF scores
-car::vif(m3.ols)
+vif(lm_LOTT)
 ```
+
+# Possible homework question
+
+Below is another directed acyclic graph representing what we believe the true relationship between variables is. This directed acyclic graph is different than the one first presented. 
+
+Assume this is the correct directed acyclic graph: what did we do in our analysis that would limit the effect of simultaneity between police staffing and violent crime on our effect estimates? 
+
+Let's pretend that summertime humidity is associated with the adoption of a right-to-carry law but not with violent crime. Should we include humidity in our model? 
+
+Would we include beer in our adjustment set if violent crime instead led to an increase in beer consumption? Why not? What type of variable would beer consumption be? 
+
+```{r}
+coords2 <- tibble::tribble(
+  ~name, ~x, ~y,
+  "VC", 2, 0,
+  "RTC", 1, 0,
+  "Dem", 1.5, 2,
+  "Beer", 1.5, 1,
+  "UE", 2, -2,
+  "Poverty", 1.5, -1,
+  "PS", 2, 2,
+  "Humidity", 1, -2
+)
+
+DAG2 <- dagify(VC ~ RTC + Dem + Beer + UE + Poverty,
+               VC ~~ PS,
+               RTC ~ Dem, 
+               RTC ~ Humidity, 
+               Beer ~ Dem,
+               Poverty ~ UE,
+       labels = c("VC" = "Violent\nCrime", 
+                  "RTC" = "RTC\nLaw",
+                  "Beer" = "Beer",
+                  "Dem" = "Demographics",
+                  "UE" = "Unemployment",
+                  "Poverty" = "Poverty",
+                  "PS" = "Police Staffing",
+                  "Humidity" = "Summertime Humidity"),
+       coords = coords2)
+
+
+ggdag(DAG2, text = FALSE,use_labels = "label") +
+  theme_void() + 
+  labs(title = "DAG")
+```
+
 
 helpful_link
 
 https://rpubs.com/rslbliss/fixed_effects
 
 http://karthur.org/2019/implementing-fixed-effects-panel-models-in-r.html
+
+https://stats.stackexchange.com/questions/99236/effects-in-panel-models-individual-time-or-twoways
+
+# Code Garage
+
+### Beer 
+
+The following data was downloaded from the [National Institutes of Health](https://pubs.niaaa.nih.gov/publications/surveillance115/pcyr1970-2018.txt)
+
+```{r, eval=FALSE}
+beer_df <- read_table2("Data/Beer/pcyr1970-2018.txt", col_names = FALSE, skip = 131)
+colnames(beer_df)
+
+head(beer_df)
+
+columns_beer <- c("YEAR",
+                  "STATEFP",
+                  "Beverage",
+                  "Gal_bev",
+                  "Gal_eth",
+                  "Pop_least_14",
+                  "Gal_eth_cap_least_14",
+                  "Cap_decile_least_14",
+                  "Pop_least_21",
+                  "Gal_eth_cap_least_21",
+                  "Cap_decile_least_21",
+                  "Data_source",
+                  "TV_ABV",
+                  "Gal_eth_TV_ABV")
+
+colnames(beer_df) <- columns_beer
+
+class(beer_df$Beverage)
+
+beer_df <- beer_df %>%
+    mutate(STATEFP = str_pad(STATEFP, 2, pad = "0"),
+           Beverage = as.character(Beverage)) %>%
+    mutate(Beverage = recode_factor(Beverage,
+                                    `1`="Spirits",
+                                    `2`="Wine",
+                                    `3` = "Beer",
+                                    `4` = "All beverages")) %>%
+    filter(Beverage == "Beer",
+           !STATEFP %in% c("91","92","93","94","99")) %>%
+    dplyr::select(YEAR, STATEFP, Gal_eth_cap_least_21) %>%
+    rename("Gal_beer_cap"=Gal_eth_cap_least_21) %>%
+    mutate(Gal_beer_cap = Gal_beer_cap/10000) %>% # /10000 for correct value (see df)
+    left_join(STATE_FIPS, by = "STATEFP")
+
+beer_df <- beer_df %>%
+  dplyr::select(-STATEFP) %>%
+  pivot_longer(cols="Gal_beer_cap",
+               names_to = "VARIABLE",
+               values_to = "VALUE")
+```
