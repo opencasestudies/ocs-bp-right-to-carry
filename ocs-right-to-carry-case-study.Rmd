@@ -1,5 +1,5 @@
 ---
-title: "Right-to-carry Case Study"
+title: "Multicollinearity and Inference"
 author: "Michael Ontiveros, Carrie Wright, PhD."
 date: "4/16/2020"
 output: 
@@ -13,27 +13,17 @@ output:
 
 # RA Notes
 
-## Literature
+Need to fix initialization problem 
+
+# Motivation
+
+## Background
 
 This case study will focus on conflicting findings from two papers.
 
 [Donohue, et al.](https://www.nber.org/papers/w23510.pdf)
 
 [Lott and Mustard](https://chicagounbound.uchicago.edu/cgi/viewcontent.cgi?article=1150&context=law_and_economics)
-
-## Question
-
-How does the inclusion of different numbers of age groups influence the results of an analysis of right to carry laws and violence rates?
-
-## Description
-
-We will evaluate how multicollinearity can influence linear regression results and resulted in different conclusions for Donohoe vs Lott on this very important topic. 
-
-## Data Sources
-
-# Motivation
-
-## Background
 
 It is important that we do not treat race as an objective measure. Despite this, it can be used to advance scientific inquiry. For more information on this topic, we have included a link to a [paper on the use of race as a measure in epidemiology](https://academic.oup.com/epirev/article/22/2/187/456942). 
 
@@ -72,14 +62,16 @@ Linear regression analysis, directed acyclic graphs, discussion about the influe
 
 ```{r}
 library(car) # vif function
-library(MASS) # negative binomial regression
-library(plm)
+library(plm) # fixed effect model, linear regression
 library(broom) # tidy output
 library(tidyverse) # general wrangling functions
 library(pdftools) # read data from pdf 
 library(readxl) # importing excel sheets
-library(ggdag) # DAGs
 library(cowplot) # to produce plot of plots 
+library(GGally)
+library(ggrepel)
+
+set.seed(999)
 ```
 
 # What is the data?
@@ -95,277 +87,6 @@ knitr::include_graphics('Donohue_AppendixJ.png')
 ```
 
 # Data import 
-
-# Causal Inference
-
-<style>
-div.red { background-color:#ffcccc; border-radius: 5px; padding: 20px;}
-</style>
-<div class = "red">
-DISCLAIMER: The content in this case study was created solely for demonstrative purposes. Resultantly, the relationships shown may not be accurate.
-</div>
-
-## Directed acyclic graphs
-
-[**D**irected **A**cyclic **G**raphs](https://en.wikipedia.org/wiki/Directed_acyclic_graph?oldformat=true) are often used to identify adjustment sets, the sets of variables that need to be controlled for in an analysis.
-
-Arrows stemming from one variable to another represent causal relationships between the two. The paths of arrows never create a cycle. The relationships between the variables for a [graph](https://www.wikiwand.com/en/Graph_(discrete_mathematics). These, altogether, for a directed acyclic graph. 
-
-In scientific inquiry, directed acyclic graphs—as visual representations of the world—rarely encompass all relationships relevant to a question. Still, they are helpful at identifying flaws in our analytic methods. 
-
-Below is a labelled directed acyclic graph.
-
-```{r, echo=FALSE}
-COORDSX_1 <- tibble::tribble(
-  ~name, ~x, ~y,
-  "Y", 2, 0,
-  "X", 1, 0,
-  "A", 1.5, 2,
-  "B", 1.5, 0,
-  "C", 1.5, -2,
-  "R", 1, -2,
-  "S", 2, 2
-)
-
-DAGX_1 <- dagify(Y ~ A + S,
-               X ~ A + R, 
-               Y ~ B,
-               B ~ X,
-               C ~ Y,
-               C ~ X,
-       exposure = "X",
-       outcome = "Y",
-       coords = COORDSX_1) %>%
-  tidy_dagitty(seed = 1) %>%
-  ggdag(text = TRUE,
-        node = FALSE,
-        text_col = "black",
-        text_size = 8) +
-  xlim(c(0.5,2.5)) +
-  ylim(c(-2.5,2.5)) +
-  labs(title = "Variables that can be found of a directed acyclic graph",
-       subtitle = "X: Exposure\nY: Outcome\nA: Confounder\nB: Mediator\nC: Collider\nR: Instrument\nS: Extraneous variable associated only with outcome") +
-  theme_void()
-
-DAGX_1
-```
-
-Below is a directed acyclic graph for the analysis we will conduct. 
-
-```{r, echo=FALSE}
-set.seed(999)
-
-COORDS1 <- tibble::tribble(
-  ~name, ~x, ~y,
-  "Crime", 2, 0,
-  "Law", 1, 0,
-  "Demographics", 1.5, 2,
-  "Alcohol", 1.75, 1,
-  "Unemployment", 1.5, -2,
-  "Poverty", 1.5, -1,
-  "Police", 2, 2
-)
-
-DAG1 <- dagify(Crime ~ Law + Alcohol + Unemployment + Poverty + Police,
-               Law ~ Demographics + Unemployment + Poverty, 
-               Alcohol ~ Demographics,
-               Poverty ~ Unemployment,
-       exposure = "Law",
-       outcome = "Crime",
-       coords = COORDS1) %>%
-  tidy_dagitty(seed = 1) %>%
-  ggdag(text = TRUE,
-        node = FALSE,
-        text_col = "black",
-        text_size = 4) +
-  xlim(c(0.5,2.5)) +
-  ylim(c(-2.5,2.5)) +
-  labs(title = "Directed acyclic graph",
-       subtitle = "We will assume this represents the mechanisms relevant to our question.") +
-  theme_void()
-
-DAG1
-```
-
-## Identifying Adjustment Sets
-
-Below we list a set of general rules for identifying adjustment sets in causal inference. These rules, while not exhaustive, provide a general framework for identifying adjustment sets with directed acyclic graphs
-
-<style>
-div.blue { background-color:#e6f0ff; border-radius: 5px; padding: 20px;}
-</style>
-<div class = "blue">
-**Rules for causal inference adjustment sets**
-
-1. Confounders should be adjusted for
-2. Instruments should not be adjusted for
-5. Extraneous variables only associated with outcome should be adjusted for
-3. Mediators should not be adjusted for 
-4. Colliders block paths
-
-**Gather information from the directed acyclic graph**
-
-1. List each pathway 
-2. Label each pathway as causal or non-causal
-3. Label each pathway as open or closed
-4. Identify important variable types
-    + Exposure
-    + Outcome
-    + Instruments
-    + Extraneous variables associated only with outcome
-    + Colliders
-    + Mediators
-    + Confounders
-5. Identify variables that can be adjusted for to block open, non-causal pathways
-</div>
-
-Let's see how we can use a DAG to guide our analysis.
-
-To get acquainted with how DAGs work, we will explore each pathway and make some comments on relationships we see. After exploring each pathway, we will use the rules above to define our adjustment set. 
-
-```{r, echo=FALSE}
-DAG1_explain <- dagify(Crime ~ Law + Alcohol + Unemployment + Poverty + Police,
-               Law ~ Demographics + Unemployment + Poverty, 
-               Alcohol ~ Demographics,
-               Poverty ~ Unemployment,
-       exposure = "Law",
-       outcome = "Crime",
-       coords = COORDS1) %>%
-  tidy_dagitty(seed = 1) %>%
-  ggdag(text = TRUE,
-        node = FALSE,
-        text_col = "black",
-        text_size = 4) +
-  xlim(c(0.5,2.5)) +
-  ylim(c(-2.5,2.5)) +
-  theme_void()
-
-DAG1_explain
-```
-
-This is the caual path we are interested in evaluating. As a causal path, we want to make sure this path is left open.
-
-```{r, echo=FALSE}
-CP1_1 <- dagify(Crime ~ Law,
-       exposure = "Law",
-       outcome = "Crime",
-       coords = COORDS1) %>%
-  tidy_dagitty() %>%
-  ggdag(text = TRUE,
-        node = FALSE,
-        text_col = "black",
-        text_size = 4) +
-  xlim(c(0.5,2.5)) +
-  ylim(c(-2.5,2.5)) +
-  theme_void()
-
-CP1_1 
-```
-
-This is a non-causal pathway. Alcohol consumption is a mediator on the pathway between demographics and the outcome meaning that, in the absense of any other relationships we should account for, we do not have have to control for it in our analysis. We can ignore the alcohol variable altogether in our analysis since the alcohol variable is a mediator on this pathway with no relationships to other variables. With that said, the demographics variable is a confounder; this variable must be adjusted for if we wish to close this pathway.
-
-```{r, echo=FALSE}
-NCP1_1 <- dagify(Crime ~ Alcohol,
-                 Alcohol ~ Demographics,
-                 Law ~ Demographics,
-                 exposure = "Law",
-                 outcome = "Crime",
-                 coords = COORDS1) %>%
-  tidy_dagitty() %>%
-  ggdag(text = TRUE,
-        node = FALSE,
-        text_col = "black",
-        text_size = 4) +
-  xlim(c(0.5,2.5)) +
-  ylim(c(-2.5,2.5)) +
-  theme_void()
-
-NCP1_1
-```
-
-This pathway is an open, non-causal pathway. The poverty variable influences both the exposure and outcome. This makes the variable a confounder. No other variables are in this pathway. We should close this pathway by adjusting for poverty. 
-
-```{r, echo=FALSE}
-NCP1_2 <- dagify(Crime ~ Poverty,
-                 Law ~ Poverty,
-                 exposure = "Law",
-                 outcome = "Crime",
-                 coords = COORDS1) %>%
-  tidy_dagitty() %>%
-  ggdag(text = TRUE,
-        node = FALSE,
-        text_col = "black",
-        text_size = 4) +
-  xlim(c(0.5,2.5)) +
-  ylim(c(-2.5,2.5)) +
-  theme_void()
-
-NCP1_2
-```
-
-This pathway is very similar to the pathway describe above. 
-
-This pathway is an open, non-causal pathway. The unemployment variable influences both the exposure and outcome. This makes the variable a confounder. No other variables are in this pathway. We should close this pathway by adjusting for unemployment. 
-
-```{r, echo=FALSE}
-NCP1_3 <- dagify(Crime ~ Unemployment,
-                 Law ~ Unemployment,
-                 exposure = "Law",
-                 outcome = "Crime",
-                 coords = COORDS1) %>%
-  tidy_dagitty() %>%
-  ggdag(text = TRUE,
-        node = FALSE,
-        text_col = "black",
-        text_size = 4) +
-  xlim(c(0.5,2.5)) +
-  ylim(c(-2.5,2.5)) +
-  theme_void()
-
-NCP1_3
-```
-
-This is a non-causal pathway. Poverty is a mediator on the pathway between the unemployment variable and the outcome meaning that, in the absense of any other relationships we should account for, we do not have have to control for it in our analysis. Unlike the alcohol variable, we can not yet ignore the poverty variable altogether in our analysis since the variable has a relationship with another variable, our exposure. With that said, the unemployment variable is a confounder; this variable must be adjusted for if we wish to close this pathway.
-
-```{r, echo=FALSE}
-NCP1_4 <- dagify(Crime ~  Poverty,
-                 Poverty ~ Unemployment,
-                 Law ~ Unemployment,
-                 exposure = "Law",
-                 outcome = "Crime",
-                 coords = COORDS1) %>%
-  tidy_dagitty() %>%
-  ggdag(text = TRUE,
-        node = FALSE,
-        text_col = "black",
-        text_size = 4) +
-  xlim(c(0.5,2.5)) +
-  ylim(c(-2.5,2.5)) +
-  theme_void()
-
-NCP1_4
-```
-
-This is a non-causal pathway. The police variable only influences the outcome. Adjusting for this variable may increase the precision of our estimate. 
-
-```{r}
-NCP1_5 <- dagify(Crime ~ Police + Law,
-                 exposure = "Law",
-                 outcome = "Crime",
-                 coords = COORDS1) %>%
-  tidy_dagitty() %>%
-  ggdag(text = TRUE,
-        node = FALSE,
-        text_col = "black",
-        text_size = 4) +
-  xlim(c(0.5,2.5)) +
-  ylim(c(-2.5,2.5)) +
-  theme_void()
-
-NCP1_5
-```
-
-Click [here to learn more about biases introduced by adjustment ](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2744485/), [here to learn more about the consequences instrumental variable adjustment](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3254160/), or [here to learn about M-bias and butterfly bias](https://arxiv.org/abs/1408.0324#:~:text=%22M%2DBias%2C%22%20as,when%20the%20treatment%20and%20the).
 
 # Data wrangling
 
@@ -1133,57 +854,57 @@ syn_control_paper <- pdf_text("w23510.pdf")
 
 syn_control_paper_p_62 <- syn_control_paper[[62]]
 
-test <- syn_control_paper_p_62 %>%
+p_62 <- syn_control_paper_p_62 %>%
     strsplit("\n") %>%
     unlist() %>%
     as.data.frame() %>%
     slice(-(1:2))
 
-apply(test, 1, nchar)
+apply(p_62, 1, nchar)
 
-test[53,] #physcial page 60
+p_62[53,] #physcial page 60
 
-test <- test %>%
+p_62 <- p_62 %>%
     slice(-53)
 
-apply(test, 1, str_count, "\\s{5,}")
-apply(test, 1, str_count, "\\s{10,}")
-apply(test, 1, str_count, "\\s{20,}")
-apply(test, 1, str_count, "\\s{40,}")
+apply(p_62, 1, str_count, "\\s{5,}")
+apply(p_62, 1, str_count, "\\s{10,}")
+apply(p_62, 1, str_count, "\\s{20,}")
+apply(p_62, 1, str_count, "\\s{40,}")
 
-head(cbind(test, apply(test, 1, str_count, "\\s{40,}")))
+head(cbind(p_62, apply(p_62, 1, str_count, "\\s{40,}")))
 
-test <- test %>%
+p_62 <- p_62 %>%
     apply(1,str_replace_all, "\\s{40,}", "|N/A|") %>%
     str_replace_all("\\s{2,15}", "|") %>%
     as.data.frame()
 
-test <- sapply(test$., str_split, "\\|{1,}")
+p_62 <- sapply(p_62$., str_split, "\\|{1,}")
 
-sapply(test, nchar)
+sapply(p_62, nchar)
 
-test <- lapply(test, function(x) x[nchar(x) > 0]) 
+p_62 <- lapply(p_62, function(x) x[nchar(x) > 0]) 
 
-test <- as.data.frame(do.call(rbind, test))
+p_62 <- as.data.frame(do.call(rbind, p_62))
 
-rownames(test)
+rownames(p_62)
 
-rownames(test) <- c()
+rownames(p_62) <- c()
 
-colnames(test) <- c("STATE",
+colnames(p_62) <- c("STATE",
                     "E_Date_RTC",
                     "Frac_Yr_Eff_Yr_Pass",
                     "RTC_Date_SA")
-sapply(test, class)
+sapply(p_62, class)
 
-test <- test %>%
+p_62 <- p_62 %>%
   dplyr::select(STATE, RTC_Date_SA) %>%
   rename("RTC_LAW_YEAR"=RTC_Date_SA) %>%
   mutate(RTC_LAW_YEAR = as.numeric(RTC_LAW_YEAR)) %>%
   mutate(RTC_LAW_YEAR = case_when(RTC_LAW_YEAR == 0 ~ Inf,
                               TRUE ~ RTC_LAW_YEAR))
 
-sapply(test, class)
+sapply(p_62, class)
 ```
 
 ## Checkpoint
@@ -1215,7 +936,7 @@ DONOHUE_DF <- bind_rows(dem_DONOHUE,
                         ps_data) %>%
   pivot_wider(names_from = "VARIABLE",
               values_from = "VALUE") %>%
-  left_join(test , by = c("STATE")) %>%
+  left_join(p_62 , by = c("STATE")) %>%
   mutate(RTC_LAW = case_when(YEAR >= RTC_LAW_YEAR ~ TRUE,
                               TRUE ~ FALSE))
 
@@ -1274,7 +995,7 @@ LOTT_DF <- bind_rows(dem_LOTT,
                      ps_data) %>%
   pivot_wider(names_from = "VARIABLE",
               values_from = "VALUE") %>%
-  left_join(test , by = c("STATE")) %>%
+  left_join(p_62 , by = c("STATE")) %>%
   mutate(RTC_LAW = case_when(YEAR >= RTC_LAW_YEAR ~ TRUE,
                               TRUE ~ FALSE))
 
@@ -1322,24 +1043,63 @@ summary(droplevels(as.factor(LOTT_DF$STATE)))
 length(summary(droplevels(as.factor(LOTT_DF$STATE))))
 ```
 
-# Data analysis
+# Data exploration
 
-## Donohue, et al.
-
-```{r}
+```{r, fig.width=10, fig.height=7}
 sapply(DONOHUE_DF, class)
 
 DONOHUE_DF %>%
-  ggplot(aes(x = YEAR, y = (Viol_crime_count*100000)/Population)) +
-  geom_line(aes(group=STATE), alpha = 0.1, show.legend = FALSE) + 
-  geom_smooth() + 
-  theme_minimal()
+  mutate(Viol_crime_rate_100k_log = log((Viol_crime_count*100000)/Population)) %>%
+  ggplot(aes(x = YEAR, y = Viol_crime_rate_100k_log, color = STATE)) +
+  geom_point(size = 0.5,
+             alpha= 0.5) +
+  geom_line(aes(group=STATE),
+            alpha = 0.5,
+            show.legend = FALSE) +
+  geom_text_repel(data = DONOHUE_DF %>%
+              mutate(Viol_crime_rate_100k_log = log((Viol_crime_count*100000)/Population)) %>%
+              filter(YEAR == last(YEAR)),
+            aes(label = STATE,
+                x = YEAR,
+                y = Viol_crime_rate_100k_log),
+            size = 3,
+            alpha = 1,
+            nudge_x = 10,
+            direction = "y",
+            hjust = 1,
+            vjust = 1,
+            segment.size = 0.25,
+            segment.alpha = 0.25,
+            force = 1,
+            max.iter = 9999) +
+  guides(color = FALSE) +
+  theme_minimal() +
+  scale_x_continuous(breaks = seq(1980, 2015, by = 5),
+                     limits = c(1980, 2015),
+                     labels = c(seq(1980, 2010, by = 5), rep("", 1))) +
+  scale_y_continuous(breaks = seq(3.5, 8.5, by = 0.5),
+                     limits = c(3.5, 8.5)) +
+  labs(title = "States have different levels of crime",
+       x = "Year",
+       y = "ln(violent crimes per 100,000 people)")
 
 DONOHUE_DF %>%
-  ggplot(aes(x = YEAR, y = (Viol_crime_count*100000)/Population)) +
-  geom_smooth() + 
-  theme_minimal()
+  group_by(YEAR) %>%
+  summarise(Viol_crime_count = sum(Viol_crime_count),
+            Population = sum(Population),
+            .groups = "drop") %>%
+  mutate(Viol_crime_rate_100k_log = log((Viol_crime_count*100000)/Population)) %>%
+  ggplot(aes(x = YEAR, y = Viol_crime_rate_100k_log)) +
+  geom_line() +
+  theme_minimal() + 
+  labs(title = "Crime rates fluctuate over time",
+       x = "Year",
+       y = "ln(violent crimes per 100,000 people)")
 ```
+
+# Data analysis
+
+## Donohue, et al.
 
 Some code taken from http://karthur.org/2019/implementing-fixed-effects-panel-models-in-r.html
 
@@ -1364,27 +1124,9 @@ DONOHUE_OUTPUT <- plm(Viol_crime_rate_1k_log ~
 
 summary(DONOHUE_OUTPUT)
 
-design.matrix <- as.data.frame(model.matrix(DONOHUE_OUTPUT))
+DONOHUE_OUTPUT_TIDY <- tidy(DONOHUE_OUTPUT, conf.int = 0.95)
 
-design.matrix$Viol_crime_rate_1k_log <- plm::Within(
-  d_panel$Viol_crime_rate_1k_log)
-
-lm_DONOHUE <- lm(Viol_crime_rate_1k_log ~
-                        RTC_LAWTRUE + # logical class changes variable name after inital model
-                        White_Male_15_to_19_years +
-                        White_Male_20_to_39_years +
-                        Black_Male_15_to_19_years +
-                        Black_Male_20_to_39_years +
-                        Other_Male_15_to_19_years +
-                        Other_Male_20_to_39_years +
-                        Unemployment_rate +
-                        Poverty_rate + 
-                        Population_log +
-               police_per_100k_lag,
-             data = design.matrix)
-
-
-vif(lm_DONOHUE)
+DONOHUE_OUTPUT_TIDY$Analysis <- "Donohue, et al."
 ```
 
 ## Lott and Mustard
@@ -1415,6 +1157,154 @@ LOTT_OUTPUT <- plm(LOTT_fmla,
 
 summary(LOTT_OUTPUT)
 
+LOTT_OUTPUT_TIDY <- tidy(LOTT_OUTPUT, conf.int = 0.95)
+
+LOTT_OUTPUT_TIDY$Analysis <- "Lott and Mustard"
+```
+
+## Comparing analyses
+
+```{r}
+comparing_analyses <- DONOHUE_OUTPUT_TIDY %>%
+  bind_rows(LOTT_OUTPUT_TIDY) %>%
+  filter(term == "RTC_LAWTRUE")
+
+comparing_analyses_plot <- ggplot(comparing_analyses) + 
+  geom_point(aes(x = Analysis, y = estimate)) +
+  geom_errorbar(aes(x = Analysis, ymin = conf.low, ymax = conf.high)) + 
+  geom_hline(yintercept = 0, color = "red") +
+  theme_minimal() + 
+  labs(title = "Effect of right-to-carry law on ln(violent crime rate per 100,000)",
+       y = "Point estimate (95% CI)")
+
+comparing_analyses_plot
+```
+
+# Multicollinearity analysis
+
+How did the above happen?
+
+The analysis dataframes are very similar yet rendered very different results. 
+
+```{r}
+all_equal(target = DONOHUE_DF,
+          current = LOTT_DF,
+          ignore_col_order = TRUE,
+          ignore_row_order = TRUE)
+
+dim(DONOHUE_DF)[1] == dim(LOTT_DF)[1]
+```
+
+The only difference between the two dataframes rests in how the demographic variables were parameterized.
+
+```{r}
+DONOHUE_DF %>%
+  dplyr::select(contains("years")) %>%
+  colnames()
+
+LOTT_DF %>%
+  dplyr::select(contains("years")) %>%
+  colnames()
+```
+
+Clearly, this had an effect on the results of the analysis. 
+
+Let's explore how this occured. 
+
+When seemingly independent variables are highly related to one another, the relationships estimated in an analysis may be distorted. 
+
+In regression analysis, this distortion is often a byproduct of a violation of the independence assumption. This distortion, if large enough, can impact statistical inference. 
+
+There are several ways we can diagnose multicollinearity.
+
+### Correlation
+
+Again, multicollinearity often occurs when independent variables are highly related to one another. Consequently, we can evaluate these relationships be examining the correlation between variable pairs.
+
+<style>
+div.blue { background-color:#e6f0ff; border-radius: 5px; padding: 20px;}
+</style>
+<div class = "blue">
+
+It is important to note that multicollinearity and correlation are not one and the same. Correlation can be thought of as the strength of the relationship between variables. On the other hand, multicollinearity can be thought of the the violation of the independence assumption that is a consequence of this correlation in a regression analysis. 
+
+</div>
+
+```{r, fig.align="center"}
+colnames(DONOHUE_DF)
+
+DONOHUE_DF %>% 
+  dplyr::select(RTC_LAW,
+                Viol_crime_rate_1k_log,
+                Unemployment_rate,
+                Poverty_rate,
+                Population_log) %>% 
+  ggpairs(.,
+          columns = c(2:4),
+          lower = list(continuous = wrap("smooth_loess", alpha = 0.1, size = 0.1)))
+
+LOTT_DF %>% 
+  dplyr::select(RTC_LAW,
+                Viol_crime_rate_1k_log,
+                Unemployment_rate,
+                Poverty_rate,
+                Population_log) %>% 
+  ggpairs(.,
+          columns = c(2:4),
+          lower = list(continuous = wrap("smooth_loess", alpha = 0.1, size = 0.1)))
+```
+
+```{r, fig.width=10, fig.height=7}
+DONOHUE_DF %>%
+  dplyr::select(contains("_years")) %>%
+  ggcorr(method = c("pairwise.complete.obs", "pearson"),
+         hjust = 0.5,
+         vjust = 0,
+         color = "transparent") +
+  labs(title = "Pearson's Correlation Coefficient by Demographic Group")
+```
+
+```{r, fig.width=10, fig.height=7}
+LOTT_DF %>%
+  dplyr::select(contains("_years")) %>%
+  ggcorr(method = c("pairwise.complete.obs", "pearson"),
+         hjust = 0.5,
+         vjust = 0.5,
+         color = "transparent") +
+  labs(title = "Pearson's Correlation Coefficient by Demographic Group")
+```
+
+### Splitting the data
+
+### VIF
+
+```{r}
+design.matrix <- as.data.frame(model.matrix(DONOHUE_OUTPUT))
+
+design.matrix$Viol_crime_rate_1k_log <- plm::Within(
+  d_panel$Viol_crime_rate_1k_log)
+
+lm_DONOHUE <- lm(Viol_crime_rate_1k_log ~
+                        RTC_LAWTRUE + # logical class changes variable name after inital model
+                        White_Male_15_to_19_years +
+                        White_Male_20_to_39_years +
+                        Black_Male_15_to_19_years +
+                        Black_Male_20_to_39_years +
+                        Other_Male_15_to_19_years +
+                        Other_Male_20_to_39_years +
+                        Unemployment_rate +
+                        Poverty_rate + 
+                        Population_log +
+               police_per_100k_lag,
+             data = design.matrix)
+
+
+vif(lm_DONOHUE)
+
+max_vif_DONOHUE <- max(vif(lm_DONOHUE))
+```
+
+```{r}
 design.matrix <- as.data.frame(model.matrix(LOTT_OUTPUT))
 
 design.matrix$Viol_crime_rate_1k_log <- plm::Within(
@@ -1439,55 +1329,26 @@ lm_LOTT <- lm(LOTT_fmla_ols,
              data = design.matrix)
 
 vif(lm_LOTT)
+
+max(vif(lm_LOTT))
+
+max_vif_LOTT <- max(vif(lm_LOTT))
+```
+
+```{r}
+max_vif_DONOHUE
+max_vif_LOTT
+```
+
+# Synthesis
+
+```{r, eval=FALSE}
+plot_grid(comparing_analyses_plot)
 ```
 
 # Possible homework question
 
-Below is another directed acyclic graph representing what we believe the true relationship between variables is. This directed acyclic graph is different than the one first presented. 
-
-Assume this is the correct directed acyclic graph: what did we do in our analysis that would limit the effect of simultaneity between police staffing and violent crime on our effect estimates? 
-
-Let's pretend that summertime humidity is associated with the adoption of a right-to-carry law but not with violent crime. Should we include humidity in our model? 
-
-Would we include beer in our adjustment set if violent crime instead led to an increase in beer consumption? Why not? What type of variable would beer consumption be? 
-
-```{r}
-coords2 <- tibble::tribble(
-  ~name, ~x, ~y,
-  "VC", 2, 0,
-  "RTC", 1, 0,
-  "Dem", 1.5, 2,
-  "Beer", 1.5, 1,
-  "UE", 2, -2,
-  "Poverty", 1.5, -1,
-  "PS", 2, 2,
-  "Humidity", 1, -2
-)
-
-DAG2 <- dagify(VC ~ RTC + Dem + Beer + UE + Poverty,
-               VC ~~ PS,
-               RTC ~ Dem, 
-               RTC ~ Humidity, 
-               Beer ~ Dem,
-               Poverty ~ UE,
-       labels = c("VC" = "Violent\nCrime", 
-                  "RTC" = "RTC\nLaw",
-                  "Beer" = "Beer",
-                  "Dem" = "Demographics",
-                  "UE" = "Unemployment",
-                  "Poverty" = "Poverty",
-                  "PS" = "Police Staffing",
-                  "Humidity" = "Summertime Humidity"),
-       coords = coords2)
-
-
-ggdag(DAG2, text = FALSE,use_labels = "label") +
-  theme_void() + 
-  labs(title = "DAG")
-```
-
-
-helpful_link
+# Helpful links
 
 https://rpubs.com/rslbliss/fixed_effects
 
