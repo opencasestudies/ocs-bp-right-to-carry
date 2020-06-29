@@ -11,6 +11,10 @@ output:
         number_sections: false
 ---
 
+```{r, echo=FALSE}
+knitr::opts_chunk$set(fig.width=10, fig.height=7, fig.align='center') 
+```
+
 # RA Notes
 
 Need to fix initialization problem 
@@ -61,6 +65,7 @@ Linear regression analysis, directed acyclic graphs, discussion about the influe
 ## Libraries
 
 ```{r}
+library(here) # Thanks, Carrie! 
 library(car) # vif function
 library(plm) # fixed effect model, linear regression
 library(broom) # tidy output
@@ -70,6 +75,11 @@ library(readxl) # importing excel sheets
 library(cowplot) # to produce plot of plots 
 library(GGally)
 library(ggrepel)
+library(scales)
+library(latex2exp)
+library(viridis)
+library(ggcorrplot)
+library(rsample)
 
 set.seed(999)
 ```
@@ -690,7 +700,7 @@ Extracted from Table 21 from [US Census Bureau](https://www.census.gov/data/tabl
 solution to above is alledgedly: "In any case the suggested approach is to initialize the column"
 
 ```{r}
-poverty_rate_data <- read_xls("Data/Poverty/hstpov21.xls", skip=2)
+poverty_rate_data <- read_xls("Data/Poverty/hstpov21.xls", skip=2) #This may cause initialization issue, not easily reproducible (even after restarting R)
 
 head(poverty_rate_data)
 
@@ -715,9 +725,9 @@ rep_rows <- states_eq + extra_col
 
 groups <- (dim(poverty_rate_data)[1])/(rep_rows)
 
-paste(groups - (2018-1980 + 1), "extra groups.")
+paste(groups - (2018-1980 + 1), "extra groups")
 
-poverty_rate_data$year_group <- rep(1:groups, each=rep_rows) 
+poverty_rate_data$year_group <- rep(1:groups, each=rep_rows)
 
 poverty_rate_data <- poverty_rate_data %>%
   group_by(year_group) %>%
@@ -905,6 +915,8 @@ p_62 <- p_62 %>%
                               TRUE ~ RTC_LAW_YEAR))
 
 sapply(p_62, class)
+
+head(p_62)
 ```
 
 ## Checkpoint
@@ -1045,16 +1057,15 @@ length(summary(droplevels(as.factor(LOTT_DF$STATE))))
 
 # Data exploration
 
-```{r, fig.width=10, fig.height=7}
+```{r}
 sapply(DONOHUE_DF, class)
 
 DONOHUE_DF %>%
   mutate(Viol_crime_rate_100k_log = log((Viol_crime_count*100000)/Population)) %>%
   ggplot(aes(x = YEAR, y = Viol_crime_rate_100k_log, color = STATE)) +
-  geom_point(size = 0.5,
-             alpha= 0.5) +
+  geom_point(size = 0.5) +
   geom_line(aes(group=STATE),
-            alpha = 0.5,
+            size = 0.5,
             show.legend = FALSE) +
   geom_text_repel(data = DONOHUE_DF %>%
               mutate(Viol_crime_rate_100k_log = log((Viol_crime_count*100000)/Population)) %>%
@@ -1073,15 +1084,16 @@ DONOHUE_DF %>%
             force = 1,
             max.iter = 9999) +
   guides(color = FALSE) +
-  theme_minimal() +
-  scale_x_continuous(breaks = seq(1980, 2015, by = 5),
+  scale_x_continuous(breaks = seq(1980, 2015, by = 1),
                      limits = c(1980, 2015),
-                     labels = c(seq(1980, 2010, by = 5), rep("", 1))) +
+                     labels = c(seq(1980, 2010, by = 1), rep("", 5))) +
   scale_y_continuous(breaks = seq(3.5, 8.5, by = 0.5),
                      limits = c(3.5, 8.5)) +
   labs(title = "States have different levels of crime",
        x = "Year",
-       y = "ln(violent crimes per 100,000 people)")
+       y = "ln(violent crimes per 100,000 people)") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90))
 
 DONOHUE_DF %>%
   group_by(YEAR) %>%
@@ -1091,10 +1103,16 @@ DONOHUE_DF %>%
   mutate(Viol_crime_rate_100k_log = log((Viol_crime_count*100000)/Population)) %>%
   ggplot(aes(x = YEAR, y = Viol_crime_rate_100k_log)) +
   geom_line() +
-  theme_minimal() + 
+  scale_x_continuous(breaks = seq(1980, 2010, by = 1),
+                     limits = c(1980, 2010),
+                     labels = c(seq(1980, 2010, by = 1))) +
+  scale_y_continuous(breaks = seq(5.75, 6.75, by = 0.25),
+                     limits = c(5.75, 6.75)) +
   labs(title = "Crime rates fluctuate over time",
        x = "Year",
-       y = "ln(violent crimes per 100,000 people)")
+       y = "ln(violent crimes per 100,000 people)") +
+  theme_minimal() + 
+  theme(axis.text.x = element_text(angle = 90))
 ```
 
 # Data analysis
@@ -1104,7 +1122,7 @@ DONOHUE_DF %>%
 Some code taken from http://karthur.org/2019/implementing-fixed-effects-panel-models-in-r.html
 
 ```{r}
-d_panel <- pdata.frame(DONOHUE_DF, index=c("STATE", "YEAR"))
+d_panel_DONOHUE <- pdata.frame(DONOHUE_DF, index=c("STATE", "YEAR"))
 
 DONOHUE_OUTPUT <- plm(Viol_crime_rate_1k_log ~
                         RTC_LAW +
@@ -1120,13 +1138,13 @@ DONOHUE_OUTPUT <- plm(Viol_crime_rate_1k_log ~
                         police_per_100k_lag,
                       effect = "twoways",
                       model = "within",
-                      data=d_panel)
+                      data=d_panel_DONOHUE)
 
 summary(DONOHUE_OUTPUT)
 
 DONOHUE_OUTPUT_TIDY <- tidy(DONOHUE_OUTPUT, conf.int = 0.95)
 
-DONOHUE_OUTPUT_TIDY$Analysis <- "Donohue, et al."
+DONOHUE_OUTPUT_TIDY$Analysis <- "Analysis 1"
 ```
 
 ## Lott and Mustard
@@ -1148,18 +1166,18 @@ LOTT_fmla <- as.formula(paste("Viol_crime_rate_1k_log ~",
                               )
                         )
 
-d_panel <- pdata.frame(LOTT_DF, index=c("STATE", "YEAR"))
+d_panel_LOTT <- pdata.frame(LOTT_DF, index=c("STATE", "YEAR"))
 
 LOTT_OUTPUT <- plm(LOTT_fmla,
                       model = "within",
                    effect = "twoways",
-                      data=d_panel)
+                      data=d_panel_LOTT)
 
 summary(LOTT_OUTPUT)
 
 LOTT_OUTPUT_TIDY <- tidy(LOTT_OUTPUT, conf.int = 0.95)
 
-LOTT_OUTPUT_TIDY$Analysis <- "Lott and Mustard"
+LOTT_OUTPUT_TIDY$Analysis <- "Analysis 2"
 ```
 
 ## Comparing analyses
@@ -1169,13 +1187,32 @@ comparing_analyses <- DONOHUE_OUTPUT_TIDY %>%
   bind_rows(LOTT_OUTPUT_TIDY) %>%
   filter(term == "RTC_LAWTRUE")
 
+library(grid)
+
 comparing_analyses_plot <- ggplot(comparing_analyses) + 
   geom_point(aes(x = Analysis, y = estimate)) +
-  geom_errorbar(aes(x = Analysis, ymin = conf.low, ymax = conf.high)) + 
+  geom_errorbar(aes(x = Analysis, ymin = conf.low, ymax = conf.high), width = 0.25) + 
   geom_hline(yintercept = 0, color = "red") +
+  scale_y_continuous(breaks = seq(-0.2, 0.2, by = 0.05),
+                     labels = seq(-0.2, 0.2, by = 0.05),
+                     limits = c(-0.2,0.2)) +
+  geom_segment(aes(x = 1, y = 0.125, xend = 1, yend = 0.175),
+               arrow = arrow(angle = 45, ends = "last", type = "open"),
+               size = 2,
+               color = "green",
+               lineend = "butt",
+               linejoin = "mitre") +
+  geom_segment(aes(x = 2, y = -0.125, xend = 2, yend = -0.175),
+               arrow = arrow(angle = 45, ends = "last", type = "open"),
+               size = 2,
+               color = "red",
+               lineend = "butt",
+               linejoin = "mitre") +
   theme_minimal() + 
-  labs(title = "Effect of right-to-carry law on ln(violent crime rate per 100,000)",
-       y = "Point estimate (95% CI)")
+  theme(axis.title.x = element_blank(),
+        axis.text = element_text(size = 12)) +
+  labs(title = "Effect estimate on ln(violent crimes per 100,000 people)",
+       y = "Effect estimate (95% CI)")
 
 comparing_analyses_plot
 ```
@@ -1230,7 +1267,9 @@ It is important to note that multicollinearity and correlation are not one and t
 
 </div>
 
-```{r, fig.align="center"}
+#### Scatterplots
+
+```{r}
 colnames(DONOHUE_DF)
 
 DONOHUE_DF %>% 
@@ -1240,8 +1279,11 @@ DONOHUE_DF %>%
                 Poverty_rate,
                 Population_log) %>% 
   ggpairs(.,
-          columns = c(2:4),
-          lower = list(continuous = wrap("smooth_loess", alpha = 0.1, size = 0.1)))
+          columns = c(2:5),
+          lower = list(continuous = wrap("smooth_loess",
+                                         color = "red",
+                                         alpha = 0.5,
+                                         size = 0.1)))
 
 LOTT_DF %>% 
   dplyr::select(RTC_LAW,
@@ -1250,31 +1292,130 @@ LOTT_DF %>%
                 Poverty_rate,
                 Population_log) %>% 
   ggpairs(.,
-          columns = c(2:4),
-          lower = list(continuous = wrap("smooth_loess", alpha = 0.1, size = 0.1)))
+          columns = c(2:5),
+          lower = list(continuous = wrap("smooth_loess",
+                                         color = "red",
+                                         alpha = 0.5,
+                                         size = 0.1)))
 ```
 
-```{r, fig.width=10, fig.height=7}
-DONOHUE_DF %>%
-  dplyr::select(contains("_years")) %>%
-  ggcorr(method = c("pairwise.complete.obs", "pearson"),
-         hjust = 0.5,
-         vjust = 0,
-         color = "transparent") +
-  labs(title = "Pearson's Correlation Coefficient by Demographic Group")
+#### Heatmaps
+
+```{r}
+cor_DONOHUE_dem <- cor(DONOHUE_DF %>% dplyr::select(contains("_years")))
+
+corr_mat_DONOHUE <- ggcorrplot(cor_DONOHUE_dem,
+           tl.cex = 6,
+           hc.order = TRUE,
+           colors = c("red",
+                      "white",
+                      "red"),
+           outline.color = "transparent",
+           title = "Correlation Matrix, Analysis 1",
+           legend.title = TeX("$\\rho$"))
+
+corr_mat_DONOHUE
+
+cor_LOTT_dem <- cor(LOTT_DF %>% dplyr::select(contains("_years")))
+
+corr_mat_LOTT <- ggcorrplot(cor_LOTT_dem,
+           tl.cex = 6,
+           hc.order = TRUE,
+           colors = c("red",
+                      "white",
+                      "red"),
+           outline.color = "transparent",
+           title = "Correlation Matrix, Analysis 2",
+           legend.title = TeX("$\\rho$"))
+
+corr_mat_LOTT
 ```
 
-```{r, fig.width=10, fig.height=7}
-LOTT_DF %>%
-  dplyr::select(contains("_years")) %>%
-  ggcorr(method = c("pairwise.complete.obs", "pearson"),
-         hjust = 0.5,
-         vjust = 0.5,
-         color = "transparent") +
-  labs(title = "Pearson's Correlation Coefficient by Demographic Group")
-```
+### Coefficient estimate instability
 
-### Splitting the data
+```{r}
+sims <- 250
+
+# DONOHUE
+
+# round(dim(DONOHUE_DF)[1]/2)
+samps_DONOHUE <- lapply(rep(dim(DONOHUE_DF)[1]-1, sims),
+       function(x)DONOHUE_DF[sample(nrow(DONOHUE_DF),
+                                     size = x, replace = FALSE),])
+
+fit_nls_on_bootstrap_DONOHUE <- function(split){
+  plm(Viol_crime_rate_1k_log ~
+                        RTC_LAW +
+                        White_Male_15_to_19_years +
+                        White_Male_20_to_39_years +
+                        Black_Male_15_to_19_years +
+                        Black_Male_20_to_39_years +
+                        Other_Male_15_to_19_years +
+                        Other_Male_20_to_39_years +
+                        Unemployment_rate +
+                        Poverty_rate + 
+                        Population_log + 
+                        police_per_100k_lag,
+      data = data.frame(split),
+      index = c("STATE","YEAR"),
+      model = "within",
+      effect = "twoways")
+}
+  
+samps_models_DONOHUE <- lapply(samps_DONOHUE, fit_nls_on_bootstrap_DONOHUE)
+
+samps_models_DONOHUE <- samps_models_DONOHUE %>%
+  map(tidy)
+
+names(samps_models_DONOHUE) <- paste0("DONOHUE_",1:length(samps_models_DONOHUE))
+
+simulations_DONOHUE <- samps_models_DONOHUE %>%
+  bind_rows(.id = "ID") %>%
+  mutate(Analysis = "Analysis 1")
+
+## LOTT
+
+samps_LOTT <- lapply(rep(round(dim(LOTT_DF)[1]/2), sims),
+       function(x) LOTT_DF[sample(nrow(LOTT_DF),
+                                  size = x, replace = FALSE),])
+
+fit_nls_on_bootstrap_LOTT <- function(split){
+  plm(LOTT_fmla,
+      data = data.frame(split),
+      index = c("STATE","YEAR"),
+      model = "within",
+      effect = "twoways")
+}
+  
+samps_models_LOTT <- lapply(samps_LOTT, fit_nls_on_bootstrap_LOTT)
+
+samps_models_LOTT <- samps_models_LOTT %>%
+  map(tidy)
+
+names(samps_models_LOTT) <- paste0("LOTT_",1:length(samps_models_LOTT))
+
+simulations_LOTT <- samps_models_LOTT %>%
+  bind_rows(.id = "Analysis") %>%
+  mutate(Analysis = "Analysis 2")
+
+simulations <- bind_rows(simulations_DONOHUE,
+                         simulations_LOTT)
+
+simulation_plot <- simulations %>%
+  filter(term=="RTC_LAWTRUE") %>%
+  ggplot(aes(x = Analysis, y = estimate)) + 
+  geom_jitter(alpha = 0.25,
+              width = 0.1) + 
+  labs(title = "Coefficient instability",
+       subtitle = "Estimates sensitive to observation deletions",
+       x = "Term",
+       y = "Coefficient",
+       caption = "Results from simulations") + 
+  theme_minimal() +
+  theme(axis.title.x = element_blank())
+
+simulation_plot
+```
 
 ### VIF
 
@@ -1282,7 +1423,7 @@ LOTT_DF %>%
 design.matrix <- as.data.frame(model.matrix(DONOHUE_OUTPUT))
 
 design.matrix$Viol_crime_rate_1k_log <- plm::Within(
-  d_panel$Viol_crime_rate_1k_log)
+  d_panel_DONOHUE$Viol_crime_rate_1k_log)
 
 lm_DONOHUE <- lm(Viol_crime_rate_1k_log ~
                         RTC_LAWTRUE + # logical class changes variable name after inital model
@@ -1301,14 +1442,23 @@ lm_DONOHUE <- lm(Viol_crime_rate_1k_log ~
 
 vif(lm_DONOHUE)
 
-max_vif_DONOHUE <- max(vif(lm_DONOHUE))
+vif_DONOHUE <- vif(lm_DONOHUE)
+
+vif_DONOHUE <- vif_DONOHUE %>%
+  as_tibble() %>%
+  cbind(., names(vif_DONOHUE)) %>%
+  as_tibble()
+  
+colnames(vif_DONOHUE) <- c("VIF", "Variable")
+
+max_vif_DONOHUE <- max(vif(lm_DONOHUE)) 
 ```
 
 ```{r}
 design.matrix <- as.data.frame(model.matrix(LOTT_OUTPUT))
 
 design.matrix$Viol_crime_rate_1k_log <- plm::Within(
-  d_panel$Viol_crime_rate_1k_log)
+  d_panel_LOTT$Viol_crime_rate_1k_log)
 
 LOTT_variables_ols <- LOTT_DF %>%
   dplyr::select(RTC_LAW,
@@ -1330,20 +1480,208 @@ lm_LOTT <- lm(LOTT_fmla_ols,
 
 vif(lm_LOTT)
 
-max(vif(lm_LOTT))
+vif_LOTT <- vif(lm_LOTT)
+
+vif_LOTT <- vif_LOTT %>%
+  as_tibble() %>%
+  cbind(., names(vif_LOTT)) %>%
+  as_tibble()
+  
+colnames(vif_LOTT) <- c("VIF", "Variable")
 
 max_vif_LOTT <- max(vif(lm_LOTT))
 ```
 
-```{r}
+```{r, echo=FALSE}
+#This could be used to label the max VIF of each analysis
+
 max_vif_DONOHUE
 max_vif_LOTT
 ```
 
+$$\frac{1}{1-R_{i}^{2}}$$
+
+```{r}
+vif_DONOHUE$Analysis <- "Analysis 1"
+vif_LOTT$Analysis <- "Analysis 2"
+
+vif_df <- rbind(vif_DONOHUE,
+                vif_LOTT)
+
+vif_plot <- vif_df %>%
+  ggplot(aes(x = Analysis, y = VIF)) +
+  geom_jitter(width = 0.1, alpha = 0.5, size = 2) +
+  geom_hline(yintercept = 10, color = "red") +
+  scale_y_continuous(trans = 'log10',
+                     limits = c(1,1000)) +
+  labs(title = "Variance inflation factors") + 
+  theme_minimal() +
+  theme(axis.title.x = element_blank())
+
+vif_plot
+```
+
 # Synthesis
 
-```{r, eval=FALSE}
-plot_grid(comparing_analyses_plot)
+```{r, fig.height=10, echo=FALSE, message=FALSE, warning=FALSE}
+title_plots <- ggdraw() + 
+  draw_label(
+    "Multicollinearity and its effects",
+    fontface = 'bold',
+    size=18,
+    x = 0,
+    hjust = 0
+  ) +
+  theme(
+    plot.margin = margin(0, 0, 0, 0)
+  )
+
+forward <- ggdraw() + 
+  draw_label(
+    "Analysis 1: 6 demographic variables\nAnalysis 2: 36 demographic variables",
+    fontface = 'bold',
+    size=10,
+    x = 0,
+    hjust = 0
+  ) +
+  theme(
+    plot.margin = margin(0, 0, 0, 0)
+  )
+
+corr_mat_DONOHUE <- ggcorrplot(cor_DONOHUE_dem,
+                               tl.cex = 6,
+                               hc.order = TRUE,
+                               outline.color = "transparent",
+                               colors = c("red",
+                                          "white",
+                                          "red"),
+                            legend.title = TeX("$\\rho$")) +
+  theme_void() + 
+  theme(plot.title= element_text(size=8)) +
+  labs(title = "Analysis 1") 
+
+corr_mat_LOTT <- ggcorrplot(cor_LOTT_dem,
+                            tl.cex = 6,
+                            hc.order = TRUE,
+                            outline.color = "transparent",
+                            colors = c("red",
+                                       "white",
+                                       "red"),
+                            legend.title = TeX("$\\rho$")) +
+  theme_void() + 
+  theme(plot.title = element_text(size=8)) +
+  labs(title = "Analysis 2") 
+
+plot_A1 <- corr_mat_DONOHUE
+
+plot_A2 <- corr_mat_LOTT
+
+row_A <- plot_grid(plot_A1,
+                   plot_A2,
+                   nrow = 1)
+
+title_A <- ggdraw() + 
+  draw_label(
+    "Correlation between variables can induce multicollinearity",
+    fontface = 'bold',
+    size=14,
+    x = 0,
+    hjust = 0
+  ) +
+  theme(
+    plot.margin = margin(0, 0, 0, 0)
+  )
+
+legend_A <- get_legend(corr_mat_LOTT)
+
+plot_A <- plot_grid(title_A,
+                    row_A,
+                    ncol = 1,
+                    rel_heights = c(0.1,1))
+
+empty_df <- cbind(c(1:10),c(1:10)) %>%
+  as.data.frame()
+
+colnames(empty_df) <- c("X", "Y")
+
+plot_B1 <- ggplot(empty_df, aes(x = X, y = Y)) +
+  annotate("text",
+           x=5,
+           y=5,
+           label = TeX("$VIF_{i} = \\frac{1}{1-R_{i}^{2}}$"),
+           size = 8) +
+  theme_void()
+
+plot_B2 <- vif_plot +
+  theme(axis.title.x = element_text(size=8))
+
+row_B <- plot_grid(plot_B1,
+                       plot_B2,
+                       nrow = 1)
+
+title_B <- ggdraw() + 
+  draw_label(
+    "Variance inflation factors can be used to identify multicollinearity when present",
+    fontface = 'bold',
+    size=14,
+    x = 0,
+    hjust = 0
+  ) +
+  theme(
+    plot.margin = margin(0, 0, 0, 0)
+  )
+
+plot_B <- plot_grid(title_B,
+                    row_B,
+                    ncol = 1,
+                    rel_heights = c(0.1,1))
+
+plot_C1 <- comparing_analyses_plot + 
+  theme(axis.text.x = element_text(size = 8),
+        axis.title.x = element_blank()) +
+  labs(title = "Introduces bias to estimates",
+       subtitle = "Bias introduced can change direction of estimate")
+
+plot_C2 <- simulation_plot +
+  labs(title = "Reduces precision in estimates")
+
+row_C <- plot_grid(plot_C1,
+                       plot_C2,
+                       nrow = 1)
+
+title_C <- ggdraw() + 
+  draw_label(
+    "Multicollinearity can have a negative effect on statistical inference",
+    fontface = 'bold',
+    size=14,
+    x = 0,
+    hjust = 0
+  ) +
+  theme(
+    plot.margin = margin(0, 0, 0, 0)
+  )
+
+plot_C <- plot_grid(title_C,
+                    row_C,
+                    ncol = 1,
+                    rel_heights = c(0.1,1))
+
+plots <- plot_grid(plot_A,
+                   plot_B,
+                   plot_C,
+          ncol = 1,
+          rel_heights = c(1,1,1))
+
+figure_uw <- plot_grid(title_plots,
+                       forward,
+                       plots,
+                       #legend_uw,
+                       ncol = 1,
+                       rel_heights = c(0.05,
+                                       0.05,
+                                       1))
+
+figure_uw
 ```
 
 # Possible homework question
@@ -1356,55 +1694,3 @@ http://karthur.org/2019/implementing-fixed-effects-panel-models-in-r.html
 
 https://stats.stackexchange.com/questions/99236/effects-in-panel-models-individual-time-or-twoways
 
-# Code Garage
-
-### Beer 
-
-The following data was downloaded from the [National Institutes of Health](https://pubs.niaaa.nih.gov/publications/surveillance115/pcyr1970-2018.txt)
-
-```{r, eval=FALSE}
-beer_df <- read_table2("Data/Beer/pcyr1970-2018.txt", col_names = FALSE, skip = 131)
-colnames(beer_df)
-
-head(beer_df)
-
-columns_beer <- c("YEAR",
-                  "STATEFP",
-                  "Beverage",
-                  "Gal_bev",
-                  "Gal_eth",
-                  "Pop_least_14",
-                  "Gal_eth_cap_least_14",
-                  "Cap_decile_least_14",
-                  "Pop_least_21",
-                  "Gal_eth_cap_least_21",
-                  "Cap_decile_least_21",
-                  "Data_source",
-                  "TV_ABV",
-                  "Gal_eth_TV_ABV")
-
-colnames(beer_df) <- columns_beer
-
-class(beer_df$Beverage)
-
-beer_df <- beer_df %>%
-    mutate(STATEFP = str_pad(STATEFP, 2, pad = "0"),
-           Beverage = as.character(Beverage)) %>%
-    mutate(Beverage = recode_factor(Beverage,
-                                    `1`="Spirits",
-                                    `2`="Wine",
-                                    `3` = "Beer",
-                                    `4` = "All beverages")) %>%
-    filter(Beverage == "Beer",
-           !STATEFP %in% c("91","92","93","94","99")) %>%
-    dplyr::select(YEAR, STATEFP, Gal_eth_cap_least_21) %>%
-    rename("Gal_beer_cap"=Gal_eth_cap_least_21) %>%
-    mutate(Gal_beer_cap = Gal_beer_cap/10000) %>% # /10000 for correct value (see df)
-    left_join(STATE_FIPS, by = "STATEFP")
-
-beer_df <- beer_df %>%
-  dplyr::select(-STATEFP) %>%
-  pivot_longer(cols="Gal_beer_cap",
-               names_to = "VARIABLE",
-               values_to = "VALUE")
-```
