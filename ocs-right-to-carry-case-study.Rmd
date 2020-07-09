@@ -11,6 +11,10 @@ output:
         number_sections: false
 ---
 
+```{r}
+library(here)
+```
+
 ```{r, echo=FALSE}
 knitr::opts_chunk$set(fig.width=10, fig.height=7, fig.align='center') 
 ```
@@ -38,7 +42,7 @@ How does the inclusion of different numbers of age groups influence the results 
 **This screenshot needs to be taken again. Cursor highlight is showing**
 
 ```{r, echo=FALSE, out.height = '100%', out.width = '100%', fig.align='center'}
-knitr::include_graphics('Donohue_Table2.png')
+knitr::include_graphics(here("img",'Donohue_Table2.png'))
 ```
 
 ```{r, echo=FALSE, out.height = '75%', out.width = '75%', fig.align='center'}
@@ -107,7 +111,7 @@ knitr::include_graphics('Donohue_AppendixJ.png')
 The following data was downloaded from the [US Census Bureau](https://www.census.gov/geographies/reference-files/2014/demo/popest/2014-geocodes-state.html)
 
 ```{r}
-STATE_FIPS <- read_xls("Data/State_FIPS_codes/state-geocodes-v2014.xls", skip = 5)
+STATE_FIPS <- read_xls("docs/State_FIPS_codes/state-geocodes-v2014.xls", skip = 5)
 
 head(STATE_FIPS)
 
@@ -130,7 +134,7 @@ STATE_FIPS <- STATE_FIPS %>%
 The following data was downloaded from the [US Census Bureau](https://www2.census.gov/programs-surveys/popest/tables/1900-1980/state/asrh/).
 
 ```{r}
-dem_77_79 <- read_csv("Data/Demographics/Decade_1970/pe-19.csv", skip = 5)
+dem_77_79 <- read_csv("docs/Demographics/Decade_1970/pe-19.csv", skip = 5)
 
 head(dem_77_79)
 
@@ -178,7 +182,7 @@ County data was used for this decade.
 
 ```{r}
 dem_80_89 <- list.files(recursive = TRUE,
-                  path = "Data/Demographics/Decade_1980/",
+                  path = "docs/Demographics/Decade_1980/",
                   pattern = "*.csv",
                   full.names = TRUE) %>% 
   map(~read_csv(., skip=5))
@@ -232,13 +236,13 @@ The following data was downloaded from the [US Census Bureau](https://www2.censu
 
 ```{r}
 dem_90_99 <- list.files(recursive = TRUE,
-                  path = "Data/Demographics/Decade_1990/",
+                  path = "docs/Demographics/Decade_1990/",
                   pattern = "*.txt",
                   full.names = TRUE) %>% 
   map(~read_table2(., skip = 14))
 
 dem_90_99_names <- list.files(recursive = TRUE,
-                  path = "Data/Demographics/Decade_1990/",
+                  path = "docs/Demographics/Decade_1990/",
                   pattern = "*.txt") %>%
     str_extract("[9][0-9]") %>%
     paste0("Year_19",.)
@@ -371,7 +375,7 @@ The following data was downloaded from the [US Census Bureau](https://www.census
 
 ```{r}
 dem_00_10 <- list.files(recursive = TRUE,
-                  path = "Data/Demographics/Decade_2000/",
+                  path = "docs/Demographics/Decade_2000/",
                   pattern = "*.csv",
                   full.names = TRUE) %>% 
   map(~read_csv(.))
@@ -585,7 +589,7 @@ population_data <- population_data %>%
 The following data was downloaded from the [Federal Bureau of Investigation](https://crime-data-explorer.fr.cloud.gov/downloads-and-docs).
 
 ```{r}
-ps_data <- read_csv("Data/Police_staffing/pe_1960_2018.csv",
+ps_data <- read_csv("docs/Police_staffing/pe_1960_2018.csv",
                     col_types = cols(male_total_ct = "n",
                                      female_total_ct = "n"))
 
@@ -660,13 +664,13 @@ https://data.bls.gov/cgi-bin/dsrv?la
 
 ```{r}
 ue_rate_data <- list.files(recursive = TRUE,
-                  path = "Data/Unemployment",
+                  path = "docs/Unemployment",
                   pattern = "*.xlsx",
                   full.names = TRUE) %>% 
   map(~read_xlsx(., skip = 10))
 
 ue_rate_names <- list.files(recursive = TRUE,
-                  path = "Data/Unemployment",
+                  path = "docs/Unemployment",
                   pattern = "*.xlsx",
                   full.names = TRUE) %>%
   map(~read_xlsx(.)) %>%
@@ -700,7 +704,7 @@ Extracted from Table 21 from [US Census Bureau](https://www.census.gov/data/tabl
 solution to above is alledgedly: "In any case the suggested approach is to initialize the column"
 
 ```{r}
-poverty_rate_data <- read_xls("Data/Poverty/hstpov21.xls", skip=2) #This may cause initialization issue, not easily reproducible (even after restarting R)
+poverty_rate_data <- read_xls("docs/Poverty/hstpov21.xls", skip=2) #This may cause initialization issue, not easily reproducible (even after restarting R)
 
 head(poverty_rate_data)
 
@@ -794,7 +798,7 @@ colnames(poverty_rate_data)
 https://www.ucrdatatool.gov/Search/Crime/State/StatebyState.cfm
 
 ```{r}
-crime_data <- read_lines("Data/Crime/CrimeStatebyState.csv", skip = 2, skip_empty_rows = TRUE)
+crime_data <- read_lines("docs/Crime/CrimeStatebyState.csv", skip = 2, skip_empty_rows = TRUE)
 
 length(crime_data)
 
@@ -860,7 +864,13 @@ crime_data <- crime_data %>%
 Extracted from table in [Donohue paper](https://www.nber.org/papers/w23510.pdf)
 
 ```{r}
-syn_control_paper <- pdf_text("w23510.pdf")
+
+if(!file.exists(here("docs", "w23510.pdf"))){
+  url <- "https://www.nber.org/papers/w23510.pdf"
+  utils::download.file(url, here("docs", "w23510.pdf"))
+}
+
+syn_control_paper <- pdf_text(here("docs", "w23510.pdf"))
 
 syn_control_paper_p_62 <- syn_control_paper[[62]]
 
