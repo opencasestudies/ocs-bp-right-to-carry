@@ -1,75 +1,236 @@
 ---
-title: "Multicollinearity and Inference"
+title: "Open Case Studies: Examination of Multicollinearity Influence on Inference Using Right-to-Carry Gun Law and Violent Crime Data"
 author: "Michael Ontiveros, Carrie Wright, PhD."
-date: "4/16/2020"
-output: 
-    html_document:
-        theme: cosmo 
-        toc: true
-        toc_float: true
-        highlight: tango
-        number_sections: false
+css: style.css
+output:
+  html_document:
+    self_contained: yes
+    code_download: yes
+    highlight: tango
+    number_sections: no
+    theme: cosmo
+    toc: yes
+    toc_float: yes
+  pdf_document:
+    toc: yes
+  word_document:
+    toc: yes
 ---
 
-```{r}
+<style>
+#TOC {
+  background: url("https://opencasestudies.github.io/img/logo.jpg");
+  background-size: contain;
+  padding-top: 240px !important;
+  background-repeat: no-repeat;
+}
+</style>
+
+
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(include = TRUE, comment = NA, echo = TRUE,
+                      message = FALSE, warning = FALSE, cache = FALSE, fig.width=10, fig.height=7,
+                      fig.align = "center", out.width = '90%')
 library(here)
+library(knitr)
 ```
 
-```{r, echo=FALSE}
-knitr::opts_chunk$set(fig.width=10, fig.height=7, fig.align='center') 
+#### {.outline }
+```{r, echo = FALSE, out.width = "800 px"}
+knitr::include_graphics(here::here("img", "mainplot.png"))
 ```
 
-# RA Notes
+####
 
-Need to fix initialization problem 
+## {.disclaimer_block}
 
-# Motivation
+**Disclaimer**: The purpose of the [Open Case Studies](https://opencasestudies.github.io){target="_blank"} project is **to demonstrate the use of various data science methods, tools, and software in the context of messy, real-world data**. A given case study does not cover all aspects of the research process, is not claiming to be the most appropriate way to analyze a given data set, and should not be used in the context of making policy decisions without external consultation from scientific experts. 
 
-## Background
+# **Motivation**
+*** 
 
-This case study will focus on conflicting findings from two papers.
+Avocado... not sure what Michael meant by this: Need to fix initialization problem 
 
-[Donohue, et al.](https://www.nber.org/papers/w23510.pdf)
 
-[Lott and Mustard](https://chicagounbound.uchicago.edu/cgi/viewcontent.cgi?article=1150&context=law_and_economics)
+This case study will focus on one reason why two papers that explore the relationship of the adoption of right-to-carry (RTC) concealed handgun laws and violent crime show conflicting findings:
 
-It is important that we do not treat race as an objective measure. Despite this, it can be used to advance scientific inquiry. For more information on this topic, we have included a link to a [paper on the use of race as a measure in epidemiology](https://academic.oup.com/epirev/article/22/2/187/456942). 
+1) The first analysis by [Lott and Mustard](https://chicagounbound.uchicago.edu/cgi/viewcontent.cgi?article=1150&context=law_and_economics){target="_blank"} published in 1996 suggests that RTC laws reduce violent crime.
 
-How does the inclusion of different numbers of age groups influence the results of an analysis of right to carry laws and violence rates?
+```{r, echo=FALSE, out.height = '100%', out.width = '100%', fig.align='center'}
+knitr::include_graphics(here("img", "Lott.png"))
+```
 
-## Table 2, Donohue, et al. 
+2) The second analysis by [Donohue, et al.](https://www.nber.org/papers/w23510.pdf){target="_blank"} published in 2017 suggests that RTC laws increase violent crime.
 
-**This screenshot needs to be taken again. Cursor highlight is showing**
+```{r, echo=FALSE, out.height = '100%', out.width = '100%', fig.align='center'}
+knitr::include_graphics(here("img", "Donohue.png"))
+```
+
+These are by no means the only articles published about the question of the influence of RTC laws on violent crime. This has been a controversial topic as many other articles since the [Lott and Mustard](https://chicagounbound.uchicago.edu/cgi/viewcontent.cgi?article=1150&context=law_and_economics){target="_blank"} also had conflicting results. 
+
+The [Donohue, et al.](https://www.nber.org/papers/w23510.pdf){target="_blank"} article discusses how there are many other important methodolical aspects that could account for the historically conflicting results in these previous papers.
+
+In fact, nearly every aspect of the data analysis process was different between the [Donohue, et al.](https://www.nber.org/papers/w23510.pdf){target="_blank"} analysis and the [Lott and Mustard](https://chicagounbound.uchicago.edu/cgi/viewcontent.cgi?article=1150&context=law_and_economics){target="_blank"} analysis.
+
+```{r, echo=FALSE, out.height = '75%', out.width = '75%', fig.align='center'}
+knitr::include_graphics(here("img", "Educational_Graphic1.jpg"))
+```
+
+We will focus particularly on one aspect that was very influential. It is something called multicollinearity and we will explore how it can influence linear regression analyses and result in different conclusions. 
+
+This analysis will demonstrate how methodological details can be critically influential for our overall conclusions and can result in important policy related consequences. This [article]((https://www.nber.org/papers/w23510.pdf){target="_blank"}) will provide a basis for the motivation. 
+
+#### {.reference_block}
+
+John J. Donohue et al., Right‐to‐Carry Laws and Violent Crime: A Comprehensive Assessment Using Panel Data and a State‐Level Synthetic Control Analysis. *Journal of Empirical Legal Studies*, 16,2 (2019).
+
+David B. Mustard & John Lott. Crime, Deterrence, and Right-to-Carry Concealed Handguns. *Coase-Sandor Institute for Law & Economics* Working Paper No. 41, (1996).
+
+####
+
+
+
+Here you can see the differences in the data used in the featured RTC articles:
+
 
 ```{r, echo=FALSE, out.height = '100%', out.width = '100%', fig.align='center'}
 knitr::include_graphics(here("img",'Donohue_Table2.png'))
 ```
 
-```{r, echo=FALSE, out.height = '75%', out.width = '75%', fig.align='center'}
-knitr::include_graphics('Educational_Graphic1.jpg')
-```
 
-## Analysis goal
+We will perform analyses similar to those in these articles, however we will not try to recreate them, instead we will simplify our analysis to allow us to focus on multicolinearity.
 
-We will evaluate how multicollinearity can influence linear regression results and result in different conclusions for Donohoe vs Lott on this very important topic. We will also discuss briefly how synthetic control methods can be used to assess the impact of policies by creating controls for comparison that did not have policy adoption but were otherwise similar.
 
-This analysis will demonstrate how details about our methods can be critically influential for our overall conclusions  and can result in important policy related consequences. This report will provide a basis for the motivation:  https://www.nber.org/papers/w23510. As this is a historically controversial topic, we will focus on how different statistical methods can yield different results, but we will avoid making conclusions about right to carry laws.
+Therefore we will use a subset of the listed explanatory variables and they will be consistent for both analyses that we will perform, however one analysis will have 6 demographic variables like the analysis in the [Donohue, et al.](https://www.nber.org/papers/w23510.pdf){target="_blank"} article and the other will have 36 demogrpahic variables like the analysis in the [Lott and Mustard](https://chicagounbound.uchicago.edu/cgi/viewcontent.cgi?article=1150&context=law_and_economics){target="_blank"}article.
 
-```{r, echo=FALSE, out.height = '75%', out.width = '75%', fig.align='center'}
-knitr::include_graphics('Educational_Graphic2.jpg')
-```
 
-## Learning objectives
 
-Linear regression analysis, directed acyclic graphs, discussion about the influence of multicollinearity
+## **Main Question**
+*** 
+
+#### {.main_question_block}
+<b><u> Our main question: </u></b>
+
+1) How does the inclusion of different numbers of age groups influence the results of an analysis of right to carry laws and violence rates?
+
+####
+
+
+## **Learning Objectives** 
+*** 
+
+Statistical Learning Objectives
+
+In this case study, students will learn:
+1) what multicolinearity is and how it can influence linear regression coefficients
+2)how to look for the presence of multicolinarity 
+3) the difference between multicolinearity and correlation 
+
+Data science Learning Objectives
 
 1) wrangling – joining data from multiple sources (dplyr)  and data reshaping (tidyr)
 2) visualizations (ggplot2)
 
-## Libraries
+
+We will especially focus on using packages and functions from the [`Tidyverse`](https://www.tidyverse.org/){target="_blank"}, such as `package_name`, `package_name`. The tidyverse is a library of packages created by RStudio. While some students may be familiar with previous R programming packages, these packages make data science in R especially efficient.
+
+
+```{r, out.width = "20%", echo = FALSE, fig.align ="center"}
+include_graphics("https://tidyverse.tidyverse.org/logo.png")
+```
+
+## **Context**
+***
+So what exactly is a **right-to-carry law**?
+
+It is a law that allows citizens **  not surea about this part** who obtain a permit to have a handgun on their person or nearby (for example in the citizen's car) in public if it is concealed. 
+
+This is no federal law about carrying concealed guns. These laws are legistalted at the state level and some states have chosen to adopt such laws, while others do not allow citizens to legally carry a concealed handgun. 
+
+The [Second Amendment](https://en.wikipedia.org/wiki/Second_Amendment_to_the_United_States_Constitution){target="_blank"} to the United States Constitution guarantees the right to "keep and bear arms". The amendment was ratified in 1791 as part of the [Bill of Rights](https://en.wikipedia.org/wiki/United_States_Bill_of_Rights){target="_blank"}.
+
+```{r, echo=FALSE, out.height = '50%', out.width = '50%', fig.align='center'}
+knitr::include_graphics("https://upload.wikimedia.org/wikipedia/commons/7/79/Bill_of_Rights_Pg1of1_AC.jpg")
+```
+
+However, there are no federal laws about the right to carry firearms in public. 
+
+
+According to Wikipedia about the history of right-to-carry policies in the United States:
+
+> Public perception on concealed carry vs open carry has largely flipped. In the early days of the United States, open carrying of firearms, long guns and revolvers was a common and well-accepted practice. Seeing guns carried openly was not considered to be any cause for alarm. Therefore, anyone who would carry a firearm but attempt to conceal it was considered to have something to hide, and presumed to be a criminal. For this reason, concealed carry was denounced as a detestable practice in the early days of the United States.
+
+> Concealed weapons bans were passed in Kentucky and Louisiana in 1813. (In those days open carry of weapons for self-defense was considered acceptable; concealed carry was denounced as the practice of criminals.) By 1859, Indiana, Tennessee, Virginia, Alabama, and Ohio had followed suit.[5] By the end of the nineteenth century, similar laws were passed in places such as Texas, Florida, and Oklahoma, which protected some gun rights in their state constitutions.[6] Before the mid 1900s, most U.S. states had passed concealed carry laws rather than banning weapons completely.[7] Until the late 1990s, many Southern states were either "No-Issue" or "Restrictive May-Issue". Since then, these states have largely enacted "Shall-Issue" licensing laws, with numerous states legalizing "Unrestricted concealed carry".
+
+See [here](https://en.wikipedia.org/wiki/History_of_concealed_carry_in_the_U.S.){target="_blank"} for more information.
+
+Each state has specific laws about the right to carry firearms with the following general categories:
+
+```{r, echo=FALSE, out.height = '100%', out.width = '100%', fig.align='center'}
+knitr::include_graphics(here("img", "RTC.png"))
+```
+
+```{r, echo=FALSE, out.height = '100%', out.width = '100%', fig.align='center'}
+knitr::include_graphics(here("img", "RTC_map.png"))
+```
+
+
+
+Here you can see how these laws have changed over time around the country:
+```{r, echo=FALSE, out.height = '100%', out.width = '100%', fig.align='center'}
+knitr::include_graphics("https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Right_to_Carry%2C_timeline.gif/620px-Right_to_Carry%2C_timeline.gif")
+```
+
+There is variation from state to state even within the same general category:
+
+For example here are the [current carry laws in Idaho](https://www.nraila.org/gun-laws/state-gun-laws/idaho/) which is considered an "Unrestricted - no permit required" state:
+
+>Idaho permits the open carrying of firearms.
+
+>Idaho law permits both residents and non-residents who are at least 18 years old to carry concealed weapons, without a carry license, outside the limits of or confines of any city, provided the person is not otherwise disqualified from being issued a license to carry.
+
+>A person may also carry concealed weapons on or about his or her person, without a license, in the person’s own place of abode or fixed place of business, on property in which the person has any ownership or leasehold interest, or on private property where the person has permission to carry from any person who has an ownership or leasehold interest in that property. 
+
+>State law also allows any resident of Idaho or a current member of the armed forces of the United States to carry a concealed handgun without a license to carry, provided the person is over 18 years old and not disqualified from being issued a license to carry concealed weapons under state law. An amendment to state law that takes effect on July 1, 2020 changes the reference in the above law from “a resident of Idaho” to “any citizen of the United States.”  
+
+
+And here are the [current carry laws in Arizona](https://www.nraila.org/gun-laws/state-gun-laws/arizona/) which is also considered an "Unrestricted- - no permit required" state:
+
+> Arizona respects the right of law abiding citizens to openly carry a handgun.
+
+> Any person 21 years of age or older, who is not prohibited possessor, may carry a weapon openly or concealed without the need for a license. Any person carrying without a license must acknowledge and comply with the demands of a law enforcement officer when asked if he/she is carrying a concealed deadly weapon, if the officer has initiated an "investigation" such as a traffic stop.
+
+Notice that citizens in Idaho only need to be 18 to carry a firearm, whereas they must be 21 in Arizona. 
+
+
+In contrast here is an example of [current carry laws in Maryland](https://www.nraila.org/gun-laws/state-gun-laws/maryland/) which is considered a "Rights Restricted-Very Limited Issue" state:
+
+>Carrying and Transportation in Vehicles
+It is unlawful for any person without a permit to wear or carry a handgun, openly or concealed, upon or about his person.  It is also unlawful for any person to knowingly transport a handgun in any vehicle traveling on public roads, highways, waterways or airways, or upon roads or parking lots generally used by the public. This does not apply to any person wearing, carrying or transporting a handgun within the confines of real estate owned or leased by him, or on which he resides, or within the confines of a business establishment owned or leased by him.
+
+>Permit To Carry
+Application for a permit to carry a handgun is made to the Secretary of State Police.  In addition to the printed application form, the applicant should submit a notarized letter stating the reasons why he is applying for a permit.
+
+## **Limitations**
+*** 
+There are some important considerations regarding this data analysis to keep in mind: 
+
+1) We do not use all of the data used by either the  [Lott and Mustard](https://chicagounbound.uchicago.edu/cgi/viewcontent.cgi?article=1150&context=law_and_economics){target="_blank"} or [Donohue, et al.](https://www.nber.org/papers/w23510.pdf){target="_blank"} analyses, nor do we perform the same analysis of each article. We instead perform a much simpler analysis with less variables for the purposes of illustration of the concept of multicollinearity and its influence on regression coefficients, not to reproduce either analysis.
+
+2) Because our analysis is an oversimplification, our analysis should not be used for determining policy changes, instead we suggest that users consult with a specialist.
+
+
+We would also like to note that...AVOCADO
+It is important that we do not treat race as an objective measure. Despite this, it can be used to advance scientific inquiry. For more information on this topic, we have included a link to a [paper on the use of race as a measure in epidemiology](https://academic.oup.com/epirev/article/22/2/187/456942). 
+
+
+We will begin by loading the packages that we will need:
 
 ```{r}
-library(here) # Thanks, Carrie! 
+library(here) 
 library(car) # vif function
 library(plm) # fixed effect model, linear regression
 library(broom) # tidy output
@@ -88,19 +249,41 @@ library(rsample)
 set.seed(999)
 ```
 
-# What is the data?
 
-## Appendix J, Donohue, et al.
+ Package   | Use                                                                         
+---------- |-------------
+[here](https://github.com/jennybc/here_here){target="_blank"}       | to easily load and save data
+[readr](https://readr.tidyverse.org/){target="_blank"}      | to import the CSV file data
+[car]  | to calculate vif values
+
+The first time we use a function, we will use the `::` to indicate which package we are using. Unless we have overlapping function names, this is not necessary, but we will include it here to be informative about where the functions we will use come from.
+
+
+
+
+
+# **What are the data?**
+***
 
 Below is table from the [Donohue, et al.](https://www.nber.org/papers/w23510.pdf) paper.
 
 The datasets below were available to the respective authors at the time of their analyses. 
 
 ```{r, echo=FALSE, out.height = '100%', out.width = '100%', fig.align='center'}
-knitr::include_graphics('Donohue_AppendixJ.png')
+knitr::include_graphics(here("img", "Donohue_AppendixJ.png"))
 ```
 
-# Data import 
+
+
+# **Data import**
+***
+
+```{r}
+STATE_FIPS <- read_xls("docs/State_FIPS_codes/state-geocodes-v2014.xls", skip = 5)
+
+```
+
+
 
 # Data wrangling
 
@@ -111,7 +294,6 @@ knitr::include_graphics('Donohue_AppendixJ.png')
 The following data was downloaded from the [US Census Bureau](https://www.census.gov/geographies/reference-files/2014/demo/popest/2014-geocodes-state.html)
 
 ```{r}
-STATE_FIPS <- read_xls("docs/State_FIPS_codes/state-geocodes-v2014.xls", skip = 5)
 
 head(STATE_FIPS)
 
@@ -1682,7 +1864,7 @@ plots <- plot_grid(plot_A,
           ncol = 1,
           rel_heights = c(1,1,1))
 
-figure_uw <- plot_grid(title_plots,
+mainplot <- plot_grid(title_plots,
                        forward,
                        plots,
                        #legend_uw,
@@ -1691,8 +1873,15 @@ figure_uw <- plot_grid(title_plots,
                                        0.05,
                                        1))
 
-figure_uw
+mainplot
 ```
+
+
+
+```{r, echo=FALSE, include=FALSE}
+ggsave(here::here("img", "mainplot.png"))
+```
+
 
 # Possible homework question
 
