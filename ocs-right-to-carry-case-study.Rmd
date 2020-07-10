@@ -49,29 +49,35 @@ knitr::include_graphics(here::here("img", "mainplot.png"))
 
 **Disclaimer**: The purpose of the [Open Case Studies](https://opencasestudies.github.io){target="_blank"} project is **to demonstrate the use of various data science methods, tools, and software in the context of messy, real-world data**. A given case study does not cover all aspects of the research process, is not claiming to be the most appropriate way to analyze a given data set, and should not be used in the context of making policy decisions without external consultation from scientific experts. 
 
+## {.liscence_block}
+
+This work is licensed under the Creative Commons Attribution-NonCommercial 3.0 [(CC BY-NC 3.0)](https://creativecommons.org/licenses/by-nc/3.0/us/){target="_blank"}  United States License.
+
 # **Motivation**
 *** 
 
 Avocado... not sure what Michael meant by this: Need to fix initialization problem 
 
 
-This case study will focus on one reason why two papers that explore the relationship of the adoption of right-to-carry (RTC) concealed handgun laws and violent crime show conflicting findings:
+This case study will introduce the topic of multicolinearity. We will do so by showcasing a real world example where multicolinearity in part resulted in historically contriversial and conflicting findings about the influence of the adoption of right-to-carry (RTC) concealed handgun laws on violent crime rates in the United States. 
 
-1) The first analysis by [Lott and Mustard](https://chicagounbound.uchicago.edu/cgi/viewcontent.cgi?article=1150&context=law_and_economics){target="_blank"} published in 1996 suggests that RTC laws reduce violent crime.
+We will focus on two articles:
+
+1) The first analysis by [Lott and Mustard](https://chicagounbound.uchicago.edu/cgi/viewcontent.cgi?article=1150&context=law_and_economics){target="_blank"} published in 1996 suggests that RTC laws reduce violent crime. Lott authored a book extending these findings in 1998 called [***More Guns, Less Crime***](https://en.wikipedia.org/wiki/More_Guns,_Less_Crime){target="_blank"}.
 
 ```{r, echo=FALSE, out.height = '100%', out.width = '100%', fig.align='center'}
 knitr::include_graphics(here("img", "Lott.png"))
 ```
 
-2) The second analysis by [Donohue, et al.](https://www.nber.org/papers/w23510.pdf){target="_blank"} published in 2017 suggests that RTC laws increase violent crime.
+2) The second analysis is a recent article by [Donohue, et al.](https://www.nber.org/papers/w23510.pdf){target="_blank"} published in 2017 that suggests that RTC laws increase violent crime. Donohue has also published previous articles with titles such as [***"Shooting down the "More Guns, Less Crime" Hypothesis***](https://www.jstor.org/stable/1229603?seq=1){target="_blank"} 
 
 ```{r, echo=FALSE, out.height = '100%', out.width = '100%', fig.align='center'}
 knitr::include_graphics(here("img", "Donohue.png"))
 ```
 
-These are by no means the only articles published about the question of the influence of RTC laws on violent crime. This has been a controversial topic as many other articles since the [Lott and Mustard](https://chicagounbound.uchicago.edu/cgi/viewcontent.cgi?article=1150&context=law_and_economics){target="_blank"} also had conflicting results. 
+This has been a controversial topic as many other articles also had conflicting results. See [here](https://en.wikipedia.org/wiki/More_Guns,_Less_Crime){target="_blank"} for a list of studies.
 
-The [Donohue, et al.](https://www.nber.org/papers/w23510.pdf){target="_blank"} article discusses how there are many other important methodolical aspects that could account for the historically conflicting results in these previous papers.
+The [Donohue, et al.](https://www.nber.org/papers/w23510.pdf){target="_blank"} article discusses how there are many other important methodolical aspects besides multicolinearity that could account for the historically conflicting results in these previous papers.
 
 In fact, nearly every aspect of the data analysis process was different between the [Donohue, et al.](https://www.nber.org/papers/w23510.pdf){target="_blank"} analysis and the [Lott and Mustard](https://chicagounbound.uchicago.edu/cgi/viewcontent.cgi?article=1150&context=law_and_economics){target="_blank"} analysis.
 
@@ -79,7 +85,7 @@ In fact, nearly every aspect of the data analysis process was different between 
 knitr::include_graphics(here("img", "Educational_Graphic1.jpg"))
 ```
 
-We will focus particularly on one aspect that was very influential. It is something called multicollinearity and we will explore how it can influence linear regression analyses and result in different conclusions. 
+However, we will focus particularly on multicolinearity and we will explore how it can influence linear regression analyses and result in different conclusions. 
 
 This analysis will demonstrate how methodological details can be critically influential for our overall conclusions and can result in important policy related consequences. This [article]((https://www.nber.org/papers/w23510.pdf){target="_blank"}) will provide a basis for the motivation. 
 
@@ -92,7 +98,6 @@ David B. Mustard & John Lott. Crime, Deterrence, and Right-to-Carry Concealed Ha
 ####
 
 
-
 Here you can see the differences in the data used in the featured RTC articles:
 
 
@@ -101,11 +106,10 @@ knitr::include_graphics(here("img",'Donohue_Table2.png'))
 ```
 
 
-We will perform analyses similar to those in these articles, however we will not try to recreate them, instead we will simplify our analysis to allow us to focus on multicolinearity.
+We will perform analyses similar to those in these articles, however **we will not try to recreate them**, instead we will simplify our analysis to allow us to focus on multicolinearity.
 
 
-Therefore we will use a subset of the listed explanatory variables and they will be consistent for both analyses that we will perform, however one analysis will have 6 demographic variables like the analysis in the [Donohue, et al.](https://www.nber.org/papers/w23510.pdf){target="_blank"} article and the other will have 36 demogrpahic variables like the analysis in the [Lott and Mustard](https://chicagounbound.uchicago.edu/cgi/viewcontent.cgi?article=1150&context=law_and_economics){target="_blank"}article.
-
+Therefore we will use a subset of the listed explanatory variables and they will be consistent for both analyses that we will perform, with the exception that one analysis will have 6 demographic variables like the analysis in the [Donohue, et al.](https://www.nber.org/papers/w23510.pdf){target="_blank"} article and the other will have 36 demogrpahic variables like the analysis in the [Lott and Mustard](https://chicagounbound.uchicago.edu/cgi/viewcontent.cgi?article=1150&context=law_and_economics){target="_blank"} article.
 
 
 ## **Main Question**
@@ -122,20 +126,21 @@ Therefore we will use a subset of the listed explanatory variables and they will
 ## **Learning Objectives** 
 *** 
 
-Statistical Learning Objectives
+Statistical Learning Objectives  
 
-In this case study, students will learn:
-1) what multicolinearity is and how it can influence linear regression coefficients
-2)how to look for the presence of multicolinarity 
-3) the difference between multicolinearity and correlation 
+In this case study, students will learn:  
+1) what multicolinearity is and how it can influence linear regression coefficients  
+2) how to look for the presence of multicolinarity  
+3) the difference between multicolinearity and correlation  
 
-Data science Learning Objectives
+Data science Learning Objectives  
 
-1) wrangling – joining data from multiple sources (dplyr)  and data reshaping (tidyr)
-2) visualizations (ggplot2)
+1) joining data from multiple sources (dplyr)  
+2) reshaping data into different formats (tidyr)  
+2) visualizations (ggplot2)  
 
 
-We will especially focus on using packages and functions from the [`Tidyverse`](https://www.tidyverse.org/){target="_blank"}, such as `package_name`, `package_name`. The tidyverse is a library of packages created by RStudio. While some students may be familiar with previous R programming packages, these packages make data science in R especially efficient.
+We will especially focus on using packages and functions from the [`Tidyverse`](https://www.tidyverse.org/){target="_blank"}, such as `dplyr` and `ggplot2`. The tidyverse is a library of packages created by RStudio. While some students may be familiar with previous R programming packages, these packages make data science in R especially efficient.
 
 
 ```{r, out.width = "20%", echo = FALSE, fig.align ="center"}
@@ -146,9 +151,7 @@ include_graphics("https://tidyverse.tidyverse.org/logo.png")
 ***
 So what exactly is a **right-to-carry law**?
 
-It is a law that allows citizens **  not surea about this part** who obtain a permit to have a handgun on their person or nearby (for example in the citizen's car) in public if it is concealed. 
-
-This is no federal law about carrying concealed guns. These laws are legistalted at the state level and some states have chosen to adopt such laws, while others do not allow citizens to legally carry a concealed handgun. 
+It is a law thatspecifies if and how citizens are allowed to have a firearm on their person or nearby (for example in the citizen's car) in public. 
 
 The [Second Amendment](https://en.wikipedia.org/wiki/Second_Amendment_to_the_United_States_Constitution){target="_blank"} to the United States Constitution guarantees the right to "keep and bear arms". The amendment was ratified in 1791 as part of the [Bill of Rights](https://en.wikipedia.org/wiki/United_States_Bill_of_Rights){target="_blank"}.
 
@@ -156,28 +159,34 @@ The [Second Amendment](https://en.wikipedia.org/wiki/Second_Amendment_to_the_Uni
 knitr::include_graphics("https://upload.wikimedia.org/wikipedia/commons/7/79/Bill_of_Rights_Pg1of1_AC.jpg")
 ```
 
-However, there are no federal laws about the right to carry firearms in public. 
+However, there are no federal laws about carrying firearms in public. 
+
+These laws are created and enforced at the state level. Sates vary greatly in their laws about the right to carry firearms. Some require extensive effort to obtain a permit to legally carry a firearm, while other states require very minimal effort to legally carry a firearm.
 
 
 According to Wikipedia about the history of right-to-carry policies in the United States:
 
 > Public perception on concealed carry vs open carry has largely flipped. In the early days of the United States, open carrying of firearms, long guns and revolvers was a common and well-accepted practice. Seeing guns carried openly was not considered to be any cause for alarm. Therefore, anyone who would carry a firearm but attempt to conceal it was considered to have something to hide, and presumed to be a criminal. For this reason, concealed carry was denounced as a detestable practice in the early days of the United States.
 
-> Concealed weapons bans were passed in Kentucky and Louisiana in 1813. (In those days open carry of weapons for self-defense was considered acceptable; concealed carry was denounced as the practice of criminals.) By 1859, Indiana, Tennessee, Virginia, Alabama, and Ohio had followed suit.[5] By the end of the nineteenth century, similar laws were passed in places such as Texas, Florida, and Oklahoma, which protected some gun rights in their state constitutions.[6] Before the mid 1900s, most U.S. states had passed concealed carry laws rather than banning weapons completely.[7] Until the late 1990s, many Southern states were either "No-Issue" or "Restrictive May-Issue". Since then, these states have largely enacted "Shall-Issue" licensing laws, with numerous states legalizing "Unrestricted concealed carry".
+> Concealed weapons bans were passed in Kentucky and Louisiana in 1813. (In those days open carry of weapons for self-defense was considered acceptable; concealed carry was denounced as the practice of criminals.) By 1859, Indiana, Tennessee, Virginia, Alabama, and Ohio had followed suit. By the end of the nineteenth century, similar laws were passed in places such as Texas, Florida, and Oklahoma, which protected some gun rights in their state constitutions. Before the mid 1900s, most U.S. states had passed concealed carry laws rather than banning weapons completely. Until the late 1990s, many Southern states were either "No-Issue" or "Restrictive May-Issue". Since then, these states have largely enacted "Shall-Issue" licensing laws, with numerous states legalizing "Unrestricted concealed carry".
 
 See [here](https://en.wikipedia.org/wiki/History_of_concealed_carry_in_the_U.S.){target="_blank"} for more information.
 
-Each state has specific laws about the right to carry firearms with the following general categories:
+Here are the general categories of Right to Carry Laws:
 
 ```{r, echo=FALSE, out.height = '100%', out.width = '100%', fig.align='center'}
 knitr::include_graphics(here("img", "RTC.png"))
 ```
+[source](https://www.nraila.org/gun-laws/){target="_blank"}
+
 
 ```{r, echo=FALSE, out.height = '100%', out.width = '100%', fig.align='center'}
 knitr::include_graphics(here("img", "RTC_map.png"))
 ```
 
+[source](https://www.nraila.org/gun-laws/){target="_blank"}
 
+You can see that none of the fifty states have no-issue laws currently, meaning that all states allow the right to carry firearms at least in some way, however the level of restrictions is dramatically different from one state to another.
 
 Here you can see how these laws have changed over time around the country:
 ```{r, echo=FALSE, out.height = '100%', out.width = '100%', fig.align='center'}
@@ -213,6 +222,9 @@ It is unlawful for any person without a permit to wear or carry a handgun, openl
 
 >Permit To Carry
 Application for a permit to carry a handgun is made to the Secretary of State Police.  In addition to the printed application form, the applicant should submit a notarized letter stating the reasons why he is applying for a permit.
+
+
+avocado....Right to carry and covid masks?
 
 ## **Limitations**
 *** 
