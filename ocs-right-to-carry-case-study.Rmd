@@ -56,9 +56,6 @@ This work is licensed under the Creative Commons Attribution-NonCommercial 3.0 [
 # **Motivation**
 *** 
 
-Avocado... not sure what Michael meant by this: Need to fix initialization problem 
-
-
 This case study will introduce the topic of multicolinearity. We will do so by showcasing a real world example where multicolinearity in part resulted in historically contriversial and conflicting findings about the influence of the adoption of right-to-carry (RTC) concealed handgun laws on violent crime rates in the United States. 
 
 We will focus on two articles:
@@ -112,7 +109,7 @@ We will perform analyses similar to those in these articles, however **we will n
 Therefore we will use a subset of the listed explanatory variables and they will be consistent for both analyses that we will perform, with the exception that one analysis will have 6 demographic variables like the analysis in the [Donohue, et al.](https://www.nber.org/papers/w23510.pdf){target="_blank"} article and the other will have 36 demogrpahic variables like the analysis in the [Lott and Mustard](https://chicagounbound.uchicago.edu/cgi/viewcontent.cgi?article=1150&context=law_and_economics){target="_blank"} article.
 
 
-## **Main Question**
+# **Main Question**
 *** 
 
 #### {.main_question_block}
@@ -123,17 +120,17 @@ Therefore we will use a subset of the listed explanatory variables and they will
 ####
 
 
-## **Learning Objectives** 
+# **Learning Objectives** 
 *** 
 
-Statistical Learning Objectives  
+<u>**Statistical Learning Objectives:**</u> 
 
 In this case study, students will learn:  
 1) what multicolinearity is and how it can influence linear regression coefficients  
 2) how to look for the presence of multicolinarity  
 3) the difference between multicolinearity and correlation  
 
-Data science Learning Objectives  
+<u>**Data science Learning Objectives:**</u>
 
 1) joining data from multiple sources (dplyr)  
 2) reshaping data into different formats (tidyr)  
@@ -147,8 +144,9 @@ We will especially focus on using packages and functions from the [`Tidyverse`](
 include_graphics("https://tidyverse.tidyverse.org/logo.png")
 ```
 
-## **Context**
+# **Context**
 ***
+
 So what exactly is a **right-to-carry law**?
 
 It is a law thatspecifies if and how citizens are allowed to have a firearm on their person or nearby (for example in the citizen's car) in public. 
@@ -226,7 +224,7 @@ Application for a permit to carry a handgun is made to the Secretary of State Po
 
 avocado....Right to carry and covid masks?
 
-## **Limitations**
+# **Limitations**
 *** 
 There are some important considerations regarding this data analysis to keep in mind: 
 
@@ -271,39 +269,219 @@ set.seed(999)
 The first time we use a function, we will use the `::` to indicate which package we are using. Unless we have overlapping function names, this is not necessary, but we will include it here to be informative about where the functions we will use come from.
 
 
-
-
-
 # **What are the data?**
 ***
 
-Below is table from the [Donohue, et al.](https://www.nber.org/papers/w23510.pdf) paper.
+Below is a table from the [Donohue, et al.](https://www.nber.org/papers/w23510.pdf) paper that shows the data used in both analyses, where DAW stands for [Donohue, et al.](https://www.nber.org/papers/w23510.pdf){target="_blank"} and LM stands for [Lott and Mustard](https://chicagounbound.uchicago.edu/cgi/viewcontent.cgi?article=1150&context=law_and_economics){target="_blank"}.
 
-The datasets below were available to the respective authors at the time of their analyses. 
 
 ```{r, echo=FALSE, out.height = '100%', out.width = '100%', fig.align='center'}
 knitr::include_graphics(here("img", "Donohue_AppendixJ.png"))
 ```
 
+We will be using a subset of these variables, which are highlighted in green:
 
 
-# **Data import**
+```{r, echo=FALSE, out.height = '100%', out.width = '100%', fig.align='center'}
+knitr::include_graphics(here("img", "ourdata.png"))
+```
+
+
+# **Data Import**
 ***
+
+##State FIPS codes
+Avocado why do we need State FIPS?
+
+The following data was downloaded from the [US Census Bureau](https://www.census.gov/geographies/reference-files/2014/demo/popest/2014-geocodes-state.html).
+
+To import the data we will use the `read_xls()` function of the `readxl` package. Since the first five lines of this excel is information about the source of the data and when it was released, we need to skip importing these lines using the `skip` argument so that the data has the same number of columns for each row. 
+
+```{r}
+knitr::include_graphics(here("img", "FIPS.png"))
+
+```
 
 ```{r}
 STATE_FIPS <- read_xls("docs/State_FIPS_codes/state-geocodes-v2014.xls", skip = 5)
+```
+
+## Demographic and Population data
+
+To obtain information about age, sex, and race, and overall population we will use US Census Bureau data, just like both of the articles. The cesnus data is available for different time spans. Here are the links for the years used in our analysis. We will use data from 1977 to 2010.
+
+Data   | Link                                                                        
+---------- |-------------
+**years 1977 to 1979**  | [link](https://www2.census.gov/programs-surveys/popest/tables/1900-1980/state/asrh/)  
+**years 1980 to 1989**  | [link](https://www2.census.gov/programs-surveys/popest/tables/1980-1990/counties/asrh/) * county data was used for this decade
+**years 1990 to 1999**  | [link](https://www2.census.gov/programs-surveys/popest/tables/1990-2000/state/asrh/)
+**years 2000 to 2010**  | [link](https://www.census.gov/data/datasets/time-series/demo/popest/intercensal-2000-2010-state.html) <br> [technical documentation](https://www2.census.gov/programs-surveys/popest/technical-documentation/file-layouts/2000-2010/intercensal/state/st-est00int-alldata.pdf)
+
+To import the data we will use the `read_csv()` function of the `readr` package for the csv files. In some decades, there are separate files for each year, we will read each of these together using the base `list.files()` function to get all of the names for each file and then the `map()` function of the `purrr` package to apply the `read_csv()` function on all of the file paths in the list created by `list.files()`. For years that are txt files we will use `read_table2()` also fo the `readr` package. The `read_table2()` function, unlike the `read_table()`,  allows for any number of whitespace characters between columns, and the lines can be of different lengths.
+
+AVOCADO I am a bit confused about the last decade... it's only one file but it seems to need map...
+
+```{r}
+
+dem_77_79 <- read_csv("docs/Demographics/Decade_1970/pe-19.csv", skip = 5)
+
+dem_80_89 <- list.files(recursive = TRUE,
+                  path = "docs/Demographics/Decade_1980/",
+                  pattern = "*.csv",
+                  full.names = TRUE) %>% 
+  map(~read_csv(., skip=5))
+
+dem_90_99 <- list.files(recursive = TRUE,
+                  path = "docs/Demographics/Decade_1990/",
+                  pattern = "*.txt",
+                  full.names = TRUE) %>% 
+  map(~read_table2(., skip = 14))
+
+
+dem_90_99 <- dem_90_99 %>%
+  map_df(bind_rows)
+
+
+dem_00_10_2 <- read_csv("docs/Demographics/Decade_2000/st-est00int-alldata.csv")
+
+dem_00_10 <- list.files(recursive = TRUE,
+                  path = "docs/Demographics/Decade_2000/",
+                  pattern = "*.csv",
+                   full.names = TRUE) %>% 
+   map(~read_csv(.))
+
+
+```
+
+## Police staffing data
+The following data was downloaded from the [Federal Bureau of Investigation](https://crime-data-explorer.fr.cloud.gov/downloads-and-docs). 
+
+
+The `read_csv()` function of the `readr` package guesses what the class is for each variable, but sometimes it makes mistakes. It is good to specify the class for variables if you know them. We know that we want the variables about male and female counts to be numeric. We can specify that using the `col_types =` argument. See [here](https://readr.tidyverse.org/articles/readr.html) and [here](https://cran.r-project.org/web/packages/readr/vignettes/readr.html) for more information.
+
+```{r}
+ps_data <- read_csv("docs/Police_staffing/pe_1960_2018.csv")
+ps_data <- read_csv("docs/Police_staffing/pe_1960_2018.csv",
+                    col_types = cols(male_total_ct = "n",
+                                     female_total_ct = "n"))
+
+ps_data <- read_csv("docs/Police_staffing/pe_1960_2018.csv",
+                   col_types =  cols(male_total_ct = col_double(),
+                                   female_total_ct = col_double()))
+                              
+```
+
+
+
+## Unemplyment data
+
+The following data was downloaded from the [U.S. Bureau of Labor Statistics](https://data.bls.gov/cgi-bin/dsrv?la). 
+
+There are excel files for each state.  As you can see, there are many rows to skip to make sure that there are the same number of columns for each row. We can also see that the state name is located in a couple of the first rows. 
+
+```{r}
+knitr::include_graphics(here("img", "Unemp.png"))
+```
+
+We can also see that here if we just try to read in the files directly.
+
+```{r}
+
+ue_rate_data <- list.files(recursive = TRUE,
+                  path = "docs/Unemployment",
+                  pattern = "*.xlsx",
+                  full.names = TRUE) %>% 
+  map(~read_xlsx(.))
+      
+head(ue_rate_data)[1]
+```
+
+So now we will skip the first 10 lines. And also create a names tibble that contains only the cell with the state information.
+
+```{r}
+ 
+ ue_rate_data <- list.files(recursive = TRUE,
+                  path = "docs/Unemployment",
+                  pattern = "*.xlsx",
+                  full.names = TRUE) %>% 
+  map(~read_xlsx(., skip = 10))
+  
+                 
+# ue_rate_names <- list.files(recursive = TRUE,
+#                   path = "docs/Unemployment",
+#                   pattern = "*.xlsx",
+#                   full.names = TRUE) %>%
+#   map(~read_xlsx(.)) %>%
+#   sapply(., "[",7,2, drop=TRUE)
+```
+
+To get the state name for each file, we will specifically import only a small range of cells and then grab the cell that has state information and the use the base `unlist()` function to unlist the list of lists that this creates.
+
+```{r}
+ue_rate_names <- list.files(recursive = TRUE,
+                  path = "docs/Unemployment",
+                  pattern = "*.xlsx",
+                  full.names = TRUE) %>%
+  map(~read_xlsx(., range = "B4:D6")) %>%
+  map(., c(1,2)) %>%
+  unlist()
+
+
+ue_rate_data
+ue_rate_names
+```
+## Poverty data
+Extracted from Table 21 from [US Census Bureau Poverty Data ](https://www.census.gov/data/tables/time-series/demo/income-poverty/historical-poverty-people.html)
+
+AVOCado strange issue
+
+```{r}
+
+#**persistent warning from unknown origin** https://community.rstudio.com/t/persistent-unknown-or-uninitialised-column-warnings/64879
+
+#solution to above is alledgedly: "In any case the suggested approach is to initialize the column"
+
+
+poverty_rate_data <- read_xls("docs/Poverty/hstpov21.xls", skip=2) #This may cause initialization issue, not easily reproducible (even after restarting R)
+```
+
+## Violent crime
+
+Violent crime data was obtained from [here](https://www.ucrdatatool.gov/Search/Crime/State/StatebyState.cfm) This data is a bit trickier because of spaces and `/` in the column names, thus the `read_lines()` function of the `readr` package works better than the `read_csv()` function.
+
+
+```{r}
+knitr::include_graphics(here("img", "crime.png"))
+```
+
+```{r}
+crime_data <- read_lines("docs/Crime/CrimeStatebyState.csv", skip = 2, skip_empty_rows = TRUE)
+
+```
+
+
+## Right-to-carry data
+
+This data is extracted from table in [Donohue paper](https://www.nber.org/papers/w23510.pdf). We will use the function `pdf_text()`  of the `pdftools` package to import the pdf document.
+
+```{r}
+
+if(!file.exists(here("docs", "w23510.pdf"))){
+  url <- "https://www.nber.org/papers/w23510.pdf"
+  utils::download.file(url, here("docs", "w23510.pdf"))
+}
+
+DAWpaper <- pdf_text(here("docs", "w23510.pdf"))
 
 ```
 
 
 
-# Data wrangling
 
-## Variables
 
-### State FIPS codes
-
-The following data was downloaded from the [US Census Bureau](https://www.census.gov/geographies/reference-files/2014/demo/popest/2014-geocodes-state.html)
+# **Data Wrangling**
+***
+## State FIPS codes
 
 ```{r}
 
@@ -321,15 +499,12 @@ STATE_FIPS <- STATE_FIPS %>%
     dplyr::select(STATEFP, STATE)
 ```
 
-### Demographics
+## Demographics
 
 #### 1977-1979
 
-The following data was downloaded from the [US Census Bureau](https://www2.census.gov/programs-surveys/popest/tables/1900-1980/state/asrh/).
 
 ```{r}
-dem_77_79 <- read_csv("docs/Demographics/Decade_1970/pe-19.csv", skip = 5)
-
 head(dem_77_79)
 
 colnames(dem_77_79)
@@ -370,17 +545,10 @@ dem_77_79 <- dem_77_79 %>%
 
 #### 1980-1989
 
-The following data was downloaded from the [US Census Bureau](https://www2.census.gov/programs-surveys/popest/tables/1980-1990/counties/asrh/).
 
-County data was used for this decade. 
+
 
 ```{r}
-dem_80_89 <- list.files(recursive = TRUE,
-                  path = "docs/Demographics/Decade_1980/",
-                  pattern = "*.csv",
-                  full.names = TRUE) %>% 
-  map(~read_csv(., skip=5))
-
 dem_80_89 <- dem_80_89 %>%
   map_df(bind_rows)
 
@@ -426,23 +594,9 @@ dem_80_89 <- dem_80_89 %>%
 
 #### 1990-1999
 
-The following data was downloaded from the [US Census Bureau](https://www2.census.gov/programs-surveys/popest/tables/1990-2000/state/asrh/).
 
 ```{r}
-dem_90_99 <- list.files(recursive = TRUE,
-                  path = "docs/Demographics/Decade_1990/",
-                  pattern = "*.txt",
-                  full.names = TRUE) %>% 
-  map(~read_table2(., skip = 14))
 
-dem_90_99_names <- list.files(recursive = TRUE,
-                  path = "docs/Demographics/Decade_1990/",
-                  pattern = "*.txt") %>%
-    str_extract("[9][0-9]") %>%
-    paste0("Year_19",.)
-
-dem_90_99 <- dem_90_99 %>%
-  map_df(bind_rows)
 
 colnames(dem_90_99)
 
@@ -563,17 +717,7 @@ dem_90_99 <- dem_90_99 %>%
 
 #### 2000-2010
 
-The following data was downloaded from the [US Census Bureau](https://www.census.gov/data/datasets/time-series/demo/popest/intercensal-2000-2010-state.html).
-
-[Click here for relevant technical documentation](https://www2.census.gov/programs-surveys/popest/technical-documentation/file-layouts/2000-2010/intercensal/state/st-est00int-alldata.pdf)
-
 ```{r}
-dem_00_10 <- list.files(recursive = TRUE,
-                  path = "docs/Demographics/Decade_2000/",
-                  pattern = "*.csv",
-                  full.names = TRUE) %>% 
-  map(~read_csv(.))
-
 dem_00_10 <- dem_00_10 %>%
   map_df(bind_rows)
 
@@ -778,15 +922,10 @@ population_data <- population_data %>%
   rename("VALUE"=TOT_POP)
 ```
 
-### Police staffing
+## Police staffing
 
-The following data was downloaded from the [Federal Bureau of Investigation](https://crime-data-explorer.fr.cloud.gov/downloads-and-docs).
 
 ```{r}
-ps_data <- read_csv("docs/Police_staffing/pe_1960_2018.csv",
-                    col_types = cols(male_total_ct = "n",
-                                     female_total_ct = "n"))
-
 colnames(ps_data)
 
 ps_data <- ps_data %>%
@@ -852,23 +991,11 @@ ps_data <- ps_data %>%
   dplyr::select(-Population_temp)
 ```
 
-### Unemployment
+## Unemployment
 
-https://data.bls.gov/cgi-bin/dsrv?la
 
 ```{r}
-ue_rate_data <- list.files(recursive = TRUE,
-                  path = "docs/Unemployment",
-                  pattern = "*.xlsx",
-                  full.names = TRUE) %>% 
-  map(~read_xlsx(., skip = 10))
 
-ue_rate_names <- list.files(recursive = TRUE,
-                  path = "docs/Unemployment",
-                  pattern = "*.xlsx",
-                  full.names = TRUE) %>%
-  map(~read_xlsx(.)) %>%
-  sapply(., "[",7,2, drop=TRUE)
 
 names(ue_rate_data) <- ue_rate_names
 
@@ -889,17 +1016,10 @@ ue_rate_data <- ue_rate_data %>%
   mutate(VARIABLE="Unemployment_rate")
 ```
 
-### Poverty rate
+## Poverty rate
 
-Extracted from Table 21 from [US Census Bureau](https://www.census.gov/data/tables/time-series/demo/income-poverty/historical-poverty-people.html)
-
-**persistent warning from unknown origin** https://community.rstudio.com/t/persistent-unknown-or-uninitialised-column-warnings/64879
-
-solution to above is alledgedly: "In any case the suggested approach is to initialize the column"
 
 ```{r}
-poverty_rate_data <- read_xls("docs/Poverty/hstpov21.xls", skip=2) #This may cause initialization issue, not easily reproducible (even after restarting R)
-
 head(poverty_rate_data)
 
 colnames(poverty_rate_data) <- c("STATE",
@@ -987,7 +1107,7 @@ poverty_rate_data <- poverty_rate_data %>%
 colnames(poverty_rate_data)
 ```
 
-### Violent crime
+## Violent crime
 
 https://www.ucrdatatool.gov/Search/Crime/State/StatebyState.cfm
 
@@ -1053,22 +1173,13 @@ crime_data <- crime_data %>%
          VALUE = as.numeric(VALUE))
 ```
 
-### RTC laws
+## RTC laws
 
-Extracted from table in [Donohue paper](https://www.nber.org/papers/w23510.pdf)
 
 ```{r}
+DAWpaper_p_62 <- DAWpaper[[62]]
 
-if(!file.exists(here("docs", "w23510.pdf"))){
-  url <- "https://www.nber.org/papers/w23510.pdf"
-  utils::download.file(url, here("docs", "w23510.pdf"))
-}
-
-syn_control_paper <- pdf_text(here("docs", "w23510.pdf"))
-
-syn_control_paper_p_62 <- syn_control_paper[[62]]
-
-p_62 <- syn_control_paper_p_62 %>%
+p_62 <- DAWpaper_p_62 %>%
     strsplit("\n") %>%
     unlist() %>%
     as.data.frame() %>%
@@ -1141,7 +1252,7 @@ head(crime_data)
 
 ## Join
 
-### Donohue, et al.
+## Donohue, et al.
 
 ```{r}
 DONOHUE_DF <- bind_rows(dem_DONOHUE,
@@ -1200,7 +1311,7 @@ summary(droplevels(as.factor(DONOHUE_DF$STATE)))
 length(summary(droplevels(as.factor(DONOHUE_DF$STATE))))
 ```
 
-### Lott and Mustard
+## Lott and Mustard
 
 ```{r}
 LOTT_DF <- bind_rows(dem_LOTT,
@@ -1259,7 +1370,8 @@ summary(droplevels(as.factor(LOTT_DF$STATE)))
 length(summary(droplevels(as.factor(LOTT_DF$STATE))))
 ```
 
-# Data exploration
+# **Data Exploration**
+***
 
 ```{r}
 sapply(DONOHUE_DF, class)
@@ -1319,7 +1431,8 @@ DONOHUE_DF %>%
   theme(axis.text.x = element_text(angle = 90))
 ```
 
-# Data analysis
+# **Data Analysis**
+***
 
 ## Donohue, et al.
 
@@ -1895,9 +2008,19 @@ ggsave(here::here("img", "mainplot.png"))
 ```
 
 
-# Possible homework question
 
-# Helpful links
+
+# **Data Visualization**
+*** 
+
+# **Summary**
+*** 
+
+# **Suggested Homework**
+*** 
+
+# **Helpful Links**
+*** 
 
 https://rpubs.com/rslbliss/fixed_effects
 
