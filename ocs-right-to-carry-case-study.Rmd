@@ -240,13 +240,19 @@ It is important that we do not treat race as an objective measure. Despite this,
 We will begin by loading the packages that we will need:
 
 ```{r}
-library(here) 
+library(here)
+library(readxl)
+library(readr)
+library(pdftools)
+library(dplyr)
+library(magrittr)
+library(tidyr)
+library(stringr)
+
 library(car) # vif function
 library(plm) # fixed effect model, linear regression
 library(broom) # tidy output
 library(tidyverse) # general wrangling functions
-library(pdftools) # read data from pdf 
-library(readxl) # importing excel sheets
 library(cowplot) # to produce plot of plots 
 library(GGally)
 library(ggrepel)
@@ -290,21 +296,7 @@ knitr::include_graphics(here("img", "ourdata.png"))
 # **Data Import**
 ***
 
-##State FIPS codes
-Avocado why do we need State FIPS?
 
-The following data was downloaded from the [US Census Bureau](https://www.census.gov/geographies/reference-files/2014/demo/popest/2014-geocodes-state.html).
-
-To import the data we will use the `read_xls()` function of the `readxl` package. Since the first five lines of this excel is information about the source of the data and when it was released, we need to skip importing these lines using the `skip` argument so that the data has the same number of columns for each row. 
-
-```{r}
-knitr::include_graphics(here("img", "FIPS.png"))
-
-```
-
-```{r}
-STATE_FIPS <- read_xls("docs/State_FIPS_codes/state-geocodes-v2014.xls", skip = 5)
-```
 
 ## Demographic and Population data
 
@@ -350,7 +342,27 @@ dem_00_10 <- list.files(recursive = TRUE,
                    full.names = TRUE) %>% 
    map(~read_csv(.))
 
+head(dem_00_10)
 
+```
+
+Notice that the `STATE` variable for the demographic data is numeric. That is because it is encoded by [Federal Information Processing Standard (FIPS) state codes](https://en.wikipedia.org/wiki/Federal_Information_Processing_Standard_state_code){target="_blank". Thus we also need to import data  about FIPS encoding so that we can identify what data corresponds to what state.
+
+
+##State FIPS codes
+
+The following data was downloaded from the [US Census Bureau](https://www.census.gov/geographies/reference-files/2014/demo/popest/2014-geocodes-state.html){target="_blank"}.
+
+To import the data we will use the `read_xls()` function of the `readxl` package. Since the first five lines of this excel is information about the source of the data and when it was released, we need to skip importing these lines using the `skip` argument so that the data has the same number of columns for each row. 
+
+```{r}
+knitr::include_graphics(here("img", "FIPS.png"))
+
+```
+
+```{r}
+STATE_FIPS <- read_xls("docs/State_FIPS_codes/state-geocodes-v2014.xls", skip = 5)
+(STATE_FIPS)
 ```
 
 ## Police staffing data
@@ -368,7 +380,7 @@ ps_data <- read_csv("docs/Police_staffing/pe_1960_2018.csv",
 ps_data <- read_csv("docs/Police_staffing/pe_1960_2018.csv",
                    col_types =  cols(male_total_ct = col_double(),
                                    female_total_ct = col_double()))
-                              
+head(ps_data)                            
 ```
 
 
@@ -406,28 +418,20 @@ So now we will skip the first 10 lines. And also create a names tibble that cont
                   full.names = TRUE) %>% 
   map(~read_xlsx(., skip = 10))
   
-                 
-# ue_rate_names <- list.files(recursive = TRUE,
-#                   path = "docs/Unemployment",
-#                   pattern = "*.xlsx",
-#                   full.names = TRUE) %>%
-#   map(~read_xlsx(.)) %>%
-#   sapply(., "[",7,2, drop=TRUE)
+head(ue_rate_data[1])
 ```
 
-To get the state name for each file, we will specifically import only a small range of cells and then grab the cell that has state information and the use the base `unlist()` function to unlist the list of lists that this creates.
+To get the state name for each file using the `map()` function to perform functions across all of the files, we will specifically import only a small range of cells using the `range = ` argument and then grab the cell that has state information based on it's location within the range of cells imported using `c()` and then use the base `unlist()` function to unlist the list that this creates.
 
 ```{r}
 ue_rate_names <- list.files(recursive = TRUE,
                   path = "docs/Unemployment",
                   pattern = "*.xlsx",
                   full.names = TRUE) %>%
-  map(~read_xlsx(., range = "B4:D6")) %>%
+  map(~read_xlsx(., range = "B4:B6")) %>%
   map(., c(1,2)) %>%
   unlist()
 
-
-ue_rate_data
 ue_rate_names
 ```
 ## Poverty data
@@ -443,7 +447,11 @@ AVOCado strange issue
 
 
 poverty_rate_data <- read_xls("docs/Poverty/hstpov21.xls", skip=2) #This may cause initialization issue, not easily reproducible (even after restarting R)
+
+head(poverty_rate_data)
 ```
+
+We can see that this will require some wranlging to make the data more usable. 
 
 ## Violent crime
 
@@ -456,9 +464,11 @@ knitr::include_graphics(here("img", "crime.png"))
 
 ```{r}
 crime_data <- read_lines("docs/Crime/CrimeStatebyState.csv", skip = 2, skip_empty_rows = TRUE)
+head(crime_data)
 
 ```
 
+We can see that this data will also require some wranlging to make it more usable. 
 
 ## Right-to-carry data
 
@@ -473,9 +483,11 @@ if(!file.exists(here("docs", "w23510.pdf"))){
 
 DAWpaper <- pdf_text(here("docs", "w23510.pdf"))
 
+head(DAWpaper[1])
+
 ```
 
-
+Again, this data will also require quite a bit of wrangling.
 
 
 
@@ -483,124 +495,170 @@ DAWpaper <- pdf_text(here("docs", "w23510.pdf"))
 ***
 ## State FIPS codes
 
+Let's take a look at our state FIPS data to see if it needs any cleaning or reshaping.
+
+```{r}
+head(STATE_FIPS)
+```
+
+We only need the last two columns, but we might want to rename them. The `Name` variable is vague. The variable with the FIPS code is called `State\n(FIPS)`. To get rid of the new line in this variable name and to change the `Name` variable to something more informative, we will use the `rename()` function of the `dplyr` package.  To use this function, we need to list the new name first followed by `=` and then the existing variable. We can rename multiple variables at the same time by using a comma to separate the variables we are renaming. We will use the `select()` function also of the `dplyr` package just to keep these variables, and we will filter out the rows with FIPS values of `00` with the `filter()` function, agian also part of the `dplyr` package. we will specify that we want `STATEFP` values that are not equal to `00` by using this operator: `!=`. We will also use the double pipe operator `%<>%` of the `magrittr` package which allows us to use data as iuput and then reassign it after we peform sum functions using it.
+
 ```{r}
 
-head(STATE_FIPS)
+STATE_FIPS %<>% 
+dplyr::rename( STATEFP = `State\n(FIPS)`,
+                 STATE = Name) %>%
+    dplyr::select(STATEFP, STATE) %>%
+    dplyr::filter(STATEFP != "00")
 
-colnames(STATE_FIPS) <- c("Region",
-                          "Division",
-                          "STATEFP",
-                          "STATE")
+STATE_FIPS
 
-class(STATE_FIPS$STATEFP)
-
-STATE_FIPS <- STATE_FIPS %>%
-    filter(STATEFP!="00") %>%
-    dplyr::select(STATEFP, STATE)
 ```
 
 ## Demographics
 
 #### 1977-1979
 
+Now let's take a look at our demographic data across the decades that we wish to study. If you have very wide data (meaning it has many columns), one way to view the data so that you can see all of the columns at the same time is to use the `glimpse()` function of the `dplyr` package. 
+
+Taking a look at the first decade of data, we can see that the `Race/Sex Indicator` contains two types of data, the race and the sex. This does not follow the tidy data philosophy, where each cell of a tibble should only contain one piece of information. Typically one might think of using the `separate()` function of the `tidyr` package to split this variable into two. However, one of the race values is `Other races` and since this also has a space, this makes separating this data more tricky.
+
+Instead we will use the `str_extract()` function of the `stringr` package and the `mutate()` function of the `dplyr` package. The "mutate()" will allow us to create new variables, and "str_extract()" function  will allow us to match specific patterns and pull out matches to those patterns. Therefore, if the `Race/Sex Indicator` value is `Other races male` and if we extract patterns matching either `"male"` or `"female"` which we can specify like this `pattern = "male|female"` then, the value will be `male`.
+
+First we need to rename the `Race/Sex Indicator` varaible to not have spaces so that it is compatible with the `str_extract()` function.
+
+We also want to rename a couple of variables to be simpler and filter the data to only include the years of the data we are interested in, as well as remove some variables that we dont need like the `FIPS State Code`. We can remove variables by using the `select()` function with a `-` minus sign in front of the variable we wish to remove.
 
 ```{r}
-head(dem_77_79)
+dplyr::glimpse(dem_77_79)
 
-colnames(dem_77_79)
-
-class(dem_77_79$`Year of Estimate`)
 
 dem_77_79 <- dem_77_79 %>%
-  mutate(RACE = case_when(str_detect(`Race/Sex Indicator`,"Black") ~ "Black",
-                          str_detect(`Race/Sex Indicator`,"White") ~ "White",
-                          TRUE ~ "Other"),
-         SEX = case_when(str_detect(`Race/Sex Indicator`,"female") ~ "Female",
-                         TRUE ~ "Male")) %>%
-  dplyr::select(-`Race/Sex Indicator`,-`FIPS State Code`)
+  rename("race_sex" =`Race/Sex Indicator`) %>%
+  mutate(SEX = str_extract(race_sex, "male|female"),
+        RACE = str_extract(race_sex, "Black|White|Other"))%>%
+  select(-`FIPS State Code`, -`race_sex`) %>%
+  rename("YEAR" = `Year of Estimate`,
+        "STATE" = `State Name`) %>%
+  filter(YEAR %in% 1977:1979)
 
-dem_77_79 <- dem_77_79 %>%
-    rename("YEAR"=`Year of Estimate`,
-           "STATE"=`State Name`) %>%
-    filter(YEAR %in% 1977:1979)
-    
+glimpse(dem_77_79)
+```
+
+That's looking pretty  good! We also want to take all the age group variabels and make one variable that is the age group name and one that is the value of the population count for that age group. To do this we will use the `pivot_longer()` function of the `tidyr` package. To use this function, we need to use the `cols` argument to indicate which columns we want to pivot. We also name the new variables we will create with the `names_to` and `values_to` arguments. The `names_to` will be the name of the variable that will identify each age group and `values_to` will be the name of the variable that contains the corresponding population values.
+```{r}
 dem_77_79 <- dem_77_79 %>%
   pivot_longer(cols=contains("years"),
                names_to = "AGE_GROUP",
                values_to = "SUB_POP")
 
-colnames(dem_77_79)
+glimpse(dem_77_79)
+```
 
+We also want to get data about the total population for the state for each year.
+
+To do so we can sum all the values for the `SUB_POP` variable that we just created. To do this we can use the `group_by` and `summarize()` functions of the `dplyr` package. The `group_by()` function specifies how we want to calculate  our sum, that we would like to calculate it for each year and each state individually. Thus, all the values that have the same `STATE` and `YEAR` values will be summed together, rather than summing using all of the values in the `SUB_POP` variable. The `.groups` argument allows us to remove the grouping after we peform the calculation with `summarize()`.
+
+```{r}
 pop_77_79 <- dem_77_79 %>%
   group_by(YEAR, STATE) %>%
-  summarise("TOT_POP" = sum(SUB_POP), .groups = "drop") 
+  summarize("TOT_POP" = sum(SUB_POP), .groups = "drop") 
 
-colnames(pop_77_79)
-
-dem_77_79 <- dem_77_79 %>%
-  left_join(pop_77_79, by = c("YEAR","STATE")) %>%
-  mutate(PERC_SUB_POP = SUB_POP*100/TOT_POP) %>%
-  dplyr::select(-SUB_POP, -TOT_POP)
+pop_77_79 
 ```
+
+
+ Now we will add the population value to the demographic tibble using the `left_join()` function of the `dplyr` package. It is imporant that we specify how this should be done, that the `YEAR` and `STATE` variable vlaues should match eachother. This will place the `dem_77_79` variables to the left of the `pop_77_79` data. 
+ 
+```{r}
+dem_77_79 <- dem_77_79 %>%
+  left_join(pop_77_79, by = c("YEAR","STATE"))
+
+dem_77_79
+```
+
+We will also calculate the percentage that each group makes up of the total population, by dividing the `SUB_POP` by the `TOT_POP` and multiplying by 100 using the `mutate()` function. we will also remove the other population variables.
+
+```{r}
+dem_77_79 <- dem_77_79 %>%
+  mutate(PERC_SUB_POP = (SUB_POP/TOT_POP)*100) %>%
+  select(-SUB_POP, -TOT_POP)
+
+dem_77_79
+```
+
 
 #### 1980-1989
 
+For this decade each year is a separate tibble and they are combined as a list.
+```{r}
+class(dem_80_89)
+```
 
-
-
+So the first thing we need to do is combine each tibble of the list together. We can do that using the `bind_rows()` function of `dplyr` which appends the data together based on the presence of columns with the same name in the different tibbles. We will use the `map_df()` function of the `purrr` package to allow us to do this across each tibble in our list. 
 ```{r}
 dem_80_89 <- dem_80_89 %>%
   map_df(bind_rows)
 
-sapply(dem_80_89, class)
+glimpse(dem_80_89 )
+```
 
+Great! Now our data is all together.
+
+Now we will wrangle the data similarly to the previous decade.
+```{r}
 dem_80_89 <- dem_80_89 %>%
-  mutate(RACE = case_when(str_detect(`Race/Sex Indicator`,"Black") ~ "Black",
-                          str_detect(`Race/Sex Indicator`,"White") ~ "White",
-                          TRUE ~ "Other"),
-         SEX = case_when(str_detect(`Race/Sex Indicator`,"female") ~ "Female",
-                         TRUE ~ "Male")) %>%
-  dplyr::select(-`Race/Sex Indicator`)
-
-colnames(dem_80_89)
-
-dem_80_89 <- dem_80_89 %>% 
-    rename("YEAR"=`Year of Estimate`,
-           "STATEFP_temp"=`FIPS State and County Codes`) %>%
-    mutate(STATEFP = substr(STATEFP_temp, start = 1, stop = 2)) %>%
+  rename("race_sex" =`Race/Sex Indicator`) %>%
+  mutate(SEX = str_extract(race_sex, "male|female"),
+        RACE = str_extract(race_sex, "Black|White|Other"))%>%
+  select( -`race_sex`) %>%
+  rename("YEAR" = `Year of Estimate`)
+         
+glimpse(dem_80_89)
+```
+Notice that this time the state information is based on the numeric FIPS value. We want only the first two values, as the rest indicate the county. We can use the `str_sub()` function of the `stringr` package for this. We will specify that we want to start at the first position and end at the second.  Just like `str_extract()` we need to rename this variable first so that it is compatible. 
+```{r}
+dem_80_89 %<>%
+rename("STATEFP_temp" = "FIPS State and County Codes") %>%
+mutate(STATEFP = str_sub(STATEFP_temp, start = 1, end = 2)) %>%
     left_join(STATE_FIPS, by = "STATEFP") %>%
   dplyr::select(-STATEFP)
 
-dem_80_89 <- dem_80_89 %>%
+glimpse(dem_80_89)
+```
+
+AVOCADO - why do we group by age_group sex and race this time but not with the last decade?
+
+```{r}
+dem_80_89 %<>%
   pivot_longer(cols=contains("years"),
                names_to = "AGE_GROUP",
                values_to = "SUB_POP_temp") %>%
   group_by(YEAR, STATE, AGE_GROUP, SEX, RACE) %>%
   summarise(SUB_POP = sum(SUB_POP_temp), .groups="drop")
-  
-colnames(dem_80_89)
 
+dem_80_89
+```
+  
+```{r}
 pop_80_89 <- dem_80_89 %>%
   group_by(YEAR, STATE) %>%
   summarise("TOT_POP" = sum(SUB_POP), .groups = "drop") 
 
-colnames(pop_80_89)
 
 dem_80_89 <- dem_80_89 %>%
   left_join(pop_80_89, by = c("YEAR","STATE")) %>%
-  mutate(PERC_SUB_POP = SUB_POP*100/TOT_POP) %>%
+  mutate(PERC_SUB_POP = (SUB_POP/TOT_POP)*100) %>%
   dplyr::select(-SUB_POP, -TOT_POP)
+
+dem_80_89
 ```
 
 #### 1990-1999
 
 
 ```{r}
-
-
-colnames(dem_90_99)
-
-head(dem_90_99)
+glimpse(dem_90_99)
 
 colnames(dem_90_99) <- c("YEAR",
                          "STATEFP",
@@ -721,7 +779,7 @@ dem_90_99 <- dem_90_99 %>%
 dem_00_10 <- dem_00_10 %>%
   map_df(bind_rows)
 
-sapply(dem_00_10, class)
+glimpse(dem_00_10)
 
 dem_00_10 <- dem_00_10 %>%
   dplyr::select(-ESTIMATESBASE2000,-CENSUS2010POP) %>%
@@ -733,8 +791,8 @@ dem_00_10 <- dem_00_10 %>%
          AGEGRP != 0,
          STATE != 0) %>%
   dplyr::select(-REGION, -DIVISION, -ORIGIN, -STATE) %>%
-  rename("STATE"=NAME,
-         "AGE_GROUP"=AGEGRP) %>%
+  rename("STATE" = NAME,
+         "AGE_GROUP" = AGEGRP) %>%
   mutate(SEX = factor(SEX,
                             levels = 1:2,
                             labels = c("Male",
@@ -801,7 +859,10 @@ dem_00_10 <- dem_00_10 %>%
   dplyr::select(-SUB_POP, -TOT_POP)
 ```
 
-#### 1977 - 2010
+
+
+
+### Combining demographic data
 
 ```{r}
 setequal(colnames(dem_77_79),colnames(dem_80_89))
