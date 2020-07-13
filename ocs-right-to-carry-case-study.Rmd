@@ -248,6 +248,7 @@ library(dplyr)
 library(magrittr)
 library(tidyr)
 library(stringr)
+library(purrr)
 library(forcats)
 
 library(car) # vif function
@@ -272,6 +273,7 @@ set.seed(999)
 [here](https://github.com/jennybc/here_here){target="_blank"}       | to easily load and save data
 [readr](https://readr.tidyverse.org/){target="_blank"}      | to import the CSV file data
 [car]  | to calculate vif values
+[purrr] | to combine multiple tibbles within a list of tibbles
 [forcats] | to collapse levels of factors into more summarised versions
 The first time we use a function, we will use the `::` to indicate which package we are using. Unless we have overlapping function names, this is not necessary, but we will include it here to be informative about where the functions we will use come from.
 
@@ -431,6 +433,12 @@ ue_rate_names <- list.files(recursive = TRUE,
 
 ue_rate_names
 ```
+
+Now we will make these values the names of the different tibbles within `ue_rate_data`.
+```{r}
+names(ue_rate_data) <- ue_rate_names
+```
+
 ## Poverty data
 Extracted from Table 21 from [US Census Bureau Poverty Data ](https://www.census.gov/data/tables/time-series/demo/income-poverty/historical-poverty-people.html)
 
@@ -1123,7 +1131,7 @@ We can indeed check that we have the correct number of levels for `VARIABLE` usi
  distinct(dem_LOTT, VARIABLE)
 ```
   
-## Combining population Data
+### Combining population Data
 
 We also have population data for each decade that came from  wrangling of the demogrphic data.
 
@@ -1162,33 +1170,57 @@ population_data %>%
 
 ## Police staffing
 
+<detials> <summary> click here to see detials about how the plice staffing data was wrangled. </summary>
+
+OK, now we will wrangle the police staffing data. We want to limit the data to only the years of interest. Then we will also replace NA values with zero for the `male_total_ct` and `female_total_ct` variables using the `replace_na()` function of the `tidyr` packge. We will also, use the `across()` function of the `dplyr` package to select and mutate both of these columns in this way. Since both of these variables have `total_ct` in the name and no other variables do, we can use the `contains()` function of the `dplyr` package to specify that we want to use these columns instead of listing both out.
+
+avocado... why not 2010....
 
 ```{r}
-colnames(ps_data)
+glimpse(ps_data)
 
-ps_data <- ps_data %>%
+ps_data %<>%
   filter(data_year >= 1977, 
          data_year <= 2014) %>%
-  mutate(male_total_ct = case_when(is.na(male_total_ct) ~ 0,
-                                   TRUE ~ male_total_ct),
-         female_total_ct = case_when(is.na(female_total_ct) ~ 0,
-                                   TRUE ~ female_total_ct)) %>%
+mutate(across(.cols =contains("total_ct"), ~replace_na(., 0)))
+
+glimpse(ps_data)
+```
+
+Now we can create a new variable called `officer_total` which will be the sum of these variables. We will then keep just this variable as well as the `data_year`, `pub_agency_name`, and `state_abbr`.
+
+```{r}
+
+ps_data %<>%
   mutate(officer_total = male_total_ct + female_total_ct) %>%
   dplyr::select(data_year,
                 pub_agency_name,
                 state_abbr,
                 officer_total)
 
-ps_data <- ps_data %>%
+ps_data
+```
+
+Now we also want to get collapse by `pub_agency_name` to get a total count for each year and each state. So we will do this by using the `group_by()` function and grouping by `data_year` and `state_abbr` and using the `summarise()` function to calculate a sum.
+
+```{r}
+ps_data %<>%
   group_by(data_year, state_abbr) %>%
   summarise(officer_state_total=sum(officer_total), .groups = "drop")
 
-ps_data %>%
-  group_by(state_abbr) %>%
-  tally() %>%
-  print(n = dim(.)[1])
+ps_data
+```
+And we will check that we have same number of values (the number of years included in the data) for each state.
 
-# NB is Nebraska. This was changed to NE to avoid confusions with NB in Canada. This dataset uses NB
+```{r}
+ps_data %>%
+  count(state_abbr) 
+```
+We will remove a few states now.
+AVocado- why?
+NB is  Nebraska. This was changed to NE to avoid confusions with NB in Canada. This dataset uses NB
+
+```{r}
 
 state_of_interest_NULL <- c("AS",
                             "GM",
@@ -1228,47 +1260,59 @@ ps_data <- ps_data %>%
   mutate(VARIABLE = "police_per_100k_lag") %>%
   dplyr::select(-Population_temp)
 ```
+</details>
+
 
 ## Unemployment
 
-
+The first thing we need to do with the unemployment data is combine the data across the different states.
+ We can do that using the `bind_rows()` function of `dplyr` which appends the data together based on the presence of columns with the same name in the different tibbles. We will use the `map_df()` function of the `purrr` package to allow us to do this across each tibble in our list. We will then select just the annual data for each state and year and we will rename our variables to be consistent with some of other data that we are working with. Thus we would like our variabels to be `YEAR`, `VALUE` and `VARIABLE` in all caps.
+ 
 ```{r}
-
-
-names(ue_rate_data) <- ue_rate_names
-
-ue_rate_data$Alabama[dim(ue_rate_data$Alabama)[1],]
 
 ue_rate_data <- ue_rate_data %>%
   map_df(bind_rows, .id = "STATE")
 
-colnames(ue_rate_data)
-
-sapply(ue_rate_data, class)
+head(ue_rate_data)
 
 ue_rate_data <- ue_rate_data %>%
-  mutate(Year = as.numeric(Year)) %>%
+ # mutate(Year = as.numeric(Year)) %>%
   dplyr::select(STATE, Year, Annual) %>%
-  rename("YEAR"=Year,
-         "VALUE"=Annual) %>%
-  mutate(VARIABLE="Unemployment_rate")
+  rename("YEAR" = Year,
+        "VALUE" = Annual) %>%
+  mutate(VARIABLE = "Unemployment_rate")
+
+head(ue_rate_data)
 ```
 
 ## Poverty rate
 
-
+OK, now for wrangling the poverty data. First let's take a look at it. 
 ```{r}
 head(poverty_rate_data)
+colnames(poverty_rate_data)
+```
 
+We can see that the column names are actually shifted down  below the row with the year. So we will manually make these values the actual column names.
+```{r}
 colnames(poverty_rate_data) <- c("STATE",
                                  "Total",
                                  "Number",
                                  "Number_se",
                                  "Percent",
                                  "Percent_se")
+```
 
+
+Avocado.. I think I can just remove all the NA values with drop.na
+We can also see that there are some extra notes at the end of our data. That is why it is a good idea to look at both the head and tail of your data.
+```{r}
 tail(poverty_rate_data)
+#poverty_rate_data %>% filter(is.na(Percent)) %>%print(n=45)
+```
 
+
+```{r}
 notes <- 4
 
 poverty_rate_data <- poverty_rate_data[-((dim(poverty_rate_data)[1]-notes+1):dim(poverty_rate_data)[1]),]
@@ -1350,8 +1394,6 @@ colnames(poverty_rate_data)
 https://www.ucrdatatool.gov/Search/Crime/State/StatebyState.cfm
 
 ```{r}
-crime_data <- read_lines("docs/Crime/CrimeStatebyState.csv", skip = 2, skip_empty_rows = TRUE)
-
 length(crime_data)
 
 crime_data <- crime_data[-(2143:length(crime_data))]
@@ -1413,7 +1455,6 @@ crime_data <- crime_data %>%
 
 ## RTC laws
 
-
 ```{r}
 DAWpaper_p_62 <- DAWpaper[[62]]
 
@@ -1473,7 +1514,6 @@ head(p_62)
 ```
 
 ## Checkpoint
-
 ```{r}
 colnames(dem_DONOHUE)
 colnames(dem_LOTT)
