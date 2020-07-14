@@ -1133,7 +1133,7 @@ We can indeed check that we have the correct number of levels for `VARIABLE` usi
   
 ### Combining population Data
 
-We also have population data for each decade that came from  wrangling of the demogrphic data.
+We also have population data for each decade that came from wrangling the demogrphic data.
 
 We again want to combine this data, so let's again make sure that all the different tibbles have the same column names.
 
@@ -1290,10 +1290,10 @@ head(ue_rate_data)
 OK, now for wrangling the poverty data. First let's take a look at it. 
 ```{r}
 head(poverty_rate_data)
-colnames(poverty_rate_data)
 ```
 
-We can see that the column names are actually shifted down  below the row with the year. So we will manually make these values the actual column names.
+We can see that the column names are actually shifted downbelow the row with the year. So we will manually make these values the actual column names.
+
 ```{r}
 colnames(poverty_rate_data) <- c("STATE",
                                  "Total",
@@ -1301,21 +1301,207 @@ colnames(poverty_rate_data) <- c("STATE",
                                  "Number_se",
                                  "Percent",
                                  "Percent_se")
+
+poverty_rate_data2 <-poverty_rate_data
+
 ```
 
+Let's also remove the rows where the column names are listed, like row number 2.
 
-Avocado.. I think I can just remove all the NA values with drop.na
-We can also see that there are some extra notes at the end of our data. That is why it is a good idea to look at both the head and tail of your data.
+```{r}
+poverty_rate_data  %<>%
+  filter(STATE != "STATE")
+head(poverty_rate_data)
+```
+
+We can also see that there are some extra notes at the end of our data. This is why it is a good idea to look at both the head and tail of your data.
+
 ```{r}
 tail(poverty_rate_data)
-#poverty_rate_data %>% filter(is.na(Percent)) %>%print(n=45)
+```
+We can see that the strings for the state for these rows are very long. We can also see that there are rows that just have the year, where the state is only 4 characters long. We will create a new variable called `length_state` based on the number of characters in the `STATE` values. We will use the `str_length()` function of the `stringr` package. We need to use the `map_dbl()` function to apply this to each row of the `STATE` variable. The `map()` function creates a list, whereas the `map_dbl()` function creates a vector of class double. If we were to use `map()` we would need to use `unlist()` and `pull()`.
+
+```{r}
+
+poverty_rate_data %<>%
+ mutate(length_state = map_dbl(STATE, str_length))
+
+# Alternatively with map()
+#poverty_rate_data %<>%
+#mutate(length_state = unlist(map(pull(poverty_rate_data, STATE), str_length)))
+
+poverty_rate_data
 ```
 
 
+Great, now let's look at the tail with our new variable `length_state`
 ```{r}
+tail(pull(poverty_rate_data, length_state))
+
+```
+
+```{r}
+poverty_rate_data %<>% 
+  filter(length_state <100)
+
+tail(poverty_rate_data)
+```
+Looks good!
+
+Now let's select all the states that are actually year values to create a new variable about the year. We can do so by using the `str_detect()` function of the `stringr` package to look for digits or values of 0-9. This is indicated by using the `"[:digit:]"`.
+
+As you can see in the [RStudio cheatsheet](https://rstudio.com/resources/cheatsheets/){target="_blank"}  about regular expressions this notation indicates any digit between 0 and 9.
+
+```{r}
+knitr::include_graphics(here("img", "regex.png"))
+```
+#### {.scrollable }
+```{r}
+# scroll through the output!
+poverty_rate_data %>% 
+  filter(str_detect(STATE, "[:digit:]"))
+```
+####
+
+Some of the years (2013 and 2017) are listed twice with a number in parantheses, others are just listed once with a number in parantheses. Looking at the technical documentation, this seems to do with updates to the defition of poverty and to the methods used to estimate poverty levels. See [here](https://www.census.gov/topics/income-poverty/poverty/guidance/poverty-footnotes/cps-historic-footnotes.html){target="_blank"} and [here](https://www2.census.gov/programs-surveys/cps/techdocs/cpsmar19.pdf){target="_blank"} for more information. We will simply select one of the sets of data for 2013 and 2017.
+
+```{r}
+poverty_rate_data %>% 
+  filter(str_detect(STATE, "2013")) %>%
+  filter(str_detect(STATE, "2017"))
+```
+
+First let's add the year value to our data. 
+
+
+There should be consistently data for 51 states (including DC). We can see that sometimes DC is spelled out and sometimes it is not.
+
+#### {.scrollable }
+```{r}
+### Scroll through the output!
+poverty_rate_data %>% 
+  filter(str_detect(STATE, "[:alpha:]")) %>%
+  distinct(STATE) %>% print(n = 100)
+
+```
+####
+
+
+Now we will replace `"D.C."` with `"District of Columbia"` using `str_replace()`. We can use the `tally()` function of the `dplyr` package to check that we have fewer now.
+
+```{r}
+poverty_rate_data %<>% 
+mutate(STATE = str_replace(STATE, pattern = "D.C.", 
+                              replacement = "District of Columbia" ))
+
+poverty_rate_data %>% 
+  filter(str_detect(STATE, "[:alpha:]")) %>%
+  distinct(STATE) %>% tally()
+```
+Great! Now are each of the states occurring as often as the unique year values? We can first check how many year values there are. Then can use the `count()` function of the `dplyr` package to check how often the states are repeated.
+
+```{r}
+
+poverty_rate_data %>% 
+  filter(str_detect(STATE, "[:digit:]")) %>%
+  tally()
+```
+
+There are 41 different sets of data according to year values.
+
+#### {.scrollable }
+```{r}
+### Scroll through the output!
+poverty_rate_data %>% 
+  filter(str_detect(STATE, "[:alpha:]")) %>%
+  count(STATE)
+```
+####
+Indeed, looks like each of the states are repeated the same number of times!
+
+Now let's create a new variable `YEAR` that repeats the year values for all of the different states and for the row that has just the year value for a total of 52.
+
+```{r}
+
+year_values <- poverty_rate_data %>% 
+  filter(str_detect(STATE, "[:digit:]")) %>%
+  distinct(STATE)
+
+  year_values<-rep(pull(year_values, STATE), each = 52)
+setequal(length(year_values), length(poverty_rate_data$STATE))
+```
+
+Now we will add this to our `poverty_rate_data`. We will also remove the `length_state` variable using the `select()` function of the `dplyr` package and a minus sign before the variable name.
+
+```{r}
+poverty_rate_data %<>%
+  mutate(year_value = year_values) %>%
+  select(-length_state)
+```
+
+#### {.scrollable }
+```{r}
+#Scroll through the output!
+poverty_rate_data %>% print(n = 100)
+```
+####
+
+Looks good! Now we will remove the rows that have just the year values by only preserving those with alpha characters.
+
+```{r}
+poverty_rate_data %<>%
+    filter(str_detect(STATE, "[:alpha:]"))
+
+```
+
+Now let's remove the older data for 2013 and 2017 which is the data that appears lower in the tibble.
+
+```{r}
+poverty_rate_data %<>%
+filter(year_value != "2017") %>%
+filter(year_value != "2013 (18)")
+```
+
+
+We also want to just keep the first 4 digits of the year_value and create a `YEAR` variable. We need to pull the `year_value` data because `str_sub()` expects a character vector not a tibble.
+
+```{r}
+poverty_rate_data %<>%
+  mutate(YEAR = str_sub(pull(., year_value), start = 1, end=4))
+```
+
+#### {.scrollable }
+```{r}
+poverty_rate_data 
+```
+####
+
+Looks good! Now we will just remove the extra variables and rename the variables we want to keep to be similar to our other data.
+
+```{r}
+poverty_rate_data %<>%
+  dplyr::select(- Number,
+                - Number_se,
+                - Percent_se,
+                - Total,
+                - year_value) %>%
+  rename("VALUE" = Percent) %>%
+  mutate(VARIABLE = "Poverty_rate",
+         YEAR = as.numeric(YEAR),
+         VALUE = as.numeric(VALUE))
+head(poverty_rate_data)
+```
+
+Looks great! AVOCADO this data is per 1000k? I think I need to restrict to 2014 to match the other data and thats why I get an error when making the Donohue_df 
+
+
+From Michael:
+```{r, eval = FALSE}
+
+poverty_rate_data <-poverty_rate_data2
 notes <- 4
 
-poverty_rate_data <- poverty_rate_data[-((dim(poverty_rate_data)[1]-notes+1):dim(poverty_rate_data)[1]),]
+poverty_rate_data2 <- poverty_rate_data[-((dim(poverty_rate_data)[1]-notes+1):dim(poverty_rate_data)[1]),]
 
 states_eq <- 51
 
@@ -1374,24 +1560,12 @@ poverty_rate_data %>%
 
 sapply(poverty_rate_data, class)
 
-poverty_rate_data <- poverty_rate_data %>%
-  drop_na() %>%
-  dplyr::select(-Number,
-                -Number_se,
-                -Percent_se,
-                -n_na,
-                -Total) %>%
-  rename("VALUE"=Percent) %>%
-  mutate(VARIABLE = "Poverty_rate",
-         YEAR = as.numeric(YEAR),
-         VALUE = as.numeric(VALUE))
+
 
 colnames(poverty_rate_data)
 ```
 
 ## Violent crime
-
-https://www.ucrdatatool.gov/Search/Crime/State/StatebyState.cfm
 
 ```{r}
 length(crime_data)
@@ -1526,6 +1700,11 @@ head(dem_LOTT)
 head(ue_rate_data)
 head(poverty_rate_data)
 head(crime_data)
+```
+```{r}
+crime_data %>% distinct(STATE) %>% tally()
+crime_data %>% distinct(YEAR) %>% tally()
+
 ```
 
 ## Join
