@@ -2039,42 +2039,38 @@ head(p_62)
 
 Now we will join the data from the different data sets together to create a tibble of data for an analysis that will be similar to the data used by [Donohue et al.](https://www.nber.org/papers/w23510.pdf) {target="_blank"} and [Lott and Mustard](https://chicagounbound.uchicago.edu/cgi/viewcontent.cgi?article=1150&context=law_and_economics){target="_blank"}.
 
-First we need to check that our data is indeed ready to be joined. We need ot make sure that the colum names are the same for each dataset that we intend to combine together. 
+First we need to check that our data is indeed ready to be joined. We need to make sure that the column names are the same for each dataset that we intend to combine together. 
 
-can use setequal setdiff or all_equal...
+We will use the `compare_df_cols()` and `compare_df_cols_same()` functions of the janitor package, to ensure that the column names are the same and that the column values are the same type so that the tibbles can be joined by row. 
 
-We will use the `set_equal()` function of the `dplyr` package to compare these. This does not require that the order be the same. Similar functions like `set_diff()` and `all_equal()` however do require the same order, or at least have an argument to specify if you want to check for the same order.
-setequal(X, Y)
+If they can be joined by row, then `compare_df_cols_same()`  returns the value `TRUE`, while compare_df_cols(), provides a description of the columns.
 
 ```{r}
+library(janitor)
+
+data_list <-  list(dem_DONOHUE,
+                dem_LOTT,
+                population_data,
+                ue_rate_data,
+                poverty_rate_data,
+                crime_data,
+                ps_data) #police staffing
+
+janitor::compare_df_cols_same(data_list)
+janitor::compare_df_cols(data_list)
 
 
-colnames(dem_DONOHUE)
-colnames(dem_LOTT)
-colnames(population_data)
-colnames(ue_rate_data)
-colnames(poverty_rate_data)
-colnames(crime_data)
-colnames(ps_data) #police staffing
-
-head(dem_DONOHUE)
-head(dem_LOTT)
-head(ue_rate_data)
-head(poverty_rate_data)
-head(crime_data)
-
-crime_data %>% distinct(STATE) %>% tally()
-crime_data %>% distinct(YEAR) %>% tally()
+checkstate <- function(x) { x %<>% distinct(STATE) %>% tally() %>% pull(n) }
+map(data_list, checkstate)
+checkyear <- function(x) { x %<>% distinct(YEAR) %>% tally() %>% pull(n) }
+map(data_list, checkyear)
 ```
 
-
+Avocado bind_rows will make na values for the later years beyond 2010 for the datasets that have them... not sure why we are adding these... maybe there is more about that later?
 
 ## Donohue, et al.
 
-Avocado bind_rows will make na values for the later years beyond 2010 for the datasets that have them... not sure why we are adding these... maybe more about that later?
-
-
-We will now bind the demogrpahic data that we made for the Donohue-like analysis called `dem_DONOHUE`, as well as all the other datasets that we have wrangled. This is possible becuase we have the same colnames for each dataset.
+We will now bind the demogrpahic data that we made for the Donohue-like analysis called `dem_DONOHUE`, as well as all the other datasets that we have wrangled. This is possible because we have the same colnames for each dataset. We will also use the `pivot_wider()` function of the `tidyr` package to change the shape of the data. This will make the data have more columns. Each unique value in the column called `VARIABLE` will be used to make new columns. and the values for each will come from the column called `VALUE`.
 
 ```{r}
 DONOHUE_DF <- bind_rows(dem_DONOHUE,
@@ -2082,29 +2078,123 @@ DONOHUE_DF <- bind_rows(dem_DONOHUE,
                         poverty_rate_data,
                         crime_data,
                         population_data,
-                        ps_data) %>%
-  pivot_wider(names_from = "VARIABLE",
-              values_from = "VALUE") %>%
-  left_join(p_62 , by = c("STATE")) %>%
-  mutate(RTC_LAW = case_when(YEAR >= RTC_LAW_YEAR ~ TRUE,
-                              TRUE ~ FALSE))
+                        ps_data)
+head(DONOHUE_DF)
 ```
 
 
 ```{r}
+DONOHUE_DF %<>%
+  pivot_wider(names_from = "VARIABLE",
+              values_from = "VALUE")
+
 DONOHUE_DF %>%
-  count() %>%
-  filter(n != 51) %>%
-  print(n=dim(.)[1])
+  slice_sample(n = 10) %>%
+  glimpse()
+```
 
-summary(as.factor(DONOHUE_DF$STATE))
+We will also add the Right to Carry Law data using the `left_join()` function of the `dplyr` package. Which will place the `DONOHUE_DF` data on the left of the `RTC` data.  Values will be matched by STATE. Then we will create a new variable called `RTC_LAW` using the `mutate()` function and the `case_when()` function of the `dplyr` package  that will have the value `TRUE` if the current year data is equal to or greater than the year that a more premisive RTC law was adopted, otherwise the value will be `FALSE`.
 
-max(DONOHUE_DF$YEAR) - min(DONOHUE_DF$YEAR) + 1
+```{r}
 
-DONOHUE_DF <- DONOHUE_DF %>%
-  mutate(STATE = fct_collapse(STATE, "District of Columbia"=c("District of Columbia","D.C.")))
+head(RTC)
 
-summary(as.factor(DONOHUE_DF$STATE))
+DONOHUE_DF %<>%
+  left_join(RTC , by = c("STATE")) %>%
+  mutate(RTC_LAW = case_when(YEAR >= RTC_LAW_YEAR ~ TRUE,
+                              TRUE ~ FALSE))
+
+DONOHUE_DF %>%
+  slice_sample(n = 10) %>%
+  glimpse()
+```
+
+Since we have differing numbers of years for each data set, we can use the `drop_na()` function of the `tidyr` package. to remove years that have incomplete data. Thus any row with NA values will be removed.
+
+For example, we can see that for 1977, althouth we have most of the data, we do not have the poverty rate. 
+```{r}
+DONOHUE_DF %>%
+  filter(YEAR == 1977) %>%
+  head() %>%
+  glimpse()
+
+```
+
+Another example, in 2018 we only have infromation about unemployment rates, poverty rates, and RTC laws.
+
+```{r}
+DONOHUE_DF %>%
+  filter(YEAR == 2018) %>%
+  head() %>%
+  glimpse()
+
+```
+
+```{r}
+DONOHUE_DF %<>%
+ drop_na()
+
+head(DONOHUE_DF) %>% 
+  glimpse()
+tail(DONOHUE_DF) %>% 
+  glimpse()
+
+```
+
+Now we have complete data and the data spans from 1980 to 2010.
+
+```{r}
+DONOHUE_DF %>% distinct(YEAR) %>% pull(YEAR)
+```
+
+If we include states that had a RTC law adopted before our time span of data, say 1975, then we only have information about crime rates and the other variables of interest after the law was adopted but not before, therefore including these states doesn't really makes sense. Thus, we will drop the data for these states. We can use the `set_diff()` function of the `dplyr` package to see what states are in the `population_data` that contains all the original 51 states (recall this includes the District of Columbia) but are not in the `DONOHUE_DF`. The order matters here. If we did it the other way around with `population_data` listed second, then set_diff would test if there are any states in `Donohue_DF` that are not in `population_data`. As there are none this would result in nothing.
+
+```{r}
+baseline_year <- min(DONOHUE_DF$YEAR)
+censoring_year <- max(DONOHUE_DF$YEAR)
+
+DONOHUE_DF %<>%
+  mutate(TIME_0 = baseline_year,
+         TIME_INF = censoring_year) %>%
+  filter(RTC_LAW_YEAR > TIME_0)
+
+# DONOHUE_DF %<>% 
+#   mutate(STATE = as.factor(STATE))
+# 
+# DONOHUE_DF %>% 
+#   pull(STATE) %>% 
+#   levels()
+
+setdiff(distinct(population_data, STATE), 
+        distinct(DONOHUE_DF, STATE))
+```
+
+We will also calculate a violent crime rate relative to the population in that state at that time, now that we have data for both crime count and population.  Will will also calcuate the log value of this rate and the population.
+
+```{r}
+DONOHUE_DF %<>%
+  mutate(Viol_crime_rate_1k = (Viol_crime_count*1000)/Population,
+         Viol_crime_rate_1k_log = log(Viol_crime_rate_1k),
+         Population_log = log(Population))
+
+```
+
+From michael:
+
+```{r, eval = FALSE}
+ DONOHUE_DF %>%
+   count() %>%
+   filter(n != 51) %>%
+   print(n=dim(.)[1])
+
+ summary(as.factor(DONOHUE_DF$STATE))
+
+ max(DONOHUE_DF$YEAR) - min(DONOHUE_DF$YEAR) + 1
+
+ DONOHUE_DF <- DONOHUE_DF %>%
+   mutate(STATE = fct_collapse(STATE, "District of Columbia"=c("District of Columbia","D.C.")))
+
+ summary(as.factor(DONOHUE_DF$STATE))
   
 length(levels(DONOHUE_DF$STATE))
 
@@ -2133,9 +2223,12 @@ DONOHUE_DF <- DONOHUE_DF %>%
 summary(droplevels(as.factor(DONOHUE_DF$STATE)))
 
 length(summary(droplevels(as.factor(DONOHUE_DF$STATE))))
+
 ```
 
 ## Lott and Mustard
+
+We will now bind the demogrpahic data that we made for the Lott-like analysis called `dem_Lott`, as well as all the other datasets that we have wrangled just as we did for the Donohue-like analysis. Again, this is possible because we have the same colnames for each dataset. 
 
 ```{r}
 LOTT_DF <- bind_rows(dem_LOTT,
@@ -2146,10 +2239,59 @@ LOTT_DF <- bind_rows(dem_LOTT,
                      ps_data) %>%
   pivot_wider(names_from = "VARIABLE",
               values_from = "VALUE") %>%
-  left_join(p_62 , by = c("STATE")) %>%
+  left_join(RTC , by = c("STATE")) %>%
   mutate(RTC_LAW = case_when(YEAR >= RTC_LAW_YEAR ~ TRUE,
-                              TRUE ~ FALSE))
+                              TRUE ~ FALSE)) %>%
+   drop_na()
 
+
+baseline_year <- min(LOTT_DF$YEAR)
+censoring_year <- max(LOTT_DF$YEAR)
+
+LOTT_DF %<>%
+  mutate(TIME_0 = baseline_year,
+         TIME_INF = censoring_year) %>%
+  filter(RTC_LAW_YEAR > TIME_0)
+
+setdiff(distinct(population_data, STATE), 
+        distinct(LOTT_DF, STATE))
+
+LOTT_DF %<>%
+  mutate(Viol_crime_rate_1k = (Viol_crime_count*1000)/Population,
+         Viol_crime_rate_1k_log = log(Viol_crime_rate_1k),
+         Population_log = log(Population))
+
+```
+Let's see how the data compares:
+
+We will check the dimensions of each using the base `dim()` function
+```{r}
+dim(LOTT_DF)
+dim(DONOHUE_DF)
+```
+
+As expected the `Lott_DF` is 30 columns larger, due to the 30 additional demographic variables. We can check those now as well.
+
+```{r}
+LOTT_DF %>%
+   colnames()
+
+DONOHUE_DF %>%
+   colnames()
+```
+
+Lastly, we will check that the `YEAR` values are the same. We can use the `setequal()` function of the `dplyr` package to see if the values are the same. 
+
+```{r}
+setequal(DONOHUE_DF %>% distinct(YEAR),
+          LOTT_DF %>% distinct(YEAR))
+```
+
+
+Looks as expected! we have 
+
+from Michael:
+```{r, eval = FALSE}
 LOTT_DF %>%
   group_by(YEAR) %>%
   tally() %>%
@@ -2161,7 +2303,7 @@ summary(as.factor(LOTT_DF$STATE))
 max(LOTT_DF$YEAR) - min(LOTT_DF$YEAR) + 1
 
 LOTT_DF <- LOTT_DF %>%
-  mutate(STATE = fct_collapse(STATE, "District of Columbia"=c("District of Columbia","D.C.")))
+  mutate(STATE = fct_collapse(STATE, "District of Columbia" = c("District of Columbia","D.C.")))
 
 summary(as.factor(LOTT_DF$STATE))
   
