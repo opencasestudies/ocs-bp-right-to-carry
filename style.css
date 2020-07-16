@@ -2,7 +2,7 @@ li.toctree-l2:first-child {
     display: none;
 }
 
-.liscence_block {
+.license_block {
     margin: .2em;
     padding: .2em;
     border: 1px solid black;

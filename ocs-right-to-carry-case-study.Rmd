@@ -36,7 +36,11 @@ knitr::opts_chunk$set(include = TRUE, comment = NA, echo = TRUE,
                       fig.align = "center", out.width = '90%')
 library(here)
 library(knitr)
+library(DT)
 ```
+
+
+
 
 #### {.outline }
 ```{r, echo = FALSE, out.width = "800 px"}
@@ -49,7 +53,7 @@ knitr::include_graphics(here::here("img", "mainplot.png"))
 
 **Disclaimer**: The purpose of the [Open Case Studies](https://opencasestudies.github.io){target="_blank"} project is **to demonstrate the use of various data science methods, tools, and software in the context of messy, real-world data**. A given case study does not cover all aspects of the research process, is not claiming to be the most appropriate way to analyze a given data set, and should not be used in the context of making policy decisions without external consultation from scientific experts. 
 
-## {.liscence_block}
+## {.license_block}
 
 This work is licensed under the Creative Commons Attribution-NonCommercial 3.0 [(CC BY-NC 3.0)](https://creativecommons.org/licenses/by-nc/3.0/us/){target="_blank"}  United States License.
 
@@ -118,6 +122,7 @@ Therefore we will use a subset of the listed explanatory variables and they will
 1) How does the inclusion of different numbers of age groups influence the results of an analysis of right to carry laws and violence rates?
 
 ####
+
 
 
 # **Learning Objectives** 
@@ -228,7 +233,7 @@ avocado....Right to carry and covid masks?
 *** 
 There are some important considerations regarding this data analysis to keep in mind: 
 
-1) We do not use all of the data used by either the  [Lott and Mustard](https://chicagounbound.uchicago.edu/cgi/viewcontent.cgi?article=1150&context=law_and_economics){target="_blank"} or [Donohue, et al.](https://www.nber.org/papers/w23510.pdf){target="_blank"} analyses, nor do we perform the same analysis of each article. We instead perform a much simpler analysis with less variables for the purposes of illustration of the concept of multicollinearity and its influence on regression coefficients, not to reproduce either analysis.
+1) We do not use all of the data used by either the [Lott and Mustard](https://chicagounbound.uchicago.edu/cgi/viewcontent.cgi?article=1150&context=law_and_economics){target="_blank"} or [Donohue, et al.](https://www.nber.org/papers/w23510.pdf){target="_blank"} analyses, nor do we perform the same analysis of each article. We instead perform a much simpler analysis with less variables for the purposes of illustration of the concept of multicollinearity and its influence on regression coefficients, not to reproduce either analysis.
 
 2) Because our analysis is an oversimplification, our analysis should not be used for determining policy changes, instead we suggest that users consult with a specialist.
 
@@ -250,6 +255,7 @@ library(tidyr)
 library(stringr)
 library(purrr)
 library(forcats)
+library(tibble)
 
 library(car) # vif function
 library(plm) # fixed effect model, linear regression
@@ -301,7 +307,7 @@ knitr::include_graphics(here("img", "ourdata.png"))
 
 
 
-## Demographic and opulation data
+## Demographic and population data
 
 To obtain information about age, sex, and race, and overall population we will use US Census Bureau data, just like both of the articles. The cesnus data is available for different time spans. Here are the links for the years used in our analysis. We will use data from 1977 to 2010.
 
@@ -349,6 +355,8 @@ Notice that the `STATE` variable for the demographic data is numeric. That is be
 
 
 ## State FIPS codes
+
+
 
 The following data was downloaded from the [US Census Bureau](https://www.census.gov/geographies/reference-files/2014/demo/popest/2014-geocodes-state.html){target="_blank"}.
 
@@ -522,7 +530,8 @@ STATE_FIPS
 
 ## Demographic and population data
 
-<details> <summary> Click here to see detailed information about how the demogrphic data was wrangled </summary>
+
+<details><summary> Click here to see detailed information about how the demogrphic data was wrangled </summary>
 
 
 <font size="6"> **1977-1979**</font>
@@ -979,9 +988,9 @@ dem_00_10
 
 OK, now we are ready to combine all of our demgraphic data together!
 
-</details>
+<!-- </details> -->
 
-### Combining demographic data
+## Combining demographic data
 
 We can check that the colnames are the same for the data for each of the decades by using the `setequal()` function of the `dplyr` package.
 
@@ -1131,7 +1140,7 @@ We can indeed check that we have the correct number of levels for `VARIABLE` usi
  distinct(dem_LOTT, VARIABLE)
 ```
   
-### Combining population Data
+## Combining population Data
 
 We also have population data for each decade that came from wrangling the demogrphic data.
 
@@ -1158,7 +1167,7 @@ population_data <- bind_rows(pop_77_79,
 
 population_data <- population_data %>%
   mutate(VARIABLE = "Population") %>%
-  rename("VALUE"=TOT_POP)
+  rename("VALUE" = TOT_POP)
 ```
 
 We could check that we have 51 values for each year by using the `count()` function of the `dplyr` package.
@@ -1170,7 +1179,7 @@ population_data %>%
 
 ## Police staffing
 
-<detials> <summary> click here to see detials about how the plice staffing data was wrangled. </summary>
+<details><summary> Click here to see details about how the plice staffing data was wrangled. </summary>
 
 OK, now we will wrangle the police staffing data. We want to limit the data to only the years of interest. Then we will also replace NA values with zero for the `male_total_ct` and `female_total_ct` variables using the `replace_na()` function of the `tidyr` packge. We will also, use the `across()` function of the `dplyr` package to select and mutate both of these columns in this way. Since both of these variables have `total_ct` in the name and no other variables do, we can use the `contains()` function of the `dplyr` package to specify that we want to use these columns instead of listing both out.
 
@@ -1213,12 +1222,33 @@ ps_data
 And we will check that we have same number of values (the number of years included in the data) for each state.
 
 ```{r}
+
 ps_data %>%
-  count(state_abbr) 
+  count(state_abbr)  %>% head()
+
+ps_data %>%
+  count(state_abbr) %>%
+  filter(n != 38) %>%
+  dim()
 ```
-We will remove a few states now.
-AVocado- why?
-NB is  Nebraska. This was changed to NE to avoid confusions with NB in Canada. This dataset uses NB
+Looks like all the states have 38 values.
+
+Notice also that there are some unusual abrreviations in the `state_abbr` variable.
+
+We will remove data for [US terroitories and associated states]( https://www.fs.fed.us/database/feis/format.html){target="_blank"}  
+
+
+Abbreviation   | Territory and associated states                                                                    
+---------- |-------------
+**AS**  | American Samoa 
+**GM**  | Guam
+**CZ**  | Canal Zone
+**FS**  | ??Federated States of Micronesia (usually FM)  
+**MP**  |  Northern Mariana Islands
+**OT**  | ??U.S. Minor Outlying Islands (usually UM)
+**PR**  | Puerto Rico 
+**VI**  | Virgin Islands
+
 
 ```{r}
 
@@ -1231,42 +1261,95 @@ state_of_interest_NULL <- c("AS",
                             "PR",
                             "VI")
 
-state_abb_df <- as.data.frame(cbind(state.abb, state.name))
-
-colnames(state_abb_df) <- c("state_abbr", "STATE")
-
-print(state_abb_df)
-
-state_abb_df <- state_abb_df %>%
-  add_row(state_abbr="DC",
-          STATE="District of Columbia")
-
-denominator_temp <- population_data %>%
-  dplyr::select(-VARIABLE) %>%
-  rename("Population_temp"=VALUE)
-
 ps_data <- ps_data %>%
-  filter(!(state_abbr %in% state_of_interest_NULL)) %>%
-  mutate(state_abbr = case_when(state_abbr == "NB" ~ "NE",
-                                TRUE ~ state_abbr)) %>%
-  left_join(state_abb_df, by = "state_abbr") %>%
-  dplyr::select(-state_abbr) %>%
+  filter(!(state_abbr %in% state_of_interest_NULL)) 
+```
+  
+Within the `datasets` package that is loaded with R, there is a dataset called `state` that contains an object called `state.abb` that has the state abbreviations and `state.name` that has the state names.
+We will combine these now to add the state names to our data.
+
+```{r}
+state_abb_data <- tibble( "state_abbr" = state.abb, "STATE" =state.name)
+head(state_abb_data)
+```
+
+One unusual thing about this data is that NE is used for Nebraska to avoid confusions with NB in Canada. 
+So we want to repace that using the `str_replace()` function of the `stringr` package
+
+```{r}
+state_abb_data %<>%
+  mutate(state_abbr = str_replace(string = state_abbr, 
+                                pattern = "NE", 
+                            replacement = "NB"))
+```
+
+#### {.scrollable }
+```{r}
+# Scroll through the output!
+state_abb_data %>% print(n = 50)
+```
+####
+
+
+We need to add DC to this. We will use the `add_row()` function of `dplyr` to do this.  We just need to specify values for both of the variables.
+
+```{r}
+state_abb_data %<>%
+  dplyr::add_row(state_abbr = "DC",
+                      STATE = "District of Columbia")
+```
+
+Now we will add this to our police staffing data and then remove the `state_abbr` variable, so that we just have state names. We will also 
+
+```{r}
+ps_data %<>%
+  left_join(state_abb_data, by = "state_abbr") %>%
+  dplyr::select(-state_abbr)
+ps_data
+```
+
+Now we will rename the variables to match those of the other datasets.
+```{r}
+ps_data %<>%
   rename(YEAR = "data_year",
          VALUE = "officer_state_total") %>%
-  mutate(VARIABLE = "officer_state_total") %>%
-  left_join(denominator_temp, by=c("STATE","YEAR")) %>%
-  mutate(VALUE = (VALUE*100000) / Population_temp) %>%
-  mutate(VALUE = lag(VALUE)) %>%
-  mutate(VARIABLE = "police_per_100k_lag") %>%
-  dplyr::select(-Population_temp)
+  mutate(VARIABLE = "officer_state_total")
+ps_data
 ```
-</details>
+
+
+We also need to adjust the value to be that of every 100,000 people in the state. To do so we need the population for each state, which lukily we already have. We will slightly modify the population data and create a new tibble that will make it more clear how we are dividing by it.
+
+```{r}
+denominator_temp <- population_data %>%
+ select(-VARIABLE) %>%
+  rename("Population_temp"=VALUE)
+head(denominator_temp)
+
+ps_data %<>%
+  left_join(denominator_temp, by=c("STATE","YEAR"))
+head(ps_data)
+```
+
+Avocado not sure why the lag?
+```{r}
+ps_data %<>%
+  mutate(VALUE = (VALUE * 100000) / Population_temp) %>%
+  #mutate(VALUE = lag(VALUE)) %>%
+  mutate(VARIABLE = "police_per_100k_lag") %>%
+  select(-Population_temp)
+
+ps_data
+```
+
+<!-- </details> -->
+
 
 
 ## Unemployment
 
 The first thing we need to do with the unemployment data is combine the data across the different states.
- We can do that using the `bind_rows()` function of `dplyr` which appends the data together based on the presence of columns with the same name in the different tibbles. We will use the `map_df()` function of the `purrr` package to allow us to do this across each tibble in our list. We will then select just the annual data for each state and year and we will rename our variables to be consistent with some of other data that we are working with. Thus we would like our variabels to be `YEAR`, `VALUE` and `VARIABLE` in all caps.
+ We can do that using the `bind_rows()` function of `dplyr` which appends the data together based on the presence of columns with the same name in the different tibbles. We will use the `map_df()` function of the `purrr` package to allow us to do this across each tibble in our list. We will then select just the annual data for each state and year and we will rename our variables to be consistent with some of other data that we are working with. Thus we would like our variables to be `YEAR`, `VALUE` and `VARIABLE` in all caps.
  
 ```{r}
 
@@ -1276,7 +1359,6 @@ ue_rate_data <- ue_rate_data %>%
 head(ue_rate_data)
 
 ue_rate_data <- ue_rate_data %>%
- # mutate(Year = as.numeric(Year)) %>%
   dplyr::select(STATE, Year, Annual) %>%
   rename("YEAR" = Year,
         "VALUE" = Annual) %>%
@@ -1286,6 +1368,10 @@ head(ue_rate_data)
 ```
 
 ## Poverty rate
+
+
+
+<details><summary> Click here to see details about how the poverty data was wrangled </summary>
 
 OK, now for wrangling the poverty data. First let's take a look at it. 
 ```{r}
@@ -1355,12 +1441,16 @@ As you can see in the [RStudio cheatsheet](https://rstudio.com/resources/cheatsh
 ```{r}
 knitr::include_graphics(here("img", "regex.png"))
 ```
+
 #### {.scrollable }
+
 ```{r}
-# scroll through the output!
+# Scroll through the output!
 poverty_rate_data %>% 
-  filter(str_detect(STATE, "[:digit:]"))
+  filter(str_detect(STATE, "[:digit:]")) %>%
+  print(n = 51)
 ```
+
 ####
 
 Some of the years (2013 and 2017) are listed twice with a number in parantheses, others are just listed once with a number in parantheses. Looking at the technical documentation, this seems to do with updates to the defition of poverty and to the methods used to estimate poverty levels. See [here](https://www.census.gov/topics/income-poverty/poverty/guidance/poverty-footnotes/cps-historic-footnotes.html){target="_blank"} and [here](https://www2.census.gov/programs-surveys/cps/techdocs/cpsmar19.pdf){target="_blank"} for more information. We will simply select one of the sets of data for 2013 and 2017.
@@ -1414,9 +1504,11 @@ There are 41 different sets of data according to year values.
 ### Scroll through the output!
 poverty_rate_data %>% 
   filter(str_detect(STATE, "[:alpha:]")) %>%
-  count(STATE)
+  count(STATE) %>% 
+  print(n = 51)
 ```
 ####
+
 Indeed, looks like each of the states are repeated the same number of times!
 
 Now let's create a new variable `YEAR` that repeats the year values for all of the different states and for the row that has just the year value for a total of 52.
@@ -1565,25 +1657,138 @@ sapply(poverty_rate_data, class)
 colnames(poverty_rate_data)
 ```
 
+<!-- </details> -->
+
+
+
 ## Violent crime
 
+
+
+<details><summary> Click here to see details about how the violent crime data was wrangled </summary>
+
+The `crime_data` was importated using `read_lines()` and we have some lines that we don't necessarily need. A large amount of the original data is notes at the end of the table. We want to remove these lines. We can determine where they start by searching for the row that contains the first statement of these notes using the `str_which()` function of the `stringr` package. We will subtract one from this as there is a blank line in between.
+
 ```{r}
-length(crime_data)
+tail(crime_data)
+crime_data <- crime_data[-((str_which(crime_data, "The figures shown in this column for the offense of rape were estimated using the legacy UCR definition of rape")-1): length(crime_data))]
+#crime_data <- crime_data[-(2143:length(crime_data))]
+tail(crime_data)
+```
 
-crime_data <- crime_data[-(2143:length(crime_data))]
+There are lines for each year from 1977 to 2014 as well as four lines about each state and the header information for each state. 
+Here you can see what the orginal data looks like:
+```{r}
+knitr::include_graphics(here("img", "crime_data.png"))
+```
 
+We want to delete the header information and only retain the lines numeric values or state names.  Thus since there are 38 years worth of data for each state and 4 lines for each header, then each state has 42 lines. We want to delete the lines between and including line 2 to 4 for each state. We will save the header information once to use later.
+```{r}
+head(crime_data)
 x <- 2014-1977+1
-
-rep_cycle <- 2 + 2 + x
-
+rep_cycle <- 4 + x
 rep_cycle_cut <- 2 + x
+colnames_crime<-(crime_data[4])
+```
 
-delete_rows <- c(seq(2,length(crime_data),rep_cycle),
-                 seq(3,length(crime_data),rep_cycle))
+So starting at line 2 and and 3 and 4 we create a sequence of numbers that increase by the number of rows of the length of the individual state data. We can do so using the base `seq()` function. We can take a look at these in order using the base `sort()` function.
 
+```{r}
+delete_rows <- c(seq(from = 2,
+                       to = length(crime_data),
+                       by = rep_cycle),
+                 seq(from = 3,
+                       to = length(crime_data),
+                       by = rep_cycle), 
+                 seq(from = 4,
+                       to = length(crime_data),
+                       by = rep_cycle))
+sort(delete_rows)
+
+```
+Thus we will delete lines 2, 3, and 4 and then skip 40 lines (to account for the state information for the first state, the lines of information for the 38 years, and then the state information for the next state) and then delete the next 3 consecutive lines and so on. We can indeed see that line 44-46 are what we wish to remove.
+
+```{r}
+crime_data[44:46]
+```
+
+```{r}
 crime_data <- crime_data[-delete_rows]
+```
 
-crime_data <- data.frame(cbind(crime_data, rep(1:(length(crime_data)/rep_cycle_cut),each=rep_cycle_cut)))
+
+Nice!
+
+Now we can select all the lines that have state information. We can repeat each of these for the 38 years for each state as well as this line that contains the state information by using the base `rep()` function with the `each =` argument. Finally we will remove the `"Estimated crime in "` portion of the string using the `str_remove()` function of the `stringr` package.  We will later combine this with the crime data.
+
+```{r}
+state_label_order <-crime_data[str_which(crime_data, "Estimated crime")]
+state_label_order
+
+state_label_order <- rep(state_label_order, each = 38)
+
+crime_states <-str_remove(state_label_order, pattern = "Estimated crime in ")
+head(crime_states)
+```
+
+Nice! Now for the rest of the data. We now need to remove the lines with the state information.
+
+```{r}
+crime_data <-crime_data[-str_which(crime_data, "Estimated crime")]
+head(crime_data)
+tail(crime_data)
+```
+
+It appears that the data is comma separted with 8 columns. One of the middle columns often has no values, we need to fill these in with NAs. We can use the `read_csv()` fucntion from the `readr` package to do this. It turns out you don't have to have a file, but you can also use a string our a vector.
+
+```{r}
+crime_data_sep <-read_csv(crime_data, col_names = FALSE)
+head(crime_data)
+```
+Nice! Now we just need our colnames. Recall that we saved this information. 
+
+```{r}
+colnames_crime
+
+colnames(crime_data_sep) <-c("Year",
+                             "Population",
+                             "Violent_crime_total",
+                             "Murder_and_nonnegligent_Manslaughter",
+                             "Legacy_rape" ,
+                             "Revised_rape", 
+                             "Robbery",
+                             "Aggravated_assault")
+head(crime_data_sep)
+```
+
+We also want to combine this with the state information we collected earlier.
+We will use the `bind_cols()` function of the `dplyr` package to do this. This requires that the data have the same number of rows.
+
+```{r}
+crime_data_sep <-bind_cols(STATE =crime_states, 
+          crime_data_sep)
+
+```
+
+Now we will rename the `Viol_crime_count` variable to be `Variable` and we will remove all of the other columns except for `Year`. We will also rename the variables to look like the other datasets.
+
+```{r}
+crime_data <- crime_data_sep %>%
+  mutate(VARIABLE = "Viol_crime_count") %>%
+  rename("VALUE" = Violent_crime_total) %>%
+  rename("YEAR" = Year) %>%
+  select(YEAR,STATE, VARIABLE, VALUE)
+
+crime_data
+```
+
+
+
+
+from Michael:
+
+```{r, eval = FALSE}
+crime_data2 <- data.frame(cbind(crime_data2, rep(1:(length(crime_data2)/rep_cycle_cut),each=rep_cycle_cut)))
 
 colnames(crime_data) <- c("String","STATE_GROUP")
 
@@ -1627,30 +1832,172 @@ crime_data <- crime_data %>%
          VALUE = as.numeric(VALUE))
 ```
 
+<!-- </details> -->
+
 ## RTC laws
+
+<details><summary> Click here to see details about how the RTC Law data was wrangled </summary>
+
+
+The information about the laws for each state are located on page 62 of the [Donohue, et al.](https://www.nber.org/papers/w23510.pdf){target="_blank"} article, so first we will select just this page. We can print part of the character string for this page using the `utils` `str()` function and the `ncar.max` argument.
 
 ```{r}
 DAWpaper_p_62 <- DAWpaper[[62]]
+str(DAWpaper_p_62, nchar.max = 1000)
+```
 
+ We can also use the `cat` function to see the data printed nicely to see what we are going for.
+```{r}
+
+cat(DAWpaper_p_62)
+```
+
+
+We can see that this is one continuous character string. We can sparate into lines based on the presence of `"\n"` in the string using the `str_split()` function of the `stringr` package. We need to unlist the data first, as the output of `str_split()` is a list. Finally, we can convert it to a tibble using the `as.tibble()` function of the `tibble` package.  We also see that we don't need the first line about the table. We can remove this with the `slice()` function of the `dplyr` package. We can also use this to remove the colnames so that we can replace them. Thus we will use `slice(-(1:2))` to remove the first two lines.
+
+So we will split and unlist() the data.
+```{r}
 p_62 <- DAWpaper_p_62 %>%
-    strsplit("\n") %>%
+    str_split("\n") %>%
     unlist() %>%
-    as.data.frame() %>%
+    dplyr::as_tibble() %>%
     slice(-(1:2))
 
-apply(p_62, 1, nchar)
+head(p_62)
+tail(p_62)
 
-p_62[53,] #physcial page 60
+```
+
+
+
+We also see by looking at the tail that we want to remove the last two lines. One is empty and the other has only 63 characters, which is the line with the page number.
+
+```{r}
+p_62 %<>%
+  rename(RTC = value)
+p_62 %>%
+  mutate(RTC = map_chr(RTC, str_length)) %>%tail()
+
+p_62[53,] # physcial page 60
+p_62[54,] # empty line
+p_62 %<>%
+    slice(-c(53:54))
+```
+
+Now we will try splitting by spaces. We can show the output withe the `first()` and `nth()` functions of the `dplyr` package.
+
+```{r}
+p_62 %>% pull(RTC) %>% map(str_split, pattern = " ") %>% first()
+p_62 %>% pull(RTC) %>% map(str_split, pattern = " ") %>% nth( 5)
+```
+
+
+Interesting, we can see that there are lots of spaces between the elements of the table and that they vary by line. For example there are 6 spaces before Alabama and 7 spaces before Alaska.
+
+Overall, that didn't work quite like we expected. 
+
+Recall from the cheatsheet that `"\\s"` indicates a space. There are also ways to specify how many spaces using curly brackets`{}`. 
+
+```{r}
+knitr::include_graphics(here("img", "regex.png"))
+knitr::include_graphics(here("img", "quantifiers.png"))
+```
+
+The spacing appears to vary quite a bit. WE can use the `str_count()` function of the `stringr` package to see how often we have white spaces larger than 5, 10, 15, or 40 spaces.
+```{r}
+# how often are there white spaces with more than 5 spaces
+p_62 %>% 
+  pull(RTC) %>% 
+  map(str_count, pattern = "\\s{5,}") %>% 
+  unlist()
+# how often are there white spaces with more than 10 spaces
+p_62 %>% 
+  pull(RTC) %>% 
+  map(str_count, pattern = "\\s{10,}") %>%
+  unlist()
+
+# how often are there white spaces with more than 15 spaces
+p_62 %>% 
+  pull(RTC) %>% 
+  map(str_count, pattern = "\\s{15,}") %>%
+  unlist()
+
+# how often are there white spaces with more than 40 spaces
+p_62 %>% 
+  pull(RTC) %>%
+  map(str_count, pattern = "\\s{40,}") %>% 
+  unlist()
+```
+
+Rows with white spaces with more than 40 consecutive spaces is less common. It appears to be the case in the 1st and 5th row. 
+
+If we take a look at those rows we can see that this occurs when we have a missing value.
+
+
+```{r}
+cat(DAWpaper_p_62)
+```
+
+
+So we will replace white spaces with more than 40 consecutive spaces with `NA`. Let's also remove the leading white spaces that varies infront of the state names, as DC does not have any and this could cause a problem later. We will also replace any white spaces of 2 consecutive spaces or more , but less than 15 white spaces with "|" so that we can split the data based on this symbol. Thus we will also put these around the `NA` value that we are using replace the white spaces made of 40+ spaces. 
+```{r}
+
+p_62b <-p_62 %>%
+  mutate(RTC = str_replace_all(pull(., RTC), "\\s{40,}", "|N/A|")) %>%
+  mutate(RTC =str_trim(pull(., RTC), side = "left")) %>%
+  mutate(RTC = str_replace_all(pull(., RTC), "\\s{2,15}", "|"))
+head(p_62b)
+```
+
+Now anytime there is  one or more `"|"` we should have a column break. So now we will split the data by this symbol.
+```{r}
+
+p_62b <-pull(p_62b, RTC) %>%
+  str_split( "\\|{1,}") 
+
+head(p_62b)
+```
+
+Great! Now we want to put our data in tibble format. To do so we need to bind the rows together. We can do so using the base `rbind()` function. We will use this instead of the `bind_rows()` function of `dplyr` because `rbind()` is less restrictive and allows for columns without names. We will use the base `do.call()` function, so that this is performed along each character string within the list of `p_62b` while maintaining the structure. Then we create a tibble out of this. avocado... describe do.call better... maybe do something tidyverse... 
+
+```{r}
+p_62 <- as.tibble(do.call(rbind, p_62b))
+
+colnames(p_62) <- c("STATE",
+                    "E_Date_RTC",
+                    "Frac_Yr_Eff_Yr_Pass",
+                    "RTC_Date_SA")
 
 p_62 <- p_62 %>%
-    slice(-53)
+  dplyr::select(STATE, RTC_Date_SA) %>%
+  rename("RTC_LAW_YEAR"= RTC_Date_SA) %>%
+  mutate(RTC_LAW_YEAR = as.numeric(RTC_LAW_YEAR)) %>%
+  mutate(RTC_LAW_YEAR = case_when(RTC_LAW_YEAR == 0 ~ Inf,
+                              TRUE ~ RTC_LAW_YEAR))
 
-apply(p_62, 1, str_count, "\\s{5,}")
-apply(p_62, 1, str_count, "\\s{10,}")
-apply(p_62, 1, str_count, "\\s{20,}")
-apply(p_62, 1, str_count, "\\s{40,}")
+RTC <-p_62
+RTC
+```
 
-head(cbind(p_62, apply(p_62, 1, str_count, "\\s{40,}")))
+avocado why inf?
+
+from Michael
+```{r, eval = FALSE}
+
+p_62b <-pull(p_62b, RTC) %>%
+  str_split( "\\|{1,}") %>% as.data.frame()
+  unlist()
+
+
+
+p_62b <-p_62 %>%
+  mutate(RTC = str_replace_all(pull(., RTC), "\\s{40,}", "|N/A|")) %>%
+   mutate(RTC = str_replace_all(pull(., RTC), "\\s{2,15}", "|"))
+
+p_62b %<>%
+mutate(value = str_split(pull(., value), "\\|{1}"))
+
+read_csv(p_62b$value)  
 
 p_62 <- p_62 %>%
     apply(1,str_replace_all, "\\s{40,}", "|N/A|") %>%
@@ -1687,29 +2034,47 @@ sapply(p_62, class)
 head(p_62)
 ```
 
-## Checkpoint
+## Joining Data
+
+
+Now we will join the data from the different data sets together to create a tibble of data for an analysis that will be similar to the data used by [Donohue et al.](https://www.nber.org/papers/w23510.pdf) {target="_blank"} and [Lott and Mustard](https://chicagounbound.uchicago.edu/cgi/viewcontent.cgi?article=1150&context=law_and_economics){target="_blank"}.
+
+First we need to check that our data is indeed ready to be joined. We need ot make sure that the colum names are the same for each dataset that we intend to combine together. 
+
+can use setequal setdiff or all_equal...
+
+We will use the `set_equal()` function of the `dplyr` package to compare these. This does not require that the order be the same. Similar functions like `set_diff()` and `all_equal()` however do require the same order, or at least have an argument to specify if you want to check for the same order.
+setequal(X, Y)
+
 ```{r}
+
+
 colnames(dem_DONOHUE)
 colnames(dem_LOTT)
+colnames(population_data)
 colnames(ue_rate_data)
 colnames(poverty_rate_data)
 colnames(crime_data)
+colnames(ps_data) #police staffing
 
 head(dem_DONOHUE)
 head(dem_LOTT)
 head(ue_rate_data)
 head(poverty_rate_data)
 head(crime_data)
-```
-```{r}
+
 crime_data %>% distinct(STATE) %>% tally()
 crime_data %>% distinct(YEAR) %>% tally()
-
 ```
 
-## Join
+
 
 ## Donohue, et al.
+
+Avocado bind_rows will make na values for the later years beyond 2010 for the datasets that have them... not sure why we are adding these... maybe more about that later?
+
+
+We will now bind the demogrpahic data that we made for the Donohue-like analysis called `dem_DONOHUE`, as well as all the other datasets that we have wrangled. This is possible becuase we have the same colnames for each dataset.
 
 ```{r}
 DONOHUE_DF <- bind_rows(dem_DONOHUE,
@@ -1723,10 +2088,12 @@ DONOHUE_DF <- bind_rows(dem_DONOHUE,
   left_join(p_62 , by = c("STATE")) %>%
   mutate(RTC_LAW = case_when(YEAR >= RTC_LAW_YEAR ~ TRUE,
                               TRUE ~ FALSE))
+```
 
+
+```{r}
 DONOHUE_DF %>%
-  group_by(YEAR) %>%
-  tally() %>%
+  count() %>%
   filter(n != 51) %>%
   print(n=dim(.)[1])
 
