@@ -2338,9 +2338,8 @@ length(summary(droplevels(as.factor(LOTT_DF$STATE))))
 
 # **Data Exploration**
 ***
-
+ Let's do some quick visualizations of the crime data across different states and over time. 
 ```{r}
-sapply(DONOHUE_DF, class)
 
 DONOHUE_DF %>%
   mutate(Viol_crime_rate_100k_log = log((Viol_crime_count*100000)/Population)) %>%
@@ -2396,16 +2395,89 @@ DONOHUE_DF %>%
   theme_minimal() + 
   theme(axis.text.x = element_text(angle = 90))
 ```
+We can also use the `vis_miss()` function of the `naniar` package confirm that there are no missing values.
+
+```{r}
+DONOHUE_DF %>%
+  naniar::vis_miss()
+
+```
+
+Looks like no missing data! 
+
+```{r}
+LOTT_DF %>%
+  naniar::vis_miss()
+
+```
+Same for the `LOTT_DF`.
+
+We can use the `skim()` of the `skimr` package to get a better sense of the data. This shows missingingness as well as standard deviations, spread, and means for our data. Also notice that there is a histogram of each variable.
+
+```{r}
+skimr::skim(DONOHUE_DF)
+skimr::skim(LOTT_DF)
+
+```
 
 # **Data Analysis**
 ***
 
 ## Donohue, et al.
 
+OK! We are now ready to start analyzing our data!. 
+
+We have what is called [panel data](https://en.wikipedia.org/wiki/Panel_data). This is a special type of longitundinal data. Longitudinal data are data measurments taken over time. Panel data are data repeatidly measured for the same panel members or individuals over time. In our case, we have measurements of violent crime and other varaibles each year for each state. Therefore we are using measurements about the same states over time.  
+
+In a  panel analysis there are $N$ individual panel members and $T$ time points.  
+
+There are two types of panels:  
+1) Balanced - At each time point, there are data points for each individual. 
+2) Unbalanced - There may be data points missing for some inidividuals at some timepoints.
+
+Overall in a Balanced panel we have $$n$$ observations, where $$n = N*T$$.  
+
+In an Unbalanced panel we would the number of observations is less than $$N*T$$.
+
+
+In our case we have:  
+$N$ = 45 states (recall that we removed those who had adopted a RTC law before 1980)  
+$T$ =  31 years (1980 - 2010)  
+In every year we have measurements for each state, thus our panel is balanced.
+
+So, our total observations $n = 45*31$, thus $n$ = `r 45*31`.  
+
+
+
+We will be performing a panel linear regression model analysis. 
+
+There are three general subtypes of [panel regression analysis](https://en.wikipedia.org/wiki/Panel_analysis):
+1) independently pooled panels  - assumes that there are no individual effects that are independent of time and also no effect of time on all the individuals. This is essentially an ordinary least squares linear regression.
+2) fixed effects - assumes that there are differing aspects about the individuals that do not vary with time or are fixed over time that are correlated with independent varaiables.
+3) random effets - assumes that there are the unqiue qualities about the individuals are not correlated with independent variables. 
+
+AVOCADO:This is just from my literature review and what wikipedia says but I find this a bit confusing.
+
+See [here](https://www.bauer.uh.edu/rsusmel/phd/ec1-15.pdf) for more information about these different models.
+
+We will be performing a fixed effect panel regression analysis, as we do in fact think that some of the unobserved qualities about the different states that may be correlated with some of our independent variables. For example, the level of economic opportunity might be an unobserved feature about the states that influences violent crime rate and would be correlated with poverty rate and unemployment. 
+
+In such an analysis we will model our data according to this generic model:
+
+$$Y_{it} = a + B'X_{it} + u_{it},\\ u_{it}=\mu _{i}+v_{it}$$
+Where $i$ is the individual dimension (in our case individual states) and $t$ is the time dimension.
+
+$\mu _{i}$ are individual effects that are time independent (aka. fixed over time)
+$v_{it}$ are random effects that do vary with time  
+
+https://en.wikipedia.org/wiki/Breusch%E2%80%93Pagan_test
+
+
 Some code taken from http://karthur.org/2019/implementing-fixed-effects-panel-models-in-r.html
 
 ```{r}
 d_panel_DONOHUE <- pdata.frame(DONOHUE_DF, index=c("STATE", "YEAR"))
+
 
 DONOHUE_OUTPUT <- plm(Viol_crime_rate_1k_log ~
                         RTC_LAW +
@@ -2428,7 +2500,40 @@ summary(DONOHUE_OUTPUT)
 DONOHUE_OUTPUT_TIDY <- tidy(DONOHUE_OUTPUT, conf.int = 0.95)
 
 DONOHUE_OUTPUT_TIDY$Analysis <- "Analysis 1"
+
+
 ```
+
+We will also perform a test to evaluate if there is indeed an individual effect and a time effect in our model.
+We can use the `plmtest()` function of the `plm` package. This performs a Lagrange FF Multiplier Test ... or is it 
+
+
+
+```{r}
+
+DONOHUE_pool_model <-plm(Viol_crime_rate_1k_log ~
+                        RTC_LAW +
+                        White_Male_15_to_19_years +
+                        White_Male_20_to_39_years +
+                        Black_Male_15_to_19_years +
+                        Black_Male_20_to_39_years +
+                        Other_Male_15_to_19_years +
+                        Other_Male_20_to_39_years +
+                        Unemployment_rate +
+                        Poverty_rate + 
+                        Population_log + 
+                        police_per_100k_lag,
+                      effect = "twoways",
+                      model = "pooling",
+                      data=d_panel_DONOHUE)
+plmtest(DONOHUE_pool_model, effect = c("twoways"))
+
+```
+This might be the same as the F reported in the larger output...
+
+http://www.princeton.edu/~otorres/Panel101R.pdf
+
+need pFtest to compare ols and plm test... ols being lm ... look at link above
 
 ## Lott and Mustard
 
@@ -2546,7 +2651,7 @@ div.blue { background-color:#e6f0ff; border-radius: 5px; padding: 20px;}
 </style>
 <div class = "blue">
 
-It is important to note that multicollinearity and correlation are not one and the same. Correlation can be thought of as the strength of the relationship between variables. On the other hand, multicollinearity can be thought of the the violation of the independence assumption that is a consequence of this correlation in a regression analysis. 
+It is important to note that multicollinearity and correlation are not one and the same. Correlation can be thought of as the strength of the relationship between variables. On the other hand, multicollinearity can be thought of as the the violation of the independence assumption that is a consequence of this correlation in a regression analysis. 
 
 </div>
 
