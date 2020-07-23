@@ -34,8 +34,12 @@ knitr::opts_chunk$set(include = TRUE, comment = NA, echo = TRUE,
                       fig.align = "center", out.width = '90%')
 library(here)
 library(knitr)
+library(DT)
 ```
 
+```{r}
+DT::datatable(iris)
+```
 
 #### {.outline }
 ```{r, echo = FALSE, out.width = "800 px"}
@@ -61,7 +65,7 @@ Content content
 
 
 ```{r, echo = FALSE, out.width="800px"}
-knitr::include_graphics(here::here("img","content_image.png"))
+#knitr::include_graphics(here::here("img","content_image.png"))
 ```
 for large images from the web... might do this instead:
 
@@ -160,11 +164,21 @@ Variable   | Details
 Put files in docs directory and use `here` package.
 
 ```{r}
-pm <-readr::read_csv(here("docs", "pm25_data.csv"))
+#pm <-readr::read_csv(here("docs", "pm25_data.csv"))
 ```
 
 ## **Data Exploration and Wrangling**
 *** 
+
+To make a click expand section
+<details> <summary>Click to see more</summary>
+
+text
+
+</details>
+
+
+<details>
 
 We will also use the `%>%` pipe which can be used to define the input for later sequential steps. This will make more sense when we have multiple sequential steps using the same data object. To use the pipe notation we need to install and load dplyr as well.
 
@@ -173,11 +187,11 @@ Scrollable content:
 #### {.scrollable }
 ```{r}
 # Scroll through the output!
-pm %>% 
-  distinct(state) %>%
-  print(n = 1e3)
+iris
+
 ```
 ####
+
 
 
 ## **Data Analysis**
