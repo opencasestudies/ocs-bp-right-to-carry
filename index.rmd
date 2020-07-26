@@ -130,16 +130,21 @@ Therefore we will use a subset of the listed explanatory variables and they will
 
 <u>**Statistical Learning Objectives:**</u> 
 
-In this case study, students will learn:  
-1) what multicolinearity is and how it can influence linear regression coefficients  
-2) how to look for the presence of multicolinarity  
-3) the difference between multicolinearity and correlation  
+1) what multicollinearity is and how it can influence linear regression coefficients  
+2) how to look for the presence of multicollinarity and determine the severity
+3) the difference between multicollinearity and correlation 
+
 
 <u>**Data science Learning Objectives:**</u>
 
-1) joining data from multiple sources (dplyr)  
-2) reshaping data into different formats (tidyr)  
-2) visualizations (ggplot2)  
+1) data import of many different file types with special cases (`readr`, `readxl`, `pdftools`)
+2) joining data from multiple sources (`dplyr`)  
+3) working with character strings (`stringr`)
+4) data comparisons (`dplyr` and `janitor`)
+5) reshaping data into different formats (`tidyr`)  
+6) visualizations (`ggplot2`) 
+7) perform iterative simulations
+
 
 
 We will especially focus on using packages and functions from the [`Tidyverse`](https://www.tidyverse.org/){target="_blank"}, such as `dplyr` and `ggplot2`. The tidyverse is a library of packages created by RStudio. While some students may be familiar with previous R programming packages, these packages make data science in R especially efficient.
@@ -3092,6 +3097,17 @@ ggsave(here::here("img", "mainplot.png"))
 
 # **Helpful Links**
 *** 
+
+[Tidyverse](https://www.tidyverse.org/){target="_blank"}  
+[Writing functions](https://r4ds.had.co.nz/functions.html){target="_blank"}   
+[Longitudinal studies](https://www.bmj.com/about-bmj/resources-readers/publications/epidemiology-uninitiated/7-longitudinal-studies){target="_blank"}   
+[Panel data](https://en.wikipedia.org/wiki/Panel_data){target="_blank"}    
+[Confidence intervals](https://en.wikipedia.org/wiki/Confidence_interval){target="_blank"}   
+[Linear regression model](https://en.wikipedia.org/wiki/Linear_regression){target="_blank"}   
+
+For more information on linear regression see this [book](https://rafalab.github.io/dsbook/linear-models.html#linear-regression-in-the-tidyverse){target="_blank"} and this [case study](https://opencasestudies.github.io/ocs-bp-diet/){target="_blank"}.
+
+avocado fill this out
 
 https://rpubs.com/rslbliss/fixed_effects
 
