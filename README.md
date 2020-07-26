@@ -2,6 +2,9 @@
 OpenCaseStudies
 ===============
 
+[![Build
+Status](https://travis-ci.org/opencasestudies/ocs-right-to-carry-case-study.svg?branch=master)](https://travis-ci.org/opencasestudies/ocs-right-to-carry-case-study)
+
 ### Disclaimer
 
 The purpose of the [Open Case
@@ -180,7 +183,7 @@ the end of this case study are:
 4.  data comparisons (`dplyr` and `janitor`)
 5.  reshaping data into different formats (`tidyr`)  
 6.  visualizations (`ggplot2`)
-7.  perform iterative simulations
+7.  perform iterative simulations (`rsample`)
 
 #### Data import
 
