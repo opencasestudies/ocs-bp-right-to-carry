@@ -31,7 +31,8 @@ To cite this case study:
 Wright, Carrie, and Ontiveros, Michael and Jager, Leah and Taub,
 Margaret and Hicks, Stephanie. (2020).
 <a href="https://github.com/opencasestudies/ocs-right-to-carry-case-study" class="uri">https://github.com/opencasestudies/ocs-right-to-carry-case-study</a>.
-Vaping Behaviors in American Youth (Version v1.0.0).
+Examination of Multicollinearity Influence on Inference Using
+Right-to-Carry Gun Law and Violent Crime Data (Version v1.0.0).
 
 ### Acknowledgements
 
@@ -93,10 +94,12 @@ article and the
 article, however **we do not try to recreate them**, instead we perform
 simplified analyses to allow us to focus on multicolinearity.
 
-Therefore we use a subset of the explanatory variables used by each
-article including: 1) Data about state demographics in terms of
-population compositions for age, sex, race, as well as overall
-population values from the US Census Bureau:
+Therefore we use a subset of the **explanatory variables** used by each
+article including:
+
+1.  Data about state demographics in terms of population compositions
+    for age, sex, race, as well as overall population values from the US
+    Census Bureau:
 
 <table>
 <colgroup>
@@ -142,24 +145,21 @@ to identify what demographic data corresponds to what state. This is
 also available from the
 <a href="https://www.census.gov/geographies/reference-files/2014/demo/popest/2014-geocodes-state.html" target="_blank">US Census Bureau</a>.
 
-1.  Police staffing data, which was downloaded from the [Federal Bureau
-    of
-    Investigation](https://crime-data-explorer.fr.cloud.gov/downloads-and-docs).
+1.  Police staffing data, which was downloaded from the
+    <a href="https://crime-data-explorer.fr.cloud.gov/downloads-and-docs" target="_blank">Federal Bureau of Investigation</a>
 
-2.  Unemployment data, which was downloaded from the [U.S. Bureau of
-    Labor Statistics](https://data.bls.gov/cgi-bin/dsrv?la).
+2.  Unemployment data, which was downloaded from the
+    <a href="https://data.bls.gov/cgi-bin/dsrv?la" target="_blank">U.S. Bureau of Labor Statistics</a>.
 
-3.  Poverty data, extracted from Table 21 from this [US Census Bureau
-    Poverty
-    Data](https://www.census.gov/data/tables/time-series/demo/income-poverty/historical-poverty-people.html)
+3.  Poverty data, extracted from Table 21 from this
+    <a href="https://www.census.gov/data/tables/time-series/demo/income-poverty/historical-poverty-people.html" target="_blank">US Census Bureau Poverty Data</a>
 
 4.  Right-to-carry law data, which is available in a table in the
-    [Donohue paper](https://www.nber.org/papers/w23510.pdf)
-    {target="\_blank"}.
+    <a href="https://www.nber.org/papers/w23510.pdf" target="_blank">Donohue paper</a>
 
 Finally our outcome of interest is violent crime rates. The violent
-crime data was downloaded from the [FBI uniform crime reporting
-system](https://www.ucrdatatool.gov/Search/Crime/State/StatebyState.cfm)
+crime data was downloaded from the
+<a href="https://www.ucrdatatool.gov/Search/Crime/State/StatebyState.cfm" target="_blank">FBI uniform crime reporting system</a>
 
 #### Learning Objectives
 

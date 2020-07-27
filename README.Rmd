@@ -28,7 +28,7 @@ This work is licensed under the Creative Commons Attribution-NonCommercial 3.0 (
 
 To cite this case study:
 
-Wright, Carrie, and Ontiveros, Michael and Jager, Leah and Taub, Margaret and Hicks, Stephanie. (2020). https://github.com/opencasestudies/ocs-right-to-carry-case-study. Vaping Behaviors in American Youth (Version v1.0.0).
+Wright, Carrie, and Ontiveros, Michael and Jager, Leah and Taub, Margaret and Hicks, Stephanie. (2020). https://github.com/opencasestudies/ocs-right-to-carry-case-study. Examination of Multicollinearity Influence on Inference Using Right-to-Carry Gun Law and Violent Crime Data (Version v1.0.0).
 
 ### Acknowledgements
 
@@ -60,7 +60,8 @@ In this case study we use data peform simplified analyses similar to those of re
 
 In this case study, we perform analyses similar to those in [Donohue, et al.](https://www.nber.org/papers/w23510.pdf){target="_blank"} article and the [Lott and Mustard](https://chicagounbound.uchicago.edu/cgi/viewcontent.cgi?article=1150&context=law_and_economics){target="_blank"} article, however **we do not try to recreate them**, instead we perform simplified analyses to allow us to focus on multicolinearity.
 
-Therefore we use a subset of the explanatory variables used by each article including:
+Therefore we use a subset of the **explanatory variables** used by each article including:   
+
 1) Data about state demographics in terms of population compositions for age, sex, race, as well as overall population values from the US Census Bureau:
 
 Data   | Link                                                                        
@@ -74,15 +75,15 @@ Six demographic variables are created for the [Donohue, et al.](https://www.nber
 
 To use this data, we also need [Federal Information Processing Standard (FIPS) state codes](https://en.wikipedia.org/wiki/Federal_Information_Processing_Standard_state_code){target="_blank", to identify what demographic data corresponds to what state. This is also available from the [US Census Bureau](https://www.census.gov/geographies/reference-files/2014/demo/popest/2014-geocodes-state.html){target="_blank"}.
 
-2) Police staffing data, which was downloaded from the [Federal Bureau of Investigation](https://crime-data-explorer.fr.cloud.gov/downloads-and-docs).
+2) Police staffing data, which was downloaded from the [Federal Bureau of Investigation](https://crime-data-explorer.fr.cloud.gov/downloads-and-docs){target="_blank"}
 
-3) Unemployment data, which was downloaded from the [U.S. Bureau of Labor Statistics](https://data.bls.gov/cgi-bin/dsrv?la). 
+3) Unemployment data, which was downloaded from the [U.S. Bureau of Labor Statistics](https://data.bls.gov/cgi-bin/dsrv?la){target="_blank"}. 
 
-4) Poverty data, extracted from Table 21 from this [US Census Bureau Poverty Data ](https://www.census.gov/data/tables/time-series/demo/income-poverty/historical-poverty-people.html)
+4) Poverty data, extracted from Table 21 from this [US Census Bureau Poverty Data ](https://www.census.gov/data/tables/time-series/demo/income-poverty/historical-poverty-people.html){target="_blank"}
 
-5) Right-to-carry law data, which is available in a table in the [Donohue paper](https://www.nber.org/papers/w23510.pdf) {target="_blank"}.
+5) Right-to-carry law data, which is available in a table in the [Donohue paper](https://www.nber.org/papers/w23510.pdf){target="_blank"}
 
-Finally our outcome of interest is violent crime rates. The violent crime data was downloaded from the [FBI uniform crime reporting system](https://www.ucrdatatool.gov/Search/Crime/State/StatebyState.cfm)
+Finally our outcome of interest is violent crime rates. The violent crime data was downloaded from the [FBI uniform crime reporting system](https://www.ucrdatatool.gov/Search/Crime/State/StatebyState.cfm){target="_blank"}
 
 
 #### Learning Objectives
