@@ -2597,7 +2597,7 @@ avocado I think the `analysis` variable is a lable for plots
 ```{r}
 summary(DONOHUE_OUTPUT)
 
-DONOHUE_OUTPUT_TIDY <- tidy(DONOHUE_within_twoways, conf.int = 0.95)
+DONOHUE_OUTPUT_TIDY <- tidy(DONOHUE_OUTPUT, conf.int = 0.95)
 
 DONOHUE_OUTPUT_TIDY
 
@@ -2607,7 +2607,7 @@ DONOHUE_OUTPUT_TIDY$Analysis <- "Analysis 1"
 We will now perform a test to determine if we could have simply used a pooled model. This test evaluates if the coefficients (including the intercepts) are equal.  To perform this test we will use the `pooltest()` function of the `plm` package to compare the pooled model to the fixed effect within model.
 
 ```{r}
-pooltest(VViol_crime_rate_1k_log ~
+pooltest(Viol_crime_rate_1k_log ~
                         RTC_LAW +
                         White_Male_15_to_19_years +
                         White_Male_20_to_39_years +
@@ -2772,7 +2772,7 @@ comparing_analyses <- DONOHUE_OUTPUT_TIDY %>%
   bind_rows(LOTT_OUTPUT_TIDY) %>%
   filter(term == "RTC_LAWTRUE")
 
-library(grid)
+#library(grid)
 
 comparing_analyses_plot <- ggplot(comparing_analyses) + 
   geom_point(aes(x = Analysis, y = estimate)) +
