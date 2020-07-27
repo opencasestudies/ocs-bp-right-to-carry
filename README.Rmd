@@ -62,7 +62,7 @@ In this case study, we perform analyses similar to those in [Donohue, et al.](ht
 
 Therefore we use a subset of the **explanatory variables** used by each article including:   
 
-1) Data about state demographics in terms of population compositions for age, sex, race, as well as overall population values from the US Census Bureau:
+1. Data about state demographics in terms of population compositions for age, sex, race, as well as overall population values from the US Census Bureau:
 
 Data   | Link                                                                        
 ---------- |-------------
@@ -75,13 +75,13 @@ Six demographic variables are created for the [Donohue, et al.](https://www.nber
 
 To use this data, we also need [Federal Information Processing Standard (FIPS) state codes](https://en.wikipedia.org/wiki/Federal_Information_Processing_Standard_state_code){target="_blank", to identify what demographic data corresponds to what state. This is also available from the [US Census Bureau](https://www.census.gov/geographies/reference-files/2014/demo/popest/2014-geocodes-state.html){target="_blank"}.
 
-2) Police staffing data, which was downloaded from the [Federal Bureau of Investigation](https://crime-data-explorer.fr.cloud.gov/downloads-and-docs){target="_blank"}
+2. Police staffing data, which was downloaded from the [Federal Bureau of Investigation](https://crime-data-explorer.fr.cloud.gov/downloads-and-docs){target="_blank"}
 
-3) Unemployment data, which was downloaded from the [U.S. Bureau of Labor Statistics](https://data.bls.gov/cgi-bin/dsrv?la){target="_blank"}. 
+3. Unemployment data, which was downloaded from the [U.S. Bureau of Labor Statistics](https://data.bls.gov/cgi-bin/dsrv?la){target="_blank"}. 
 
-4) Poverty data, extracted from Table 21 from this [US Census Bureau Poverty Data ](https://www.census.gov/data/tables/time-series/demo/income-poverty/historical-poverty-people.html){target="_blank"}
+4. Poverty data, extracted from Table 21 from this [US Census Bureau Poverty Data ](https://www.census.gov/data/tables/time-series/demo/income-poverty/historical-poverty-people.html){target="_blank"}
 
-5) Right-to-carry law data, which is available in a table in the [Donohue paper](https://www.nber.org/papers/w23510.pdf){target="_blank"}
+5. Right-to-carry law data, which is available in a table in the [Donohue paper](https://www.nber.org/papers/w23510.pdf){target="_blank"}
 
 Finally our outcome of interest is violent crime rates. The violent crime data was downloaded from the [FBI uniform crime reporting system](https://www.ucrdatatool.gov/Search/Crime/State/StatebyState.cfm){target="_blank"}
 
