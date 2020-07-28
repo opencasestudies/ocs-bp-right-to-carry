@@ -194,7 +194,7 @@ knitr::include_graphics(here("img", "RTC_map.png"))
 
 [source](https://www.nraila.org/gun-laws/){target="_blank"}
 
-You can see that none of the fifty states have no-issue laws currently, meaning that all states allow the right to carry firearms at least in some way, however the level of restrictions is dramatically different from one state to another.
+You can see that none of the fifty states have no-issue laws currently (the gray category), meaning that all states allow the right to carry firearms at least in some way, however the level of restrictions is dramatically different from one state to another.
 
 Here you can see how these laws have changed over time around the country:
 ```{r, echo=FALSE, out.height = '100%', out.width = '100%', fig.align='center'}
@@ -214,7 +214,7 @@ For example here are the [current carry laws in Idaho](https://www.nraila.org/gu
 >State law also allows any resident of Idaho or a current member of the armed forces of the United States to carry a concealed handgun without a license to carry, provided the person is over 18 years old and not disqualified from being issued a license to carry concealed weapons under state law. An amendment to state law that takes effect on July 1, 2020 changes the reference in the above law from “a resident of Idaho” to “any citizen of the United States.”  
 
 
-And here are the [current carry laws in Arizona](https://www.nraila.org/gun-laws/state-gun-laws/arizona/) which is also considered an "Unrestricted- - no permit required" state:
+And here are the [current carry laws in Arizona](https://www.nraila.org/gun-laws/state-gun-laws/arizona/) which is also considered an "Unrestricted - no permit required" state:
 
 > Arizona respects the right of law abiding citizens to openly carry a handgun.
 
@@ -225,11 +225,11 @@ Notice that citizens in Idaho only need to be 18 to carry a firearm, whereas the
 
 In contrast here is an example of [current carry laws in Maryland](https://www.nraila.org/gun-laws/state-gun-laws/maryland/) which is considered a "Rights Restricted-Very Limited Issue" state:
 
->Carrying and Transportation in Vehicles
+> Carrying and Transportation in Vehicles
 It is unlawful for any person without a permit to wear or carry a handgun, openly or concealed, upon or about his person.  It is also unlawful for any person to knowingly transport a handgun in any vehicle traveling on public roads, highways, waterways or airways, or upon roads or parking lots generally used by the public. This does not apply to any person wearing, carrying or transporting a handgun within the confines of real estate owned or leased by him, or on which he resides, or within the confines of a business establishment owned or leased by him.
 
->Permit To Carry
-Application for a permit to carry a handgun is made to the Secretary of State Police.  In addition to the printed application form, the applicant should submit a notarized letter stating the reasons why he is applying for a permit.
+> Permit To Carry
+Application for a permit to carry a handgun is made to the Secretary of State Police. In addition to the printed application form, the applicant should submit a notarized letter stating the reasons why he is applying for a permit.
 
 
 avocado....Right to carry and covid masks?
@@ -240,7 +240,20 @@ There are some important considerations regarding this data analysis to keep in 
 
 1) We do not use all of the data used by either the [Lott and Mustard](https://chicagounbound.uchicago.edu/cgi/viewcontent.cgi?article=1150&context=law_and_economics){target="_blank"} or [Donohue, et al.](https://www.nber.org/papers/w23510.pdf){target="_blank"} analyses, nor do we perform the same analysis of each article. We instead perform a much simpler analysis with less variables for the purposes of illustration of the concept of multicollinearity and its influence on regression coefficients, not to reproduce either analysis.
 
-2) Because our analysis is an oversimplification, our analysis should not be used for determining policy changes, instead we suggest that users consult with a specialist.
+2) Our analysis accounts for either the adoption or lack of adoption of a permissive right-to-carry law in each state, but does not acount for differences in the level of permissiveness of the laws.
+
+Recall that these are the categories of right to carry laws:
+```{r, echo=FALSE, out.height = '100%', out.width = '100%', fig.align='center'}
+knitr::include_graphics(here("img", "RTC.png"))
+```
+```{r, echo=FALSE, out.height = '100%', out.width = '100%', fig.align='center'}
+knitr::include_graphics(here("img", "RTC_map.png"))
+```
+States with laws of the category rights restricted - very limited issue (red) are considered as not having a permissive right-to-carry law. Recall that no states currently have a rights infringed/non-issue law.
+
+States of all other categories (shall issue, discretionary/reasonable issue, and no permit required) (all shades of blue) are considered the same in our analysis, as having a permissive right-to-carry law.
+
+3) Because our analysis is an oversimplification, our analysis should not be used for determining policy changes, instead we suggest that users consult with a specialist.
 
 
 We would also like to note that...AVOCADO
@@ -2342,7 +2355,49 @@ length(summary(droplevels(as.factor(LOTT_DF$STATE))))
 
 # **Data Exploration**
 ***
- Let's do some quick visualizations of the crime data across different states and over time. 
+ Let's do some quick visualizations to get a sense of our outcome of interest, the violent crime data. 
+ 
+First we will plot the rate of violent crime over time to get a sense of the general trend.
+
+To do so we need to summarise the data for each year across all of the states. 
+Thus we will use the `group_by()` function and the `summarise()` functions to calculate an overall sum of violent crime relative to the population for each year. 
+
+Then we will use the `ggplot2` package to plot the data. The first step in creating a plot with this package is to use the `ggplot()` function and the `aes()` argument to specify what data should be plotted on the x-axis and what data should be plotted in on the y-axis. Then we select what type of plot we would like to make using one of the `geom_*()` functions. Please see [this case study](https://opencasestudies.github.io/ocs-bp-co2-emissions/) for more details.
+
+We can use the `scale_x_continuous()` and `scale_y_continuous()` functions to  modify the axis labels.
+
+The `labs()` function can be used to add labels to the plot, while the `theme()` function allows for manipulation of the detials of the labels, like size and angle. 
+
+All of these functions are part of the `ggplot2` package.
+ 
+```{r}
+ 
+ DONOHUE_DF %>%
+  group_by(YEAR) %>%
+  summarise(Viol_crime_count = sum(Viol_crime_count),
+                  Population = sum(Population),
+                    .groups = "drop") %>%
+  mutate(Viol_crime_rate_100k_log = log((Viol_crime_count*100000)/Population)) %>%
+  ggplot(aes(x = YEAR, y = Viol_crime_rate_100k_log)) +
+  geom_line() +
+  scale_x_continuous(breaks = seq(1980, 2010, by = 1),
+                     limits = c(1980, 2010),
+                     labels = c(seq(1980, 2010, by = 1))) +
+  scale_y_continuous(breaks = seq(5.75, 6.75, by = 0.25),
+                     limits = c(5.75, 6.75)) +
+  labs(title = "Crime rates fluctuate over time",
+       x = "Year",
+       y = "ln(violent crimes per 100,000 people)") +
+  theme_minimal() + 
+  theme(axis.text.x = element_text(angle = 90))
+```
+Interesting! It appears that there was an overall national peak in violent crime in the early 1990s that has since then declined.  
+
+
+Now let's take a look at each state.
+
+We will use the `ggrepel` package to add text to the plot using the `geom_text_repel()` function. This is especially useful when there is alot of text, as this function reduces the overlap of text labels. Again see [this case study](https://opencasestudies.github.io/ocs-bp-co2-emissions/) for more details on how to add labels to elements of plots.
+ 
 ```{r}
 
 DONOHUE_DF %>%
@@ -2380,26 +2435,15 @@ DONOHUE_DF %>%
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 90))
 
-DONOHUE_DF %>%
-  group_by(YEAR) %>%
-  summarise(Viol_crime_count = sum(Viol_crime_count),
-            Population = sum(Population),
-            .groups = "drop") %>%
-  mutate(Viol_crime_rate_100k_log = log((Viol_crime_count*100000)/Population)) %>%
-  ggplot(aes(x = YEAR, y = Viol_crime_rate_100k_log)) +
-  geom_line() +
-  scale_x_continuous(breaks = seq(1980, 2010, by = 1),
-                     limits = c(1980, 2010),
-                     labels = c(seq(1980, 2010, by = 1))) +
-  scale_y_continuous(breaks = seq(5.75, 6.75, by = 0.25),
-                     limits = c(5.75, 6.75)) +
-  labs(title = "Crime rates fluctuate over time",
-       x = "Year",
-       y = "ln(violent crimes per 100,000 people)") +
-  theme_minimal() + 
-  theme(axis.text.x = element_text(angle = 90))
+
 ```
-We can also use the `vis_miss()` function of the `naniar` package confirm that there are no missing values.
+
+Looks like the crime rages vary quite a bit from one state to another. Some states show increased crime over time while others show decreased crime. 
+
+
+Now let's take a closer look at some of our other variables.
+
+We can also use the `vis_miss()` function of the `naniar` package to confirm that there are no missing values.
 
 ```{r}
 DONOHUE_DF %>%
@@ -2416,7 +2460,7 @@ LOTT_DF %>%
 ```
 Same for the `LOTT_DF`.
 
-We can use the `skim()` of the `skimr` package to get a better sense of the data. This shows missingingness as well as standard deviations, spread, and means for our data. Also notice that there is a histogram of each variable.
+We can use the `skim()` of the `skimr` package to get a better sense of the data. This also shows missingingness, as well as standard deviations, spread, and means for our data. Also notice that there is a histogram of each variable.
 
 ```{r}
 skimr::skim(DONOHUE_DF)
@@ -2626,6 +2670,7 @@ pooltest(Viol_crime_rate_1k_log ~
 
 The `p-value` is less than a significance threshold of .05, thus we reject the null that our coeffients are all equal. Thus the `within` fixed effects model fit the data better.
 
+
 We can also perform a test to evaluate if there is indeed an individual effect and a time effect in our model.
 
 We can use the `plmtest()` function of the `plm` package. This performs a Lagrange Multiplier Test. To do so, we need to get the output for a simple pooled model.
@@ -2651,10 +2696,10 @@ plmtest(DONOHUE_pool_model, effect = c("twoways"))
 
 ```
 
-Again, the p-value is much smaller than the significance threshold of <0.05. Therefore we reject the null that there are no effects, and we can feel confident with proceeding with a twoway effect model.
+Again, the p-value is much smaller than the significance threshold of < 0.05. Therefore we reject the null that there are no effects, and we can feel confident with proceeding with a twoway effect model.
 
 
-AVOCADO...this might be the same as the F reported in the larger output... but I dont know...
+
 
 
 There is one more test that we could perform. To test if using a random effect model would be more appropriate compared to the fixed effect model, one could use the [Hausmen test](https://en.wikipedia.org/wiki/Durbin%E2%80%93Wu%E2%80%93Hausman_test){target="_blank"} for this (also called the Durbin-Wu-Hausman test). This can be implemented using the `phtest()` function of the `plm` package.
@@ -2765,13 +2810,27 @@ LOTT_OUTPUT_TIDY$Analysis <- "Analysis 2"
 ```
 
 
-## Comparing analyses
+## RTC coefficient comparison
+
+Now let's make a plot to compare the coeffecient estimate for the Right-to-carry law adoption variable in each model.
+
+First we will combine model fit information for this coefficient for each model.
 
 ```{r}
 comparing_analyses <- DONOHUE_OUTPUT_TIDY %>%
   bind_rows(LOTT_OUTPUT_TIDY) %>%
   filter(term == "RTC_LAWTRUE")
 
+comparing_analyses
+```
+
+We can see that for the first analysis (similar to the [Donohue et al.](https://www.nber.org/papers/w23510.pdf) {target="_blank"} study) the coefficient estimate for the presence of a permissive Right-to-carry law is positive, while for the second analysis (similar to the [Lott and Mustard](https://chicagounbound.uchicago.edu/cgi/viewcontent.cgi?article=1150&context=law_and_economics){target="_blank"} study) the coefficient estimate is negative. Thus in the first analysi we could conclude that the effect of adopting permissive right-to-carry laws  may be associated with increases in violent crime (although this was not a significant result (in contrast with the real [Donohue et al.](https://www.nber.org/papers/w23510.pdf) {target="_blank"} study )); while in the other analysis we could conclude that the laws may be associated with decreases in violent crime.
+
+Let's make a plot of this finding. We will show errorbars for the coefficient estimates for both analyses using the `geom_errorbar()` function of the `ggplot2` package. This requires specifying the minimum and maximum for our errorbar, which in our case we would like to be the low and high values of our confidence intervals for the coefficient estimates. We will also add a horizontal line at y = 0 using the `geom_hline()` function of the `ggplot2` package. 
+
+Finally we will add arrows to emphasize the difference in the direction of the findings using the `geom_segment()` function of the `ggplot2` package. Using the `arrow()` function, we can specify detials about the arrow we would like to add.
+
+```{r}
 #library(grid)
 
 comparing_analyses_plot <- ggplot(comparing_analyses) + 
@@ -2802,11 +2861,15 @@ comparing_analyses_plot <- ggplot(comparing_analyses) +
 comparing_analyses_plot
 ```
 
+We can see that most of the possible range of values for the estimate in analysis 1 are positive, while they are all negative for analysis 2.
+
 # Multicollinearity analysis
 
 How did the above happen?
 
 The analysis dataframes are very similar yet rendered very different results. 
+
+Recall that the only difference is the number of demographic variables. The number of rows or observations is the same.
 
 ```{r}
 all_equal(target = DONOHUE_DF,
@@ -2835,13 +2898,15 @@ Let's explore how this occured.
 
 When seemingly independent variables are highly related to one another, the relationships estimated in an analysis may be distorted. 
 
-In regression analysis, this distortion is often a byproduct of a violation of the independence assumption. This distortion, if large enough, can impact statistical inference. 
+In regression analysis, this distortion is often a by-product of a violation of the independence assumption. This distortion, if large enough, can impact statistical inference. 
+
+The phenomona called multicollinearity occurs when independent variables are highly related to one another
 
 There are several ways we can diagnose multicollinearity.
 
 ### Correlation
 
-Again, multicollinearity often occurs when independent variables are highly related to one another. Consequently, we can evaluate these relationships be examining the correlation between variable pairs.
+One way we can evaluate the relationships between variables is by examining the correlation between variable pairs.
 
 <style>
 div.blue { background-color:#e6f0ff; border-radius: 5px; padding: 20px;}
@@ -2852,7 +2917,12 @@ It is important to note that multicollinearity and correlation are not one and t
 
 </div>
 
+
+
+
 #### Scatterplots
+
+One way to look at correlatin across pairs of variables is to use the `ggpairs()` function of the `GGally` package.
 
 ```{r}
 colnames(DONOHUE_DF)
@@ -2869,22 +2939,17 @@ DONOHUE_DF %>%
                                          color = "red",
                                          alpha = 0.5,
                                          size = 0.1)))
-
-LOTT_DF %>% 
-  dplyr::select(RTC_LAW,
-                Viol_crime_rate_1k_log,
-                Unemployment_rate,
-                Poverty_rate,
-                Population_log) %>% 
-  ggpairs(.,
-          columns = c(2:5),
-          lower = list(continuous = wrap("smooth_loess",
-                                         color = "red",
-                                         alpha = 0.5,
-                                         size = 0.1)))
 ```
+We can see that for the non-demographic variables, there is very little correlation between the pairs of variables. Only the unemployment rate and the poverty rate show relatively strong correlation, as one might expect. 
+
 
 #### Heatmaps
+
+Another way to look at correlation if we have many variables is to use heatmaps.
+
+The `ggcorrplot()` function of the `ggpcorplot` package is one way to create such a heatmap.
+
+This requires first caclulating the correaltion values useing the `cor()` function.
 
 ```{r}
 cor_DONOHUE_dem <- cor(DONOHUE_DF %>% dplyr::select(contains("_years")))
