@@ -2362,7 +2362,7 @@ First we will plot the rate of violent crime over time to get a sense of the gen
 To do so we need to summarise the data for each year across all of the states. 
 Thus we will use the `group_by()` function and the `summarise()` functions to calculate an overall sum of violent crime relative to the population for each year. 
 
-Then we will use the `ggplot2` package to plot the data. The first step in creating a plot with this package is to use the `ggplot()` function and the `aes()` argument to specify what data should be plotted on the x-axis and what data should be plotted in on the y-axis. Then we select what type of plot we would like to make using one of the `geom_*()` functions. Please see [this case study](https://opencasestudies.github.io/ocs-bp-co2-emissions/) for more details.
+Then we will use the `ggplot2` package to plot the data. The first step in creating a plot with this package is to use the `ggplot()` function and the `aes()` argument to specify what data should be plotted on the x-axis and what data should be plotted in on the y-axis. Then we select what type of plot we would like to make using one of the `geom_*()` functions. Please see [this case study](https://opencasestudies.github.io/ocs-bp-co2-emissions/){target="_blank"}  for more details.
 
 We can use the `scale_x_continuous()` and `scale_y_continuous()` functions to  modify the axis labels.
 
@@ -2396,7 +2396,7 @@ Interesting! It appears that there was an overall national peak in violent crime
 
 Now let's take a look at each state.
 
-We will use the `ggrepel` package to add text to the plot using the `geom_text_repel()` function. This is especially useful when there is alot of text, as this function reduces the overlap of text labels. Again see [this case study](https://opencasestudies.github.io/ocs-bp-co2-emissions/) for more details on how to add labels to elements of plots.
+We will use the `ggrepel` package to add text to the plot using the `geom_text_repel()` function. This is especially useful when there is alot of text, as this function reduces the overlap of text labels. Again see [this case study](https://opencasestudies.github.io/ocs-bp-co2-emissions/){target="_blank"}  for more details on how to add labels to elements of plots.
  
 ```{r}
 
@@ -2869,15 +2869,20 @@ How did the above happen?
 
 The analysis dataframes are very similar yet rendered very different results. 
 
-Recall that the only difference is the number of demographic variables. The number of rows or observations is the same.
+Recall that the only difference is the number of demographic variables. The number of rows or observations is the same. We can use the `all_equal()` function of the `dplyr` package to compare the number of columns of our Donohue-like data and our Lott-like data.
 
 ```{r}
 all_equal(target = DONOHUE_DF,
           current = LOTT_DF,
           ignore_col_order = TRUE,
           ignore_row_order = TRUE)
+```
 
-dim(DONOHUE_DF)[1] == dim(LOTT_DF)[1]
+Using the base `dim()` function we can also look at the number of rows for each and see that the number of observatiosn is the same for both datasets.
+
+```{r}
+dim(DONOHUE_DF)[1]
+dim(LOTT_DF)[1]
 ```
 
 The only difference between the two dataframes rests in how the demographic variables were parameterized.
@@ -2947,9 +2952,11 @@ We can see that for the non-demographic variables, there is very little correlat
 
 Another way to look at correlation if we have many variables is to use heatmaps.
 
+Let's to this now for the deomographic variables for each analysis.
+
 The `ggcorrplot()` function of the `ggpcorplot` package is one way to create such a heatmap.
 
-This requires first caclulating the correaltion values useing the `cor()` function.
+This requires first calculating the correaltion values using the `cor()` function of the `stats` package.
 
 ```{r}
 cor_DONOHUE_dem <- cor(DONOHUE_DF %>% dplyr::select(contains("_years")))
@@ -2980,15 +2987,143 @@ corr_mat_LOTT <- ggcorrplot(cor_LOTT_dem,
 
 corr_mat_LOTT
 ```
+We can see that many of the demographic variables are highly correlated with one another. 
+
+
+The presence of correlation bewteen variables suggests that we might have multicollinearity. However it does not necessarily mean that we do. So how can we assess this?
+
 
 ### Coefficient estimate instability
 
+One way to look at the possible influence of multicollinearit is to look at the stability of the coefficient estimates.
+
+We will focus on the `RTC_LAW` variable coefficient estimate, as this is of particular interest in our case.
+
+To do so we will perform multiple iterations of our analysis, but we will remove one observation and see if that changes our coefficient estimate results. First we will make 250 different samples that are missing one observation.  Note that this causes our data to be an unbalanced panel.
+
+This does not require any adjustment to the code to model the data, but you will notice that the output will now say "unbalanced".AVOCADO check this
+
+First we want 
+
+map_dbl(resample1$splits,
+function(x) {
+dat <- as.data.frame(x)$Species
+mean(dat == "virginica")
+})
+
+https://cfss.uchicago.edu/notes/cross-validation/
+
+```{r}
+test <-tibble(x = c(1,2,3))
+test
+
+test_samples <- test %>% loo_cv()
+test_samples
+
+pull(test_samples, splits)[[1]]
+
+training(pull(test_samples, splits)[[1]])
+training(pull(test_samples, splits)[[2]])
+
+#to get all the data subsets
+test_subsets <- map(pull(test_samples, splits), training)
+```
+
+
+
+  
+  
+```{r}
+set.seed(124)
+DONOHUE_splits <- d_panel_DONOHUE %>% loo_cv()
+DONOHUE_splits
+
+
+head(training(pull(DONOHUE_splits, splits)[[1]]))
+
+#to get all the data subsets
+DONOHUE_subsets <-map(pull(DONOHUE_splits, splits), training)
+
+glimpse(DONOHUE_subsets[[1]])
+
+#looks like the Texas data from 1988 was removed from the first split
+d_panel_DONOHUE %>%
+  filter(! rownames(d_panel_DONOHUE)  %in% rownames(DONOHUE_subsets[[1]]))
+
+#where as Louisiana data from 1981 was removed in the second split
+d_panel_DONOHUE %>%
+  filter(! rownames(d_panel_DONOHUE)  %in% rownames(DONOHUE_subsets[[2]]))
+
+```
+
+OK, so now let's fit our panel regression on the first subset  of data like we did previously:
+
+```{r}
+ subset_1_result<-plm(Viol_crime_rate_1k_log ~
+                        RTC_LAW +
+                        White_Male_15_to_19_years +
+                        White_Male_20_to_39_years +
+                        Black_Male_15_to_19_years +
+                        Black_Male_20_to_39_years +
+                        Other_Male_15_to_19_years +
+                        Other_Male_20_to_39_years +
+                        Unemployment_rate +
+                        Poverty_rate + 
+                        Population_log + 
+                        police_per_100k_lag,
+                        data = DONOHUE_subsets[[1]],
+                       index = c("STATE","YEAR"),
+                       model = "within",
+                      effect = "twoways")
+summary(subset_1_result)
+```
+
+Indeed, we can see that now we have an unbalanced panel with N = 1394 observations instead of 1395, as expected.
+
+Now that we have our subsets, we want to write a function to fit a panel regression using `plm()`on each subsets. See [this case study](https://opencasestudies.github.io/ocs-bloomberg-vaping-case-study/){target="_blank"}  for more information on writing functions.
+
+
+```{r}
+fit_nls_on_bootstrap_DONOHUE <- function(split){
+                    plm(Viol_crime_rate_1k_log ~
+                        RTC_LAW +
+                        White_Male_15_to_19_years +
+                        White_Male_20_to_39_years +
+                        Black_Male_15_to_19_years +
+                        Black_Male_20_to_39_years +
+                        Other_Male_15_to_19_years +
+                        Other_Male_20_to_39_years +
+                        Unemployment_rate +
+                        Poverty_rate + 
+                        Population_log + 
+                        police_per_100k_lag,
+                        data = data.frame(split),
+                       index = c("STATE","YEAR"),
+                       model = "within",
+                      effect = "twoways")
+}
+
+```
+
+Now we can apply this function to each of our subsets simultaneously using the `map()` function of the `purrr` package.  
+
+```{r}
+
+subsets_models_DONOHUE <- map(DONOHUE_subsets, fit_nls_on_bootstrap_DONOHUE)
+
+subsets_models_DONOHUE <- subsets_models_DONOHUE %>%
+  map(tidy)
+
+```
+
+
+Great! Now we want to do the same thing for the Lott data.
+
+from Michael
 ```{r}
 sims <- 250
 
 # DONOHUE
-
-# round(dim(DONOHUE_DF)[1]/2)
 samps_DONOHUE <- lapply(rep(dim(DONOHUE_DF)[1]-1, sims),
        function(x)DONOHUE_DF[sample(nrow(DONOHUE_DF),
                                      size = x, replace = FALSE),])
