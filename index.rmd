@@ -2559,7 +2559,7 @@ This type of panel regression makes the least assumptions.
 
 Thus, the random effects model actually makes **more assumptions** than the fixed effect model.
 
-$$Y_{it} =  B'X_{it} + (a_i + e_{it})}$$
+$$Y_{it} =  B'X_{it} + (a_i + e_{it})$$
 So each indivual has the sampe slope and the same overall error term (a_i + e_{it}). 
 
 
@@ -3215,30 +3215,80 @@ tail(simulations)
 
 Now we will make a jitter plot using the `geom_jitter()` function of the coefficient estimates of the `RTC_LAWTRUE` variable for each simulation.
 
+Since there are many variables in both analyses, we will use the `facet_grid()` function of the `ggplot2` package to allow us to separate the data for each analysis into subplots. The argument `scale = "free_x"` and `drop = TRUE` allow us to only include the variables that were present in Analysis 1, as opposed to empty spots for the variables that were in Analysis 2 but not in Analysis 1. The `space = "free"` argument removes the extra space from the dropped varaibles. 
+
+#### {.question_block}
+<b><u> Question Opportunity </u></b>
+
+What happens if dont use the `drop = TRUE` argument or the `space = "free"` argument? 
+
+####
+
 ```{r}
 simulation_plot <- simulations %>%
-  filter(term=="RTC_LAWTRUE") %>%
-  ggplot(aes(x = Analysis, y = estimate)) + 
+  ggplot(aes(x = term, y = estimate)) + 
   geom_jitter(alpha = 0.25,
               width = 0.1) + 
+  facet_grid(.~Analysis, scale = "free_x", space = "free", drop = TRUE) +
   labs(title = "Coefficient instability",
        subtitle = "Estimates sensitive to observation deletions",
        x = "Term",
        y = "Coefficient",
        caption = "Results from simulations") + 
-  theme_minimal() +
-  theme(axis.title.x = element_blank())
+  theme_linedraw() +
+  theme(axis.title.x = element_blank(),
+        axis.text.x = element_text(angle = 70, hjust = 1),
+        strip.text.x = element_text(size = 14, face = "bold"))
 
 simulation_plot
 
 ```
 
-from Michael
+We can see that the range of coeffecient estimates when only one observation is removed is much larger in Analysis 2 for nearly all variables, but particularly for many of the additional demographic variables.
+
+Let's make a plot showing the summary of the overall coeffecient instability.
+
+To do this we will calculate the standard deviation of coeffecient estimates for each variable across all of the simulations. Thus  we will group  by  the `Analysis` and  the `term` variables now that our data is in long format. We will use the `sd()` function of the `stats` package to calculate the standard deviation.
+
 ```{r}
+coeff_sd <-simulations %>% 
+  group_by(Analysis, term) %>% 
+  summarise("SD" = sd(estimate))
+```
+
+```{r}
+library(DT)
+DT::datatable(coeff_sd)
+```
+
+Now we will make a plot of this data.
+
+```{r}
+simulation_plot <- coeff_sd %>%
+  ggplot(aes(x = Analysis, y = SD)) + 
+  geom_jitter(width = 0.1) + 
+  labs(title = "Coefficient instability",
+       subtitle = "Coefficient estimates more sensitive to subsampling in Analysis 2",
+       x = "Term",
+       y = "Standard deviation of coefficient estimates across subsamples",
+       caption = "Results from simulations") + 
+  theme_linedraw() +
+  theme(axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 12, hjust = 1),
+        strip.text.x = element_text(size = 14))
+
+simulation_plot
+
+```
+
+Here we can clearly see that overall the coefficient estimates are much less stable in Analysis 2. This is a clear indication that we have multicolinearity.
+
+from Michael
+```{r, eval = FALSE}
 sims <- 250
 
 # DONOHUE
-samps_DONOHUE <- lapply(rep(dim(DONOHUE_DF)[1]-1, sims),
+samps_DONOHUE <- lapply(rep(dim(DONOHUE_DF)[1]/2, sims),
        function(x)DONOHUE_DF[sample(nrow(DONOHUE_DF),
                                      size = x, replace = FALSE),])
 
@@ -3303,7 +3353,7 @@ simulations <- bind_rows(simulations_DONOHUE,
 simulation_plot <- simulations %>%
   filter(term=="RTC_LAWTRUE") %>%
   ggplot(aes(x = Analysis, y = estimate)) + 
-  geom_jitter(alpha = 0.25,
+  geom_boxplot(alpha = 0.25,
               width = 0.1) + 
   labs(title = "Coefficient instability",
        subtitle = "Estimates sensitive to observation deletions",
@@ -3316,11 +3366,100 @@ simulation_plot <- simulations %>%
 simulation_plot
 ```
 
+
+
+
 ### VIF
 
-```{r}
-design.matrix <- as.data.frame(model.matrix(DONOHUE_OUTPUT))
+Another way of evaluating the presence and severity of multicolinearity is to calculate the [variance inflation factor (VIF)](https://en.wikipedia.org/wiki/Variance_inflation_factor){target="_blank"} . 
 
+According to [Wikipedia](https://en.wikipedia.org/wiki/Variance_inflation_factor){target="_blank"}:
+
+>It provides an index that measures how much the variance (the square of the estimate's standard deviation) of an estimated regression coefficient is increased because of collinearity. 
+> The variance inflation factor (VIF) is the **quotient of the variance in a model with multiple terms by the variance of a model with one term alone**.
+
+VIF values can be calculated for each explanatory variable in a model by performing the following calculation:
+
+1) Run another ordinary least squares (OLS) linear regression with one of the explanatory  variables of your model of interest ($Xi$) as the dependent variable and keep the ramaining explanatory variables as explanatory variables.
+
+So generically speaking say this is our model:
+
+$$Y = β_0 + β_1X_1 + β_2X_2 + β_3X_3 $$
+We have three explanatory variables ($X_1$, $X_2$, and $X_3$).
+
+If we want to calculate the VIF value for $X_1$ we would need to perform another OLS model, where $X1$ is now the dependent variable explained by the other explanatory variables.
+
+$$X_1 = β_0 +  β_2X_2 + β_3X_3 $$
+
+The [$R^2$ coefficient of determination](https://en.wikipedia.org/wiki/Coefficient_of_determination){target="_blank"} also called R squared value from this regression is then used to calcuate the VIF as follows:
+
+$$\frac{1}{1-R^{2}}$$
+
+The $R^2$ value is in this case the proportion of variance in $X_1$ explained by the other variables ($X_2$ and $X_3$).
+
+
+VIF values are typically calculated for each explanatory variable when evaluating multicollinearity of a model.
+
+Thus overall the calculaion is:
+$$VIF_i = \frac{1}{1-R_i^{2}}$$
+Where $i$ corresponds to each explanatory varaible.
+
+
+Recall that according to [Wikipedia](https://en.wikipedia.org/wiki/Variance_inflation_factor){target="_blank"}:
+> The variance inflation factor (VIF) is the **quotient of the variance in a model with multiple terms by the variance of a model with one term alone**.
+
+The $R^2$ value ranges from 0 to 1. Thus, if a variation of a variable is highly explained by the other variables, the $R^2$ will approach 1. Thus the denominator in the VIF calculation $1-R_i^{2}$ (which is sometimes refered to as tolerance) will be smaller and the VIF value will be larger.
+
+Thus, **higher VIF vales** indicate **more severe multicolinearity**. Typically a threshold of a tolerance of less than 0.10 and/or a VIF of 10 and above is used as a rule of thumb to determine if the presence of multicollinearity might be problematic.
+
+Please see this [article](https://link.springer.com/content/pdf/10.1007/s11135-006-9018-6.pdf){target="_blank"} for a thorough explanation of how to interpret VIF values and how to decide what to do if your model has high multicolinearity.]
+
+So how do we calculate VIF values in R?
+
+We could do this manually creating many linear regressions, but that would obviously be time consuming. Luckily, the `car` package has a function called `vif()` that will calcuate VIF values.
+
+This `vif()` function is not compatible with the `plm` package panel data frames and linear model outputs, thus we need to create a design matrix with the `plm` package using the `Within()` function and then use the `lm()` function of the `stats` package to fit the model.
+
+https://stackoverflow.com/questions/20281055/test-for-multicollinearity-in-panel-data-r
+
+Since VIF values are calculated using only the independent variables, we dont need to worry about the effect of time and indiviuals in our calculation.
+
+
+```{r}
+
+vif_DONOHUE <- vif(DONOHUE_pool_model)
+
+vif_DONOHUE
+
+vif_DONOHUE <- vif_DONOHUE %>%
+  as_tibble() %>%
+  cbind(., names(vif_DONOHUE)) %>%
+  as_tibble()
+  
+colnames(vif_DONOHUE) <- c("VIF", "Variable")
+```
+```{r}
+LOTT_pool_model <-plm(LOTT_fmla,
+                        model = "pooling",
+                        data=d_panel_LOTT)
+vif_LOTT <- vif(LOTT_pool_model)
+
+vif_LOTT
+
+vif_LOTT <- vif_LOTT %>%
+  as_tibble() %>%
+  cbind(., names(vif_LOTT)) %>%
+  as_tibble()
+  
+colnames(vif_LOTT) <- c("VIF", "Variable")
+```
+
+From Michael: he caclualted the time-demeaned response variable based on this link:
+http://karthur.org/2019/implementing-fixed-effects-panel-models-in-r.html
+
+```{r, eval = FALSE}
+design.matrix <- as.data.frame(model.matrix(DONOHUE_OUTPUT))
+#design.matrix<-DONOHUE_OUTPUT[["model"]]
 design.matrix$Viol_crime_rate_1k_log <- plm::Within(
   d_panel_DONOHUE$Viol_crime_rate_1k_log)
 
@@ -3339,9 +3478,9 @@ lm_DONOHUE <- lm(Viol_crime_rate_1k_log ~
              data = design.matrix)
 
 
-vif(lm_DONOHUE)
-
 vif_DONOHUE <- vif(lm_DONOHUE)
+
+vif_DONOHUE
 
 vif_DONOHUE <- vif_DONOHUE %>%
   as_tibble() %>%
@@ -3349,11 +3488,9 @@ vif_DONOHUE <- vif_DONOHUE %>%
   as_tibble()
   
 colnames(vif_DONOHUE) <- c("VIF", "Variable")
-
-max_vif_DONOHUE <- max(vif(lm_DONOHUE)) 
 ```
 
-```{r}
+```{r, eval = FALSE}
 design.matrix <- as.data.frame(model.matrix(LOTT_OUTPUT))
 
 design.matrix$Viol_crime_rate_1k_log <- plm::Within(
@@ -3391,14 +3528,14 @@ colnames(vif_LOTT) <- c("VIF", "Variable")
 max_vif_LOTT <- max(vif(lm_LOTT))
 ```
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, eval = FALSE}
 #This could be used to label the max VIF of each analysis
 
 max_vif_DONOHUE
 max_vif_LOTT
 ```
 
-$$\frac{1}{1-R_{i}^{2}}$$
+
 
 ```{r}
 vif_DONOHUE$Analysis <- "Analysis 1"
@@ -3624,6 +3761,8 @@ http://karthur.org/2019/implementing-fixed-effects-panel-models-in-r.html
 
 https://stats.stackexchange.com/questions/99236/effects-in-panel-models-individual-time-or-twoways
 
+
+in case the link to the article doesnt work: https://link.springer.com/article/10.1007%2Fs11135-006-9018-6
 ## Acknowledgements
 
 We would like to acknowledge [Daniel Webster](https://www.jhsph.edu/faculty/directory/profile/739/daniel-webster) for assisting in framing the major direction of the case study.
