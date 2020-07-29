@@ -2999,64 +2999,97 @@ One way to look at the possible influence of multicollinearit is to look at the 
 
 We will focus on the `RTC_LAW` variable coefficient estimate, as this is of particular interest in our case.
 
-To do so we will perform multiple iterations of our analysis, but we will remove one observation and see if that changes our coefficient estimate results. First we will make 250 different samples that are missing one observation.  Note that this causes our data to be an unbalanced panel.
+To do so we will perform multiple iterations of our analysis, but we will remove one observation and see if that changes our coefficient estimate results.   
 
-This does not require any adjustment to the code to model the data, but you will notice that the output will now say "unbalanced".AVOCADO check this
 
-First we want 
+To do this we will use some functions in the `rsample` package which is very useful for splitting data in various ways.
 
-map_dbl(resample1$splits,
-function(x) {
-dat <- as.data.frame(x)$Species
-mean(dat == "virginica")
-})
+We will use the `loo_cv()` function which stands for leave one out cross validation. This will allow us to split our data into every possible subset where a unique observation is left out of the data.
 
-https://cfss.uchicago.edu/notes/cross-validation/
+This function will however only prepare the data to be split.
 
+To actually get the remaining data after the removal of the observation that is left out when need to use a function called `training()`. This is because these functions are often used for in machine learning applications where the data is split between a larger training set and a smaller testing set. Thus we want the larger $n-1$ subset, as opposed to the single value that is removed, (which we could get with the `testing()` function)
+
+avocado move this:Note that this causes our data to be an unbalanced panel.
+This does not require any adjustment to the code to model the data, but you will notice that the output will now say "unbalanced".
+
+
+<details> <summary> Click here to see an example of how this works. </summary>
+
+First we will make a toy dataset that is very simle called test using the `tibble()` function of the `tidyr` package:
 ```{r}
-test <-tibble(x = c(1,2,3))
+test <-tidyr::tibble(x = c(1,2,3))
 test
-
-test_samples <- test %>% loo_cv()
-test_samples
-
-pull(test_samples, splits)[[1]]
-
-training(pull(test_samples, splits)[[1]])
-training(pull(test_samples, splits)[[2]])
-
-#to get all the data subsets
-test_subsets <- map(pull(test_samples, splits), training)
 ```
 
+Now we will use the `loo_cv()` to create leave one out splits:
+```{r}
+test_samples <- test %>% loo_cv()
+test_samples
+```
+
+We can take a look at one individual split using the `pull()` function:
+
+```{r}
+pull(test_samples, splits)
+```
+
+Here you can see that 2 values are intended for the training set (aslo called Analysis set), 1 value is intended for the testing set (also called Assessment set), and 3 values were present initially.
+
+Now we will use the `training()` function to get the data without the obersvation that is set aside. Here is the data for the first subset:
+```{r}
+training(pull(test_samples, splits)[[1]])
+```
+
+Now we will use the `map()` function of `purrr` to get all possible `training` subset of the data.
+```{r}
+
+test_subsets <- map(pull(test_samples, splits), training)
+test_subsets
+```
+
+We can see that there are 3 possible subsets that leave one value out. All 3 possible subsets are created using this method. This method will always create the same number of subsets as there are unqiue values or rows in the data.
+
+</details>
 
 
-  
-  
+Now we will use this method with the data from our Donohue-like analysis, since this data has `dim(d_panel_DONOHUE)[1]` rows, `dim(d_panel_DONOHUE)[1]` subsets will be created that leave out one row.
+
+First we will create the splits using the `loo_cv()` function:
 ```{r}
 set.seed(124)
 DONOHUE_splits <- d_panel_DONOHUE %>% loo_cv()
 DONOHUE_splits
+```
 
+Now we will use the `training()` function to select the remaining data without the value that was removed for each split:
 
-head(training(pull(DONOHUE_splits, splits)[[1]]))
-
-#to get all the data subsets
+```{r}
+# To get all the data subsets
 DONOHUE_subsets <-map(pull(DONOHUE_splits, splits), training)
 
 glimpse(DONOHUE_subsets[[1]])
+length(DONOHUE_subsets)
+```
 
-#looks like the Texas data from 1988 was removed from the first split
+As expected the first subset has 1,394 rows and there are 1395 subsets.
+
+Let's see what obsevation was left out in the first subset:
+
+```{r}
 d_panel_DONOHUE %>%
   filter(! rownames(d_panel_DONOHUE)  %in% rownames(DONOHUE_subsets[[1]]))
 
-#where as Louisiana data from 1981 was removed in the second split
-d_panel_DONOHUE %>%
-  filter(! rownames(d_panel_DONOHUE)  %in% rownames(DONOHUE_subsets[[2]]))
+# Another way to check is to use:
+DONOHUE_removed <-map(pull(DONOHUE_splits, splits), testing)
 
+DONOHUE_removed[[1]]
 ```
 
-OK, so now let's fit our panel regression on the first subset  of data like we did previously:
+It looks like the Texas data from 1988 was removed from the first split.
+
+
+OK, so now let's fit our panel regression on the first subset of data like we did previously:
 
 ```{r}
  subset_1_result<-plm(Viol_crime_rate_1k_log ~
@@ -3082,9 +3115,10 @@ Indeed, we can see that now we have an unbalanced panel with N = 1394 observatio
 
 Now that we have our subsets, we want to write a function to fit a panel regression using `plm()`on each subsets. See [this case study](https://opencasestudies.github.io/ocs-bloomberg-vaping-case-study/){target="_blank"}  for more information on writing functions.
 
+avocado add bootstarp description maybe link about cross validation- testing and training sets
 
 ```{r}
-fit_nls_on_bootstrap_DONOHUE <- function(split){
+fit_nls_on_bootstrap_DONOHUE <- function(subset){
                     plm(Viol_crime_rate_1k_log ~
                         RTC_LAW +
                         White_Male_15_to_19_years +
@@ -3097,7 +3131,7 @@ fit_nls_on_bootstrap_DONOHUE <- function(split){
                         Poverty_rate + 
                         Population_log + 
                         police_per_100k_lag,
-                        data = data.frame(split),
+                        data = data.frame(subset),
                        index = c("STATE","YEAR"),
                        model = "within",
                       effect = "twoways")
@@ -3118,6 +3152,86 @@ subsets_models_DONOHUE <- subsets_models_DONOHUE %>%
 
 
 Great! Now we want to do the same thing for the Lott data.
+
+```{r}
+set.seed(124)
+LOTT_splits <- d_panel_LOTT %>% loo_cv()
+
+# To get all the data subsets:
+LOTT_subsets <-map(pull(LOTT_splits, splits), training)
+```
+
+
+We need to create a different function to fit the data to account for the larger number of demographic variables. We will use the formula that we made previously.
+
+```{r}
+fit_nls_on_bootstrap_LOTT <- function(split){
+  plm(LOTT_fmla,
+      data = data.frame(split),
+      index = c("STATE","YEAR"),
+      model = "within",
+      effect = "twoways")
+}
+
+
+subsets_models_LOTT <- map(LOTT_subsets, fit_nls_on_bootstrap_LOTT)
+
+subsets_models_LOTT <- subsets_models_LOTT %>%
+  map(tidy)
+```
+
+Now we will combine the output so that we can make a plot to visualize the results that we obtained. First let's name each subset that we created.
+
+```{r}
+names(subsets_models_DONOHUE) <-     paste0("DONOHUE_",1:length(subsets_models_DONOHUE))
+
+names(subsets_models_LOTT) <- 
+paste0("LOTT_",1:length(subsets_models_LOTT))
+
+```
+
+Now we can combine the tibbles within the list of tibbles for the `subsets_models_DONOHUE` and `subsets_models_LOTT` data.
+
+To do this we will use the `bind_rows()` function of the `dplyr` package with the `.id = "ID"` argument, which will create a new variable called `ID` that will list the name of the tibble the data came from.
+
+Then we will combine the data from both the Donohue and Lott simulations.
+
+```{r}
+
+simulations_DONOHUE <- subsets_models_DONOHUE %>%
+  bind_rows(.id = "ID") %>%
+  mutate(Analysis = "Analysis 1")
+
+simulations_LOTT <- subsets_models_LOTT %>%
+  bind_rows(.id = "ID") %>%
+  mutate(Analysis = "Analysis 2")
+
+simulations <- bind_rows(simulations_DONOHUE,
+                         simulations_LOTT)
+
+head(simulations)
+tail(simulations)
+```
+
+Now we will make a jitter plot using the `geom_jitter()` function of the coefficient estimates of the `RTC_LAWTRUE` variable for each simulation.
+
+```{r}
+simulation_plot <- simulations %>%
+  filter(term=="RTC_LAWTRUE") %>%
+  ggplot(aes(x = Analysis, y = estimate)) + 
+  geom_jitter(alpha = 0.25,
+              width = 0.1) + 
+  labs(title = "Coefficient instability",
+       subtitle = "Estimates sensitive to observation deletions",
+       x = "Term",
+       y = "Coefficient",
+       caption = "Results from simulations") + 
+  theme_minimal() +
+  theme(axis.title.x = element_blank())
+
+simulation_plot
+
+```
 
 from Michael
 ```{r}
