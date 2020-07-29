@@ -57,6 +57,12 @@ knitr::include_graphics(here::here("img", "mainplot.png"))
 
 This work is licensed under the Creative Commons Attribution-NonCommercial 3.0 [(CC BY-NC 3.0)](https://creativecommons.org/licenses/by-nc/3.0/us/){target="_blank"}  United States License.
 
+## {.reference_block}
+
+To cite this case study please use:
+
+Wright, Carrie, and Ontiveros, Michael and Jager, Leah and Taub, Margaret and Hicks, Stephanie. (2020). https://github.com/opencasestudies/ocs-right-to-carry-case-study/. Examination of Multicollinearity Influence on Inference Using Right-to-Carry Gun Law and Violent Crime Data (Version v1.0.0)
+
 # **Motivation**
 *** 
 
@@ -232,8 +238,6 @@ It is unlawful for any person without a permit to wear or carry a handgun, openl
 Application for a permit to carry a handgun is made to the Secretary of State Police. In addition to the printed application form, the applicant should submit a notarized letter stating the reasons why he is applying for a permit.
 
 
-avocado....Right to carry and covid masks?
-
 # **Limitations**
 *** 
 There are some important considerations regarding this data analysis to keep in mind: 
@@ -255,9 +259,9 @@ States of all other categories (shall issue, discretionary/reasonable issue, and
 
 3) Because our analysis is an oversimplification, our analysis should not be used for determining policy changes, instead we suggest that users consult with a specialist.
 
+avocado - this is from Michael and very important... not sure how we want to word this...
 
-We would also like to note that...AVOCADO
-It is important that we do not treat race as an objective measure. Despite this, it can be used to advance scientific inquiry. For more information on this topic, we have included a link to a [paper on the use of race as a measure in epidemiology](https://academic.oup.com/epirev/article/22/2/187/456942). 
+It is important to note that we do not treat race as an objective measure. Despite this, it can be used to advance scientific inquiry. For more information on this topic, we have included a link to a [paper on the use of race as a measure in epidemiology](https://academic.oup.com/epirev/article/22/2/187/456942). 
 
 
 We will begin by loading the packages that we will need:
@@ -466,7 +470,7 @@ names(ue_rate_data) <- ue_rate_names
 ## Poverty data
 Extracted from Table 21 from [US Census Bureau Poverty Data ](https://www.census.gov/data/tables/time-series/demo/income-poverty/historical-poverty-people.html)
 
-AVOCado strange issue
+AVOCado strange issue that both Michael and I had
 
 ```{r}
 
@@ -1601,7 +1605,9 @@ poverty_rate_data %<>%
 head(poverty_rate_data)
 ```
 
-Looks great! AVOCADO this data is per 1000k? I think I need to restrict to 2014 to match the other data and thats why I get an error when making the Donohue_df 
+Looks great! 
+
+AVOCADO this data is per 1000k? 
 
 
 From Michael:
@@ -2527,7 +2533,7 @@ We will be performing a **panel linear regression model analysis**.
 
 In such an analysis we will model our data according to this generic model:
 
-$$Y_{it} = a + B'X_{it} + u_{it},\\ u_{it}=\mu _{i}+v_{it}$$
+$$Y_{it} = a + B'X_{it} +  u_{it},\\ u_{it}=\mu _{i}+v_{it}$$
 Where $i$ is the individual dimension (in our case individual states) and $t$ is the time dimension.
 
 Some independent variables or regressors $X_{it}$ will vary across individuals and time, while others will be fixed across the time of the study (or don't change over time), while others still will be fixed across individuals but vary across time periods.
@@ -2542,12 +2548,21 @@ There are three general subtypes of [panel regression analysis](https://en.wikip
 Overall, they assume that the different individuals are independent, however the same data for the same individual may be correlated across time.
 
 The main difference between the three subtypes are the assumptions about unobserved differences between individuals.
-  
+
+avocado: update formulas like this? https://bookdown.org/ccolonescu/RPoE4/panel-data-models.html
+pooled: $$Y_{it}=β{0}+β{1}x_{1it}+...+β_KX_{Kit}$$
+like this for fixed effect: $$Y_{it}=β_{0i}+β_{1i}X_{1it}+β_{2i}X_{2it}+e_it$$
+random: $$yit=β⎯⎯⎯1+β2x2it+νit$$
+
+
+
 1) **independently pooled panels**  - assumes that there are no individual effects that are independent of time and also no effect of time on all the individuals. In otherwords, the independent variables are not correlated with any error term. This is essentially an ordinary least squares linear regression. This type of panel regression makes the most assumptions and is therefore typically not used for panel data.
 
 2) **fixed effects** - assumes that there are unknown or unobserved unique aspects about the individuals  or heterogeneity among indivudals $a_i$ that are not explained by the independent variables but influence the outcome variable of interest. They do not vary with time or in otherwords are fixed over time but may be **correlated** with independent variables $X_{it}$.  
 
 In this case the intercept can be different for each indivudual ${a_i}$, but the slope is the same across all the individuals.
+
+
 
 These individual $a_i$ effects can be correlated with the independent variables $X$.
 
@@ -2863,7 +2878,8 @@ comparing_analyses_plot
 
 We can see that most of the possible range of values for the estimate in analysis 1 are positive, while they are all negative for analysis 2.
 
-# Multicollinearity analysis
+# **Multicollinearity analysis**
+***
 
 How did the above happen?
 
@@ -2918,16 +2934,14 @@ div.blue { background-color:#e6f0ff; border-radius: 5px; padding: 20px;}
 </style>
 <div class = "blue">
 
-It is important to note that multicollinearity and correlation are not one and the same. Correlation can be thought of as the strength of the relationship between variables. On the other hand, multicollinearity can be thought of as the the violation of the independence assumption that is a consequence of this correlation in a regression analysis. 
+It is important to note that multicollinearity and correlation are not one and the same. Correlation can be thought of as the strength of the relationship between variables. On the other hand, multicollinearity can be thought of as the the violation of the independence assumption that can be a consequence of variable correlation in a regression analysis. 
 
 </div>
 
 
-
-
 #### Scatterplots
 
-One way to look at correlatin across pairs of variables is to use the `ggpairs()` function of the `GGally` package.
+One way to look at correlation across pairs of variables is to use the `ggpairs()` function of the `GGally` package.
 
 ```{r}
 colnames(DONOHUE_DF)
@@ -2999,19 +3013,16 @@ One way to look at the possible influence of multicollinearit is to look at the 
 
 We will focus on the `RTC_LAW` variable coefficient estimate, as this is of particular interest in our case.
 
-To do so we will perform multiple iterations of our analysis, but we will remove one observation and see if that changes our coefficient estimate results.   
+To do so we will perform a process called [resampling](https://en.wikipedia.org/wiki/Resampling_(statistics)){target="_blank"}. This invovles peforming multiple iterations of our analysis, but with only a subset or subsample of our orignial data.  In our case we will remove **one** observation and see if that changes our coefficient estimate results. 
 
 
 To do this we will use some functions in the `rsample` package which is very useful for splitting data in various ways.
 
-We will use the `loo_cv()` function which stands for leave one out cross validation. This will allow us to split our data into every possible subset where a unique observation is left out of the data.
+We will use the `loo_cv()` function which stands for **leave one out** [cross validation](https://en.wikipedia.org/wiki/Cross-validation_(statistics){target="_blank"}. This will allow us to split our data into every possible subset where a unique observation is left out of the data.
 
 This function will however only prepare the data to be split.
 
 To actually get the remaining data after the removal of the observation that is left out when need to use a function called `training()`. This is because these functions are often used for in machine learning applications where the data is split between a larger training set and a smaller testing set. Thus we want the larger $n-1$ subset, as opposed to the single value that is removed, (which we could get with the `testing()` function)
-
-avocado move this:Note that this causes our data to be an unbalanced panel.
-This does not require any adjustment to the code to model the data, but you will notice that the output will now say "unbalanced".
 
 
 <details> <summary> Click here to see an example of how this works. </summary>
@@ -3089,7 +3100,8 @@ DONOHUE_removed[[1]]
 It looks like the Texas data from 1988 was removed from the first split.
 
 
-OK, so now let's fit our panel regression on the first subset of data like we did previously:
+OK, so now let's fit our panel regression on the first subset of data like we did previously. Note that this causes our data to be an unbalanced panel.
+This does not require any adjustment to the code to model the data, but you will notice that the output will now say "unbalanced".
 
 ```{r}
  subset_1_result<-plm(Viol_crime_rate_1k_log ~
@@ -3114,8 +3126,6 @@ summary(subset_1_result)
 Indeed, we can see that now we have an unbalanced panel with N = 1394 observations instead of 1395, as expected.
 
 Now that we have our subsets, we want to write a function to fit a panel regression using `plm()`on each subsets. See [this case study](https://opencasestudies.github.io/ocs-bloomberg-vaping-case-study/){target="_blank"}  for more information on writing functions.
-
-avocado add bootstarp description maybe link about cross validation- testing and training sets
 
 ```{r}
 fit_nls_on_bootstrap_DONOHUE <- function(subset){
@@ -3266,11 +3276,11 @@ Now we will make a plot of this data.
 ```{r}
 simulation_plot <- coeff_sd %>%
   ggplot(aes(x = Analysis, y = SD)) + 
-  geom_jitter(width = 0.1) + 
+ geom_jitter(width = 0.1, alpha = 0.5, size = 2) + 
   labs(title = "Coefficient instability",
-       subtitle = "Coefficient estimates more sensitive to subsampling in Analysis 2",
+       subtitle = "Coefficient estimates may be more unstable",
        x = "Term",
-       y = "Standard deviation of coefficient estimates across subsamples",
+       y = "Standard deviation of coefficient estimates",
        caption = "Results from simulations") + 
   theme_linedraw() +
   theme(axis.title.x = element_blank(),
@@ -3406,56 +3416,72 @@ Where $i$ corresponds to each explanatory varaible.
 
 
 Recall that according to [Wikipedia](https://en.wikipedia.org/wiki/Variance_inflation_factor){target="_blank"}:
+
 > The variance inflation factor (VIF) is the **quotient of the variance in a model with multiple terms by the variance of a model with one term alone**.
 
 The $R^2$ value ranges from 0 to 1. Thus, if a variation of a variable is highly explained by the other variables, the $R^2$ will approach 1. Thus the denominator in the VIF calculation $1-R_i^{2}$ (which is sometimes refered to as tolerance) will be smaller and the VIF value will be larger.
 
 Thus, **higher VIF vales** indicate **more severe multicolinearity**. Typically a threshold of a tolerance of less than 0.10 and/or a VIF of 10 and above is used as a rule of thumb to determine if the presence of multicollinearity might be problematic.
 
-Please see this [article](https://link.springer.com/content/pdf/10.1007/s11135-006-9018-6.pdf){target="_blank"} for a thorough explanation of how to interpret VIF values and how to decide what to do if your model has high multicolinearity.]
+Please see this [article](https://link.springer.com/content/pdf/10.1007/s11135-006-9018-6.pdf){target="_blank"} for a thorough explanation of how to interpret VIF values and how to decide what to do if your model has high multicolinearity.
 
 So how do we calculate VIF values in R?
 
 We could do this manually creating many linear regressions, but that would obviously be time consuming. Luckily, the `car` package has a function called `vif()` that will calcuate VIF values.
 
-This `vif()` function is not compatible with the `plm` package panel data frames and linear model outputs, thus we need to create a design matrix with the `plm` package using the `Within()` function and then use the `lm()` function of the `stats` package to fit the model.
 
+avocado: Idk if this is true or if we need to do what Michael did?
 https://stackoverflow.com/questions/20281055/test-for-multicollinearity-in-panel-data-r
 
-Since VIF values are calculated using only the independent variables, we dont need to worry about the effect of time and indiviuals in our calculation.
-
+Since VIF values are calculated using only the independent variables, we don't need to worry about the effect of time and indiviuals in our calculation, thus we will use the pooled model. Otherwise, the `vif()` function is incompatible with the output from the `plm()` function.
+Then we will create nicer looking output of the data using the `as_tibble()`function of the `tibble` package to create a tibble and add the varaible names as another column.
 
 ```{r}
 
 vif_DONOHUE <- vif(DONOHUE_pool_model)
-
-vif_DONOHUE
+vif_DONOHUE 
 
 vif_DONOHUE <- vif_DONOHUE %>%
   as_tibble() %>%
-  cbind(., names(vif_DONOHUE)) %>%
-  as_tibble()
+  cbind(., names(vif_DONOHUE))
   
 colnames(vif_DONOHUE) <- c("VIF", "Variable")
+
+vif_DONOHUE
 ```
+
+Now we will do the same for the Lott data:
+
 ```{r}
 LOTT_pool_model <-plm(LOTT_fmla,
                         model = "pooling",
                         data=d_panel_LOTT)
+
 vif_LOTT <- vif(LOTT_pool_model)
 
-vif_LOTT
 
 vif_LOTT <- vif_LOTT %>%
   as_tibble() %>%
-  cbind(., names(vif_LOTT)) %>%
-  as_tibble()
-  
+  cbind(., names(vif_LOTT))
 colnames(vif_LOTT) <- c("VIF", "Variable")
 ```
 
+
+```{r}
+
+DT::datatable(vif_LOTT)
+```
+
+We can see that some of the VIF values are very high!
+
+
+
 From Michael: he caclualted the time-demeaned response variable based on this link:
 http://karthur.org/2019/implementing-fixed-effects-panel-models-in-r.html
+
+Idk if we need to/should do this. The values are different.- lower in general.
+
+This `vif()` function is not compatible with the `plm` package panel data frames and linear model outputs, thus we need to create a design matrix with the `plm` package using the `Within()` function and then use the `lm()` function of the `stats` package to fit the model.
 
 ```{r, eval = FALSE}
 design.matrix <- as.data.frame(model.matrix(DONOHUE_OUTPUT))
@@ -3528,16 +3554,11 @@ colnames(vif_LOTT) <- c("VIF", "Variable")
 max_vif_LOTT <- max(vif(lm_LOTT))
 ```
 
-```{r, echo=FALSE, eval = FALSE}
-#This could be used to label the max VIF of each analysis
 
-max_vif_DONOHUE
-max_vif_LOTT
-```
-
-
+Now we will make a plot of the VIF values for both analyses:
 
 ```{r}
+
 vif_DONOHUE$Analysis <- "Analysis 1"
 vif_LOTT$Analysis <- "Analysis 2"
 
@@ -3556,8 +3577,20 @@ vif_plot <- vif_df %>%
 
 vif_plot
 ```
+We can see that both analyses have some variables with relatively high multicolinearity, however analysis 2 has variables with very high multicolinearity.
 
-# Synthesis
+In many cases it would be advisable to remove one or more of these variables and reassess the VIF values. There are also other options, such as [ridge regression](https://en.wikipedia.org/wiki/Tikhonov_regularization){target="_blank"}. However, both of these options need to be done with care as they can also introduce bias into the model.
+
+In any case the presence of multicolinearity should encourage further investigation about the design of the model, as the results may not be reliable due to the increased level of instability of the coeffecients estimates.
+
+See this this [article](https://link.springer.com/content/pdf/10.1007/s11135-006-9018-6.pdf){target="_blank"} for a detailed discussion about what to consider when your model has variables with high VIF values. 
+
+avocado  maybe add somewhere that pml drops perfectly colinear variables automatically.. they will not be in the output
+
+# **Data Visualization**
+*** 
+
+Now lets make a plot that summarizes all of our findings.
 
 ```{r, fig.height=10, echo=FALSE, message=FALSE, warning=FALSE}
 title_plots <- ggdraw() + 
@@ -3729,40 +3762,77 @@ ggsave(here::here("img", "mainplot.png"))
 
 
 
-# **Data Visualization**
-*** 
-
 # **Summary**
 *** 
+
+This case study has introduced the concept of multicolinearity by exploring data related to violent crimes and right-to-carry gun laws. We also intrudced the topic of panel data as a special type of longitinal data that includes data of 2 or more individuals or groups over 2 or more time points. We learned that we can use the `plm` package to perform panel linear regression analysis. We learned that the fixed effect model in panel analysis actually makes the least assumptions, and is therefore often the most appropriate test.
+
+By evaluating two analyses that were identical except for the inclusion of extra demographic variables, analysis 1 included 6, while analysis 2 included 36, we discovered that redudant and colinear variables can change the directionality and magnitude of our findings. 
+
+We learned that by looking at the correlation between pairs of explanatory variabels we can get a sense about whether multicolinearity may exist in our data. We also learned that correaltion does not necessarily imply multicolinearity. Nor does multicolinearity imply correlation.
+
+We learned that we can evaluate the stability of our coeffecient estimates across subsamples or cacluate variance inflation factor (VIF) values to get a sense of the presence and severity of multicolinearity.
+
+We learned that often a rule of thumb of >10 is used as a threshold for raising concern about the severity of multicolinearity. However, we also learned that (as often is the case with thersholds) more care may be required. 
+
+Overall we learned that multicolineartiy can bias our regression findings and it is good practice to check for multicolinearity when performing regession analysis.  It is something to keep in mind when we encounter coefficient estimates that are unexpected. 
+
+Importantly this case study showcases how methodolgical details, like how we decide to parse our demographic variables can have great consequences on the results of our analyses. 
+
 
 # **Suggested Homework**
 *** 
 
+Ask the students to remove one or more of the demographic variables with high VIF values from the LOTT- like panel data and perform the panel linear regression analysis again, as well as cacluate the VIF values. 
+
+Ask the students to discuss how this possibly changed the results.
+
+
 # **Additional Information**
 ***
 
-## *Helpful Links
-
+## *Helpful Links*
 
 [Tidyverse](https://www.tidyverse.org/){target="_blank"}  
-[Writing functions](https://r4ds.had.co.nz/functions.html){target="_blank"}   
+[Writing functions](https://r4ds.had.co.nz/functions.html){target="_blank"}
+Also see [this case study](https://opencasestudies.github.io/ocs-bloomberg-vaping-case-study/){target="_blank"}  for more information on writing functions.   
+Please see [this case study](https://opencasestudies.github.io/ocs-bp-co2-emissions/){target="_blank"}  for more details on using `ggplot2`.   
 [Longitudinal studies](https://www.bmj.com/about-bmj/resources-readers/publications/epidemiology-uninitiated/7-longitudinal-studies){target="_blank"}   
 [Panel data](https://en.wikipedia.org/wiki/Panel_data){target="_blank"}    
 [Confidence intervals](https://en.wikipedia.org/wiki/Confidence_interval){target="_blank"}   
-[Linear regression model](https://en.wikipedia.org/wiki/Linear_regression){target="_blank"}   
+[Linear regression](https://en.wikipedia.org/wiki/Linear_regression){target="_blank"}  
+[panel regression analysis](https://en.wikipedia.org/wiki/Panel_analysis){target="_blank"}   
+[Hausmen test](https://en.wikipedia.org/wiki/Durbin%E2%80%93Wu%E2%80%93Hausman_test){target="_blank"} 
+[resampling](https://en.wikipedia.org/wiki/Resampling_(statistics)){target="_blank"}   
+[Variance inflation factor (VIF)](https://en.wikipedia.org/wiki/Variance_inflation_factor){target="_blank"}   
+[$R^2$ coefficient of determination](https://en.wikipedia.org/wiki/Coefficient_of_determination){target="_blank"}   
+[ridge regression](https://en.wikipedia.org/wiki/Tikhonov_regularization){target="_blank"}   
 
 For more information on linear regression see this [book](https://rafalab.github.io/dsbook/linear-models.html#linear-regression-in-the-tidyverse){target="_blank"} and this [case study](https://opencasestudies.github.io/ocs-bp-diet/){target="_blank"}.
 
-avocado fill this out
+For more information on the different types of panel regression models see this [book](https://bookdown.org/ccolonescu/RPoE4/panel-data-models.html),  [here](https://www.bauer.uh.edu/rsusmel/phd/ec1-15.pdf), and [here](https://sites.google.com/site/econometricsacademy/econometrics-models/panel-data-models).
 
-https://rpubs.com/rslbliss/fixed_effects
+For more information on implementing panel regession in R using the `plm` package, see [here](https://cran.r-project.org/web/packages/plm/vignettes/plmPackage.html){target="_blank"}  and [here](http://www.princeton.edu/~otorres/Panel101R.pdf){target="_blank"}.
 
-http://karthur.org/2019/implementing-fixed-effects-panel-models-in-r.html
+For more information on multioclinearity and VIF, see this [article](https://link.springer.com/content/pdf/10.1007/s11135-006-9018-6.pdf){target="_blank"}.DOI 10.1007/s11135-006-9018-6
 
-https://stats.stackexchange.com/questions/99236/effects-in-panel-models-individual-time-or-twoways
+The articles used to motivate this case study are:
+[Lott and Mustard](https://chicagounbound.uchicago.edu/cgi/viewcontent.cgi?article=1150&context=law_and_economics){target="_blank"}  
+[Donohue, et al.](https://www.nber.org/papers/w23510.pdf){target="_blank"}  
+[See here for a list of studies on this topic ](https://en.wikipedia.org/wiki/More_Guns,_Less_Crime){target="_blank"}  
 
 
-in case the link to the article doesnt work: https://link.springer.com/article/10.1007%2Fs11135-006-9018-6
+avocadoPossible tutorials about plm: (not sure if we want to include or not)  
+https://rpubs.com/rslbliss/fixed_effects  
+http://karthur.org/2019/implementing-fixed-effects-panel-models-in-r.html  
+
+
+## Session Info
+
+```{r}
+sessionInfo()
+```
+
 ## Acknowledgements
 
 We would like to acknowledge [Daniel Webster](https://www.jhsph.edu/faculty/directory/profile/739/daniel-webster) for assisting in framing the major direction of the case study.
