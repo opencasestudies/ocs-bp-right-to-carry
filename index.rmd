@@ -66,7 +66,7 @@ Wright, Carrie, and Ontiveros, Michael and Jager, Leah and Taub, Margaret and Hi
 # **Motivation**
 *** 
 
-This case study will introduce the topic of multicolinearity. We will do so by showcasing a real world example where multicolinearity in part resulted in historically contriversial and conflicting findings about the influence of the adoption of right-to-carry (RTC) concealed handgun laws on violent crime rates in the United States. 
+This case study will introduce the topic of multicollinearity. We will do so by showcasing a real world example where multicollinearity in part resulted in historically controversial and conflicting findings about the influence of the adoption of right-to-carry (RTC) concealed handgun laws on violent crime rates in the United States. 
 
 We will focus on two articles:
 
@@ -84,7 +84,7 @@ knitr::include_graphics(here("img", "Donohue.png"))
 
 This has been a controversial topic as many other articles also had conflicting results. See [here](https://en.wikipedia.org/wiki/More_Guns,_Less_Crime){target="_blank"} for a list of studies.
 
-The [Donohue, et al.](https://www.nber.org/papers/w23510.pdf){target="_blank"} article discusses how there are many other important methodolical aspects besides multicolinearity that could account for the historically conflicting results in these previous papers.
+The [Donohue, et al.](https://www.nber.org/papers/w23510.pdf){target="_blank"} article discusses how there are many other important methodological aspects besides multicollinearity that could account for the historically conflicting results in these previous papers.
 
 In fact, nearly every aspect of the data analysis process was different between the [Donohue, et al.](https://www.nber.org/papers/w23510.pdf){target="_blank"} analysis and the [Lott and Mustard](https://chicagounbound.uchicago.edu/cgi/viewcontent.cgi?article=1150&context=law_and_economics){target="_blank"} analysis.
 
@@ -92,7 +92,7 @@ In fact, nearly every aspect of the data analysis process was different between 
 knitr::include_graphics(here("img", "Educational_Graphic1.jpg"))
 ```
 
-However, we will focus particularly on multicolinearity and we will explore how it can influence linear regression analyses and result in different conclusions. 
+However, we will focus particularly on multicollinearity and we will explore how it can influence linear regression analyses and result in different conclusions. 
 
 This analysis will demonstrate how methodological details can be critically influential for our overall conclusions and can result in important policy related consequences. This [article]((https://www.nber.org/papers/w23510.pdf){target="_blank"}) will provide a basis for the motivation. 
 
@@ -113,10 +113,10 @@ knitr::include_graphics(here("img",'Donohue_Table2.png'))
 ```
 
 
-We will perform analyses similar to those in these articles, however **we will not try to recreate them**, instead we will simplify our analysis to allow us to focus on multicolinearity.
+We will perform analyses similar to those in these articles, however **we will not try to recreate them**, instead we will simplify our analysis to allow us to focus on multicollinearity.
 
 
-Therefore we will use a subset of the listed explanatory variables and they will be consistent for both analyses that we will perform, with the exception that one analysis will have 6 demographic variables like the analysis in the [Donohue, et al.](https://www.nber.org/papers/w23510.pdf){target="_blank"} article and the other will have 36 demogrpahic variables like the analysis in the [Lott and Mustard](https://chicagounbound.uchicago.edu/cgi/viewcontent.cgi?article=1150&context=law_and_economics){target="_blank"} article.
+Therefore we will use a subset of the listed explanatory variables and they will be consistent for both analyses that we will perform, with the exception that one analysis will have 6 demographic variables like the analysis in the [Donohue, et al.](https://www.nber.org/papers/w23510.pdf){target="_blank"} article and the other will have 36 demographic variables like the analysis in the [Lott and Mustard](https://chicagounbound.uchicago.edu/cgi/viewcontent.cgi?article=1150&context=law_and_economics){target="_blank"} article.
 
 
 # **Main Question**
@@ -139,7 +139,8 @@ Therefore we will use a subset of the listed explanatory variables and they will
 1) what multicollinearity is and how it can influence linear regression coefficients  
 2) how to look for the presence of multicollinarity and determine the severity
 3) the difference between multicollinearity and correlation 
-
+4) implementation of panel regression analysis (`plm`)
+5) calculation of VIF (`car`)
 
 <u>**Data science Learning Objectives:**</u>
 
@@ -150,7 +151,6 @@ Therefore we will use a subset of the listed explanatory variables and they will
 5) reshaping data into different formats (`tidyr`)  
 6) visualizations (`ggplot2`) 
 7) perform iterative simulations (`rsample`)
-
 
 
 We will especially focus on using packages and functions from the [`Tidyverse`](https://www.tidyverse.org/){target="_blank"}, such as `dplyr` and `ggplot2`. The tidyverse is a library of packages created by RStudio. While some students may be familiar with previous R programming packages, these packages make data science in R especially efficient.
@@ -165,7 +165,7 @@ include_graphics("https://tidyverse.tidyverse.org/logo.png")
 
 So what exactly is a **right-to-carry law**?
 
-It is a law thatspecifies if and how citizens are allowed to have a firearm on their person or nearby (for example in the citizen's car) in public. 
+It is a law that specifies if and how citizens are allowed to have a firearm on their person or nearby (for example in the citizen's car) in public. 
 
 The [Second Amendment](https://en.wikipedia.org/wiki/Second_Amendment_to_the_United_States_Constitution){target="_blank"} to the United States Constitution guarantees the right to "keep and bear arms". The amendment was ratified in 1791 as part of the [Bill of Rights](https://en.wikipedia.org/wiki/United_States_Bill_of_Rights){target="_blank"}.
 
@@ -244,7 +244,7 @@ There are some important considerations regarding this data analysis to keep in 
 
 1) We do not use all of the data used by either the [Lott and Mustard](https://chicagounbound.uchicago.edu/cgi/viewcontent.cgi?article=1150&context=law_and_economics){target="_blank"} or [Donohue, et al.](https://www.nber.org/papers/w23510.pdf){target="_blank"} analyses, nor do we perform the same analysis of each article. We instead perform a much simpler analysis with less variables for the purposes of illustration of the concept of multicollinearity and its influence on regression coefficients, not to reproduce either analysis.
 
-2) Our analysis accounts for either the adoption or lack of adoption of a permissive right-to-carry law in each state, but does not acount for differences in the level of permissiveness of the laws.
+2) Our analysis accounts for either the adoption or lack of adoption of a permissive right-to-carry law in each state, but does not account for differences in the level of permissiveness of the laws.
 
 Recall that these are the categories of right to carry laws:
 ```{r, echo=FALSE, out.height = '100%', out.width = '100%', fig.align='center'}
@@ -298,9 +298,9 @@ set.seed(999)
 ---------- |-------------
 [here](https://github.com/jennybc/here_here){target="_blank"}       | to easily load and save data
 [readr](https://readr.tidyverse.org/){target="_blank"}      | to import the CSV file data
-[car]  | to calculate vif values
+[car]  | to calculate VIF values
 [purrr] | to combine multiple tibbles within a list of tibbles
-[forcats] | to collapse levels of factors into more summarised versions
+[forcats] | to collapse levels of factors into more summarized versions
 The first time we use a function, we will use the `::` to indicate which package we are using. Unless we have overlapping function names, this is not necessary, but we will include it here to be informative about where the functions we will use come from.
 
 
@@ -329,7 +329,7 @@ knitr::include_graphics(here("img", "ourdata.png"))
 
 ## Demographic and population data
 
-To obtain information about age, sex, and race, and overall population we will use US Census Bureau data, just like both of the articles. The cesnus data is available for different time spans. Here are the links for the years used in our analysis. We will use data from 1977 to 2010.
+To obtain information about age, sex, and race, and overall population we will use US Census Bureau data, just like both of the articles. The census data is available for different time spans. Here are the links for the years used in our analysis. We will use data from 1977 to 2010.
 
 Data   | Link                                                                        
 ---------- |-------------
@@ -338,7 +338,7 @@ Data   | Link
 **years 1990 to 1999**  | [link](https://www2.census.gov/programs-surveys/popest/tables/1990-2000/state/asrh/)
 **years 2000 to 2010**  | [link](https://www.census.gov/data/datasets/time-series/demo/popest/intercensal-2000-2010-state.html) <br> [technical documentation](https://www2.census.gov/programs-surveys/popest/technical-documentation/file-layouts/2000-2010/intercensal/state/st-est00int-alldata.pdf){target="_blank"}
 
-To import the data we will use the `read_csv()` function of the `readr` package for the csv files. In some decades, there are separate files for each year, we will read each of these together using the base `list.files()` function to get all of the names for each file and then the `map()` function of the `purrr` package to apply the `read_csv()` function on all of the file paths in the list created by `list.files()`. For years that are txt files we will use `read_table2()` also fo the `readr` package. The `read_table2()` function, unlike the `read_table()`,  allows for any number of whitespace characters between columns, and the lines can be of different lengths.
+To import the data we will use the `read_csv()` function of the `readr` package for the csv files. In some decades, there are separate files for each year, we will read each of these together using the base `list.files()` function to get all of the names for each file and then the `map()` function of the `purrr` package to apply the `read_csv()` function on all of the file paths in the list created by `list.files()`. For years that are txt files we will use `read_table2()` also for the `readr` package. The `read_table2()` function, unlike the `read_table()`,  allows for any number of white space characters between columns, and the lines can be of different lengths.
 
 AVOCADO I am a bit confused about the last decade... it's only one file but it seems to need map...
 
@@ -412,7 +412,7 @@ head(ps_data)
 
 
 
-## Unemplyment data
+## Unemployment data
 
 The following data was downloaded from the [U.S. Bureau of Labor Statistics](https://data.bls.gov/cgi-bin/dsrv?la). 
 
@@ -484,7 +484,7 @@ poverty_rate_data <- read_xls("docs/Poverty/hstpov21.xls", skip=2) #This may cau
 head(poverty_rate_data)
 ```
 
-We can see that this will require some wranlging to make the data more usable. 
+We can see that this will require some wrangling to make the data more usable. 
 
 ## Violent crime
 
@@ -501,7 +501,7 @@ head(crime_data)
 
 ```
 
-We can see that this data will also require some wranlging to make it more usable. 
+We can see that this data will also require some wrangling to make it more usable. 
 
 ## Right-to-carry data
 
@@ -528,13 +528,13 @@ Again, this data will also require quite a bit of wrangling.
 ***
 ## State FIPS codes
 
-Let's first take a look at our state FIPS data to see if it needs any cleaning or reshaping. We should start with this data, becuase we will need to use it to wrangle some of the other data.
+Let's first take a look at our state FIPS data to see if it needs any cleaning or reshaping. We should start with this data, because we will need to use it to wrangle some of the other data.
 
 ```{r}
 head(STATE_FIPS)
 ```
 
-We only need the last two columns, but we might want to rename them. The `Name` variable is vague. The variable with the FIPS code is called `State\n(FIPS)`. To get rid of the new line in this variable name and to change the `Name` variable to something more informative, we will use the `rename()` function of the `dplyr` package.  To use this function, we need to list the new name first followed by `=` and then the existing variable. We can rename multiple variables at the same time by using a comma to separate the variables we are renaming. We will use the `select()` function also of the `dplyr` package just to keep these variables, and we will filter out the rows with FIPS values of `00` with the `filter()` function, agian also part of the `dplyr` package. we will specify that we want `STATEFP` values that are not equal to `00` by using this operator: `!=`. We will also use the double pipe operator `%<>%` of the `magrittr` package which allows us to use data as iuput and then reassign it after we peform sum functions using it.
+We only need the last two columns, but we might want to rename them. The `Name` variable is vague. The variable with the FIPS code is called `State\n(FIPS)`. To get rid of the new line in this variable name and to change the `Name` variable to something more informative, we will use the `rename()` function of the `dplyr` package.  To use this function, we need to list the new name first followed by `=` and then the existing variable. We can rename multiple variables at the same time by using a comma to separate the variables we are renaming. We will use the `select()` function also of the `dplyr` package just to keep these variables, and we will filter out the rows with FIPS values of `00` with the `filter()` function, again also part of the `dplyr` package. we will specify that we want `STATEFP` values that are not equal to `00` by using this operator: `!=`. We will also use the double pipe operator `%<>%` of the `magrittr` package which allows us to use data as input and then reassign it after we perform sum functions using it.
 
 ```{r}
 
@@ -551,7 +551,7 @@ STATE_FIPS
 ## Demographic and population data
 
 
-<details><summary> Click here to see detailed information about how the demogrphic data was wrangled </summary>
+<details><summary> Click here to see detailed information about how the demographic data was wrangled </summary>
 
 
 <font size="6"> **1977-1979**</font>
@@ -565,9 +565,9 @@ Taking a look at the first decade of data, we can see that the `Race/Sex Indicat
 
 Instead we will use the `str_extract()` function of the `stringr` package and the `mutate()` function of the `dplyr` package. The "mutate()" will allow us to create new variables, and "str_extract()" function  will allow us to match specific patterns and pull out matches to those patterns. Therefore, if the `Race/Sex Indicator` value is `Other races male` and if we extract patterns matching either `"male"` or `"female"` which we can specify like this `pattern = "male|female"` then, the value will be `male`.
 
-First we need to rename the `Race/Sex Indicator` varaible to not have spaces so that it is compatible with the `str_extract()` function.
+First we need to rename the `Race/Sex Indicator` variable to not have spaces so that it is compatible with the `str_extract()` function.
 
-We also want to rename a couple of variables to be simpler and filter the data to only include the years of the data we are interested in, as well as remove some variables that we dont need like the `FIPS State Code`. We can remove variables by using the `select()` function with a `-` minus sign in front of the variable we wish to remove.
+We also want to rename a couple of variables to be simpler and filter the data to only include the years of the data we are interested in, as well as remove some variables that we don't need like the `FIPS State Code`. We can remove variables by using the `select()` function with a `-` minus sign in front of the variable we wish to remove.
 
 ```{r}
 dplyr::glimpse(dem_77_79)
@@ -585,7 +585,7 @@ dem_77_79 <- dem_77_79 %>%
 glimpse(dem_77_79)
 ```
 
-That's looking pretty  good! We also want to take all the age group variabels and make one variable that is the age group name and one that is the value of the population count for that age group. To do this we will use the `pivot_longer()` function of the `tidyr` package. To use this function, we need to use the `cols` argument to indicate which columns we want to pivot. We also name the new variables we will create with the `names_to` and `values_to` arguments. The `names_to` will be the name of the variable that will identify each age group and `values_to` will be the name of the variable that contains the corresponding population values.
+That's looking pretty  good! We also want to take all the age group variables and make one variable that is the age group name and one that is the value of the population count for that age group. To do this we will use the `pivot_longer()` function of the `tidyr` package. To use this function, we need to use the `cols` argument to indicate which columns we want to pivot. We also name the new variables we will create with the `names_to` and `values_to` arguments. The `names_to` will be the name of the variable that will identify each age group and `values_to` will be the name of the variable that contains the corresponding population values.
 ```{r}
 dem_77_79 <- dem_77_79 %>%
   pivot_longer(cols=contains("years"),
@@ -597,7 +597,7 @@ glimpse(dem_77_79)
 
 We also want to get data about the total population for the state for each year.
 
-To do so we can sum all the values for the `SUB_POP` variable that we just created. To do this we can use the `group_by` and `summarise()` functions of the `dplyr` package. The `group_by()` function specifies how we want to calculate  our sum, that we would like to calculate it for each year and each state individually. Thus, all the values that have the same `STATE` and `YEAR` values will be summed together, rather than summing using all of the values in the `SUB_POP` variable. The `.groups` argument allows us to remove the grouping after we peform the calculation with `summarise()`.
+To do so we can sum all the values for the `SUB_POP` variable that we just created. To do this we can use the `group_by` and `summarise()` functions of the `dplyr` package. The `group_by()` function specifies how we want to calculate  our sum, that we would like to calculate it for each year and each state individually. Thus, all the values that have the same `STATE` and `YEAR` values will be summed together, rather than summing using all of the values in the `SUB_POP` variable. The `.groups` argument allows us to remove the grouping after we perform the calculation with `summarise()`.
 
 ```{r}
 pop_77_79 <- dem_77_79 %>%
@@ -608,7 +608,7 @@ pop_77_79
 ```
 
 
- Now we will add the population value to the demographic tibble using the `left_join()` function of the `dplyr` package. It is imporant that we specify how this should be done, that the `YEAR` and `STATE` variable vlaues should match eachother. This will place the `dem_77_79` variables to the left of the `pop_77_79` data. 
+ Now we will add the population value to the demographic tibble using the `left_join()` function of the `dplyr` package. It is important that we specify how this should be done, that the `YEAR` and `STATE` variable values should match each other. This will place the `dem_77_79` variables to the left of the `pop_77_79` data. 
  
 ```{r}
 dem_77_79 <- dem_77_79 %>%
@@ -628,7 +628,7 @@ dem_77_79
 ```
 It is important to make sure that we have the total values we would expect. We have two levels of `SEX`, three levels of `Race`, three levels of `YEAR`, eighteen levels of `AGE_GROUP`, and fifty one levels of `STATE`. If we multiply this together we get 16,524 which is the same as the number of rows in our final `dem_77_79` data. Looks good!
 
-Also Let's make the values of the `SEX` variable capatalized so that they match the other values of the other variables like `RACE` etc. This will help us to keep consistent values across the different years as we wrangle the data for the other decades. To do so we will use the `str_to_title()` function of the `stringr` package. We need to use the `pull()` function to get the values of `SEX` out of `dem_77_79`. Once we make them captialized they are then reasigned to the `SEX` variable. 
+Also Let's make the values of the `SEX` variable capitalized so that they match the other values of the other variables like `RACE` etc. This will help us to keep consistent values across the different years as we wrangle the data for the other decades. To do so we will use the `str_to_title()` function of the `stringr` package. We need to use the `pull()` function to get the values of `SEX` out of `dem_77_79`. Once we make them capitalized they are then reassigned to the `SEX` variable. 
 
 ```{r}
 
@@ -769,7 +769,7 @@ colnames(dem_90_99) <- c("YEAR",
 glimpse(dem_90_99)
 ```
 
-Notice also that the first row is all `NA` values from white space in the orginal table for 1990, this is probably true for each year. We can check them dimensions of our table using the base `dim()` function. When we filter for rows where `YEAR` is `NA`, we indeed see 10 rows, which is what we would expect if we have a row like this for each of the years in the decade. We see the same if we try a different variable. Now we will test to see how large our tibble is if we drop rows with `NA` values using the `drop_na()` function of `tidyr`. We that indeed our dimensions only changed by ten, so there are not other rows with missing values that we might not expect. So now we will resign the `dem_90_99` variable after removing these rows.
+Notice also that the first row is all `NA` values from white space in the original table for 1990, this is probably true for each year. We can check them dimensions of our table using the base `dim()` function. When we filter for rows where `YEAR` is `NA`, we indeed see 10 rows, which is what we would expect if we have a row like this for each of the years in the decade. We see the same if we try a different variable. Now we will test to see how large our tibble is if we drop rows with `NA` values using the `drop_na()` function of `tidyr`. We that indeed our dimensions only changed by ten, so there are not other rows with missing values that we might not expect. So now we will resign the `dem_90_99` variable after removing these rows.
 
 ```{r}
 
@@ -786,7 +786,7 @@ dem_90_99 %>%drop_na()
 dem_90_99 %<>%drop_na() 
 ```
 
-Then we sum across the nonhispanic and hispaninc groups because this information is not available for the other previous decades. Then we will remove the variables for the hispanic and nonhispanic subgroups using `select()`.
+Then we sum across the non-hispanic and Hispanic groups because this information is not available for the other previous decades. Then we will remove the variables for the Hispanic and non-Hispanic subgroups using `select()`.
 
 ```{r}
 
@@ -804,7 +804,7 @@ dem_90_99%<>%
 glimpse(dem_90_99)
 ```
 
-Looking better! We also need to add age groups like the other decades. We will take a look at the 80s data using the `distinct()` function of the `dplyr` package to see what age groups we need. We can use the base `cut()` function to create a new variable with `mutate()` called `AGE_GROUP` that will have a label for every change in 5 years of age. The `right = FALSE` argument specifies that the interval is not closed on the right, meaning that if the value is at the cutpoint like the `Age` value is 5, then it will be in the `5 to 9 years` group.
+Looking better! We also need to add age groups like the other decades. We will take a look at the 80s data using the `distinct()` function of the `dplyr` package to see what age groups we need. We can use the base `cut()` function to create a new variable with `mutate()` called `AGE_GROUP` that will have a label for every change in 5 years of age. The `right = FALSE` argument specifies that the interval is not closed on the right, meaning that if the value is at the cut point like the `Age` value is 5, then it will be in the `5 to 9 years` group.
 
 We can make the labels for the `AGE_GROUP` variable match those of `dem_77_79` but we need to pull out the values of the tibble created by `distinct()`. To do this we can use the `pull()` function from the `dplyr` package. Note that it is important to check that the `AGE_GROUP` values are listed in order for `dem_77_79`. We will also remove the `Age` variable after we create the new `AGE_GROUP` variable for the `dem_90_99` data. 
 
@@ -828,7 +828,7 @@ Like the previous decades we will create a `RACE` and `SUB_POP` variable using `
 
 Now we need to collapse the data for the various races so that it matches the previous decades. This time we will use the `case_when()` function of the `dplyr` package and the `str_detect()` function of the `stringr` package to identify when the race is something other than `B` or `W` and replace with the value `Other`. The value to the right of the `~` indicates what we want the value of the new variable to be if the value of the variable we are using with `str_decect()` matches the condition specified. If the value does not match the specified condition, than the other values will be what ever is listed after `TRUE ~`. We will then create population counts as we did previously for the other decades.
 
-Finally, we will create new sums for the subpopulations where we sum across the two `Other` subgroups `Race`  to a create a single value for each value of `YEAR`, `SEX`, `AGE_GROUP`, and `STATE` by using the `group_by()` function and `summarie()`.  
+Finally, we will create new sums for the sub-populations where we sum across the two `Other` subgroups `Race`  to a create a single value for each value of `YEAR`, `SEX`, `AGE_GROUP`, and `STATE` by using the `group_by()` function and `summarie()`.  
 
 ```{r}
 dem_90_99  %<>%
@@ -868,7 +868,7 @@ dem_90_99
 ```
 
 
-Again, we should check to make sure that we have the total values we would expect. We have the same number of unique values for each of our variables as in with the data from the 80s, so if we collpased the data for the different additional subpopulations in this data, then we have done it correctly. 
+Again, we should check to make sure that we have the total values we would expect. We have the same number of unique values for each of our variables as in with the data from the 80s, so if we collapsed the data for the different additional sub-populations in this data, then we have done it correctly. 
 
 Indeed it looks like we have 55,080 rows, which is what we would expect and is the same as the number of rows of the final `dem_80_89` data. Looks good!
 
@@ -886,7 +886,7 @@ glimpse(dem_00_10)
 
 ```
 
-Ok, the data looks a bit different from the others. First we will remove a couple of variables that we probably don't need. Also it looks like we have some values for the entire United Sates and we will drop these to be like the other decades.
+OK, the data looks a bit different from the others. First we will remove a couple of variables that we probably don't need. Also it looks like we have some values for the entire United Sates and we will drop these to be like the other decades.
 
 
 
@@ -905,7 +905,7 @@ knitr::include_graphics(here::here("img", "tech_info.png"))
 
 So we will drop the total values for `SEX`, `RACE`, and `AGEGRP` by removing the rows where these variables are equal to zero.
 
-We will also want to only select for the total values for `Origin` as we do not wish to divide the data into subgroups about hispanic ethnicity because we do not have that information for the first two decades. Thus we will filter for only the rows where `Origin` is equal to zero.
+We will also want to only select for the total values for `Origin` as we do not wish to divide the data into subgroups about Hispanic ethnicity because we do not have that information for the first two decades. Thus we will filter for only the rows where `Origin` is equal to zero.
 
 We will also then remove the `REGION`, `Division`, `STATE`, and `Origin` variables. We will then rename `NAME` to be `STATE` and rename `AGEGRP` to be like the other decades as `AGE_GROUP`.
 
@@ -923,7 +923,7 @@ dem_00_10
 ```
 
 
-Now we need to recode the numeric values to the values in the techincal documentation. We can do so by adding labels to each numeric level using the base function `factor()`.
+Now we need to recode the numeric values to the values in the technical documentation. We can do so by adding labels to each numeric level using the base function `factor()`.
 
 ```{r}
 dem_00_10 %<>%
@@ -969,9 +969,9 @@ dem_00_10 %<>%
   summarise(SUB_POP = sum(SUB_POP_temp), .groups = "drop")
 ```
 
-Agian, the dimensions look as we expect with 60,588 rows. This time we have two levels of `SEX`, three levels of `Race`, **11** levels of `YEAR`, eighteen levels of `AGE_GROUP`, and fifty one levels of `STATE`. If we multiply this together we get 16,588. Looks good!
+Again, the dimensions look as we expect with 60,588 rows. This time we have two levels of `SEX`, three levels of `Race`, **11** levels of `YEAR`, eighteen levels of `AGE_GROUP`, and fifty one levels of `STATE`. If we multiply this together we get 16,588. Looks good!
 
-Now we will calculate the total polutation and percent of the total as we have done with the previous decades.
+Now we will calculate the total population and percent of the total as we have done with the previous decades.
 
 
 ```{r}
@@ -980,7 +980,7 @@ pop_00_10 <- dem_00_10 %>%
   summarise(TOT_POP = sum(SUB_POP), .groups = "drop")
 ```
 
-We can also check that our wrangling was performecd correctly by summing the values for the individual subpopulations percentages and seeing if it totals to 100.
+We can also check that our wrangling was performed correctly by summing the values for the individual sub-populations percentages and seeing if it totals to 100.
 
 ```{r}
 dem_00_10 %>%
@@ -995,7 +995,7 @@ dem_00_10 %>%
 
 ```
 
-Looks like the percentages for each state for each year all add up to 100, as we would expect. Great! Now we will reasign the `dem_00_10` data with this processing. 
+Looks like the percentages for each state for each year all add up to 100, as we would expect. Great! Now we will reassign the `dem_00_10` data with this processing. 
 
 ```{r}
 dem_00_10 %<>%
@@ -1006,13 +1006,13 @@ dem_00_10 %<>%
 dem_00_10
 ```
 
-OK, now we are ready to combine all of our demgraphic data together!
+OK, now we are ready to combine all of our demographic data together!
 
 <!-- </details> -->
 
 ## Combining demographic data
 
-We can check that the colnames are the same for the data for each of the decades by using the `setequal()` function of the `dplyr` package.
+We can check that the column names are the same for the data for each of the decades by using the `setequal()` function of the `dplyr` package.
 
 ```{r}
 setequal(colnames(dem_77_79),colnames(dem_80_89))
@@ -1059,9 +1059,9 @@ knitr::include_graphics(here("img",'Donohue_Table2.png'))
 ```
 We can see that only the percentage of males that were from age 15-39 of the race groups (black, white, and other) were used in the Donohue analysis.
 
-Ultimately we intend to make a tibble of data that is similar to each analysis. Therefore, we will create a data tibble about the demogrphaic data for each analysis now.
+Ultimately we intend to make a tibble of data that is similar to each analysis. Therefore, we will create a data tibble about the demographic data for each analysis now.
 
-To do so we will first create a vector of the age groups that should be included in the Donohue-like analysis, that we will call `DONOHUE_AGE_GROUPS`. We will then filter for only the age groups in this vector by using the `filter()` function of the `dplyr` package and the `%in%` operator to indicate that we want to keep all `AGE_GROUP` values that are equal to those within `DONOHUE_AGE_GROUPS`. We also want to filter for only population percentages for males by using the `==` operator. Then we can collpase the age groups from 20-39 by using the `fct_collpase()` function of the `forcats` package.
+To do so we will first create a vector of the age groups that should be included in the Donohue-like analysis, that we will call `DONOHUE_AGE_GROUPS`. We will then filter for only the age groups in this vector by using the `filter()` function of the `dplyr` package and the `%in%` operator to indicate that we want to keep all `AGE_GROUP` values that are equal to those within `DONOHUE_AGE_GROUPS`. We also want to filter for only population percentages for males by using the `==` operator. Then we can collapse the age groups from 20-39 by using the `fct_collpase()` function of the `forcats` package.
 
 ```{r}
 DONOHUE_AGE_GROUPS <- c("15 to 19 years",
@@ -1083,9 +1083,9 @@ dem_DONOHUE
 
 We also want to create a new variable that will contain all the demographic information for each percentage just as was done in the [Donohue, et al.](https://www.nber.org/papers/w23510.pdf){target="_blank"} analysis. This should result in 6 different demographic variables.
 
-To do this we will modify the `AGE_GROUP` variable by using the `mutate()` function of the `dplyr` package. We will replace the spaces in the now two age group categorise with and undesrscore using the `str_replace_all()` function of the `stringr` package which replaces all instances of a pattern in a character string. 
+To do this we will modify the `AGE_GROUP` variable by using the `mutate()` function of the `dplyr` package. We will replace the spaces in the now two age group categories with and underscore using the `str_replace_all()` function of the `stringr` package which replaces all instances of a pattern in a character string. 
 
-Then we will use the `group_by()` function and the `summarise()` funtion also of the `dplyr` package to allow us to calculate a sum of the percentages for each of the subpopulation percentages for the newly modifed age groups in `AGE_GROUP`. The `.groups = "drop"` argument allows for the grouping to be removed after the `summarise()` function.
+Then we will use the `group_by()` function and the `summarise()` function also of the `dplyr` package to allow us to calculate a sum of the percentages for each of the sub-population percentages for the newly modified age groups in `AGE_GROUP`. The `.groups = "drop"` argument allows for the grouping to be removed after the `summarise()` function.
 
 ```{r}
 dem_DONOHUE %<>%
@@ -1118,11 +1118,11 @@ Now, let's do the same for the "Lott-like" analysis.
 knitr::include_graphics(here("img",'Donohue_Table2.png'))
 ```
 
-So, in this analysis there were 36 variables covering percentages of indiviuals from 10 to over 65, three  race groups and both males and females. This table is misprinted and does not include the word "Other" for the third race group that was used. 
+So, in this analysis there were 36 variables covering percentages of individuals from 10 to over 65, three  race groups and both males and females. This table is misprinted and does not include the word "Other" for the third race group that was used. 
 
 First we will filter out the age groups that were not included. Then we will collapse the age groups to those that were used by Lott et al. again using the `fct_collpase()` function of the `forcats` package. 
 
-Also we will again combine the values across the variables to create a new demographic varaible with 36 levels. 
+Also we will again combine the values across the variables to create a new demographic variable with 36 levels. 
 
 ```{r}
 LOTT_AGE_GROUPS_NULL <- c("Under 5 years",
@@ -1162,7 +1162,7 @@ We can indeed check that we have the correct number of levels for `VARIABLE` usi
   
 ## Combining population Data
 
-We also have population data for each decade that came from wrangling the demogrphic data.
+We also have population data for each decade that came from wrangling the demographic data.
 
 We again want to combine this data, so let's again make sure that all the different tibbles have the same column names.
 
@@ -1199,9 +1199,9 @@ population_data %>%
 
 ## Police staffing
 
-<details><summary> Click here to see details about how the plice staffing data was wrangled. </summary>
+<details><summary> Click here to see details about how the police staffing data was wrangled. </summary>
 
-OK, now we will wrangle the police staffing data. We want to limit the data to only the years of interest. Then we will also replace NA values with zero for the `male_total_ct` and `female_total_ct` variables using the `replace_na()` function of the `tidyr` packge. We will also, use the `across()` function of the `dplyr` package to select and mutate both of these columns in this way. Since both of these variables have `total_ct` in the name and no other variables do, we can use the `contains()` function of the `dplyr` package to specify that we want to use these columns instead of listing both out.
+OK, now we will wrangle the police staffing data. We want to limit the data to only the years of interest. Then we will also replace NA values with zero for the `male_total_ct` and `female_total_ct` variables using the `replace_na()` function of the `tidyr` package. We will also, use the `across()` function of the `dplyr` package to select and mutate both of these columns in this way. Since both of these variables have `total_ct` in the name and no other variables do, we can use the `contains()` function of the `dplyr` package to specify that we want to use these columns instead of listing both out.
 
 avocado... why not 2010....
 
@@ -1253,7 +1253,7 @@ ps_data %>%
 ```
 Looks like all the states have 38 values.
 
-Notice also that there are some unusual abrreviations in the `state_abbr` variable.
+Notice also that there are some unusual abbreviations in the `state_abbr` variable.
 
 We will remove data for [US terroitories and associated states]( https://www.fs.fed.us/database/feis/format.html){target="_blank"}  
 
@@ -1285,7 +1285,7 @@ ps_data <- ps_data %>%
   filter(!(state_abbr %in% state_of_interest_NULL)) 
 ```
   
-Within the `datasets` package that is loaded with R, there is a dataset called `state` that contains an object called `state.abb` that has the state abbreviations and `state.name` that has the state names.
+Within the `datasets` package that is loaded with R, there is a data set called `state` that contains an object called `state.abb` that has the state abbreviations and `state.name` that has the state names.
 We will combine these now to add the state names to our data.
 
 ```{r}
@@ -1294,7 +1294,7 @@ head(state_abb_data)
 ```
 
 One unusual thing about this data is that NE is used for Nebraska to avoid confusions with NB in Canada. 
-So we want to repace that using the `str_replace()` function of the `stringr` package
+So we want to replace that using the `str_replace()` function of the `stringr` package
 
 ```{r}
 state_abb_data %<>%
@@ -1338,7 +1338,7 @@ ps_data
 ```
 
 
-We also need to adjust the value to be that of every 100,000 people in the state. To do so we need the population for each state, which lukily we already have. We will slightly modify the population data and create a new tibble that will make it more clear how we are dividing by it.
+We also need to adjust the value to be that of every 100,000 people in the state. To do so we need the population for each state, which luckily we already have. We will slightly modify the population data and create a new tibble that will make it more clear how we are dividing by it.
 
 ```{r}
 denominator_temp <- population_data %>%
@@ -1399,7 +1399,7 @@ OK, now for wrangling the poverty data. First let's take a look at it.
 head(poverty_rate_data)
 ```
 
-We can see that the column names are actually shifted downbelow the row with the year. So we will manually make these values the actual column names.
+We can see that the column names are actually shifted down below the row with the year. So we will manually make these values the actual column names.
 
 ```{r}
 colnames(poverty_rate_data) <- c("STATE",
@@ -1474,7 +1474,7 @@ poverty_rate_data %>%
 
 ####
 
-Some of the years (2013 and 2017) are listed twice with a number in parantheses, others are just listed once with a number in parantheses. Looking at the technical documentation, this seems to do with updates to the defition of poverty and to the methods used to estimate poverty levels. See [here](https://www.census.gov/topics/income-poverty/poverty/guidance/poverty-footnotes/cps-historic-footnotes.html){target="_blank"} and [here](https://www2.census.gov/programs-surveys/cps/techdocs/cpsmar19.pdf){target="_blank"} for more information. We will simply select one of the sets of data for 2013 and 2017.
+Some of the years (2013 and 2017) are listed twice with a number in parentheses, others are just listed once with a number in parentheses. Looking at the technical documentation, this seems to do with updates to the definition of poverty and to the methods used to estimate poverty levels. See [here](https://www.census.gov/topics/income-poverty/poverty/guidance/poverty-footnotes/cps-historic-footnotes.html){target="_blank"} and [here](https://www2.census.gov/programs-surveys/cps/techdocs/cpsmar19.pdf){target="_blank"} for more information. We will simply select one of the sets of data for 2013 and 2017.
 
 ```{r}
 poverty_rate_data %>% 
@@ -1690,7 +1690,7 @@ colnames(poverty_rate_data)
 
 <details><summary> Click here to see details about how the violent crime data was wrangled </summary>
 
-The `crime_data` was importated using `read_lines()` and we have some lines that we don't necessarily need. A large amount of the original data is notes at the end of the table. We want to remove these lines. We can determine where they start by searching for the row that contains the first statement of these notes using the `str_which()` function of the `stringr` package. We will subtract one from this as there is a blank line in between.
+The `crime_data` was imported using `read_lines()` and we have some lines that we don't necessarily need. A large amount of the original data is notes at the end of the table. We want to remove these lines. We can determine where they start by searching for the row that contains the first statement of these notes using the `str_which()` function of the `stringr` package. We will subtract one from this as there is a blank line in between.
 
 ```{r}
 tail(crime_data)
@@ -1700,7 +1700,7 @@ tail(crime_data)
 ```
 
 There are lines for each year from 1977 to 2014 as well as four lines about each state and the header information for each state. 
-Here you can see what the orginal data looks like:
+Here you can see what the original data looks like:
 ```{r}
 knitr::include_graphics(here("img", "crime_data.png"))
 ```
@@ -1762,13 +1762,13 @@ head(crime_data)
 tail(crime_data)
 ```
 
-It appears that the data is comma separted with 8 columns. One of the middle columns often has no values, we need to fill these in with NAs. We can use the `read_csv()` fucntion from the `readr` package to do this. It turns out you don't have to have a file, but you can also use a string our a vector.
+It appears that the data is comma separated with 8 columns. One of the middle columns often has no values, we need to fill these in with NAs. We can use the `read_csv()` function from the `readr` package to do this. It turns out you don't have to have a file, but you can also use a string our a vector.
 
 ```{r}
 crime_data_sep <-read_csv(crime_data, col_names = FALSE)
 head(crime_data)
 ```
-Nice! Now we just need our colnames. Recall that we saved this information. 
+Nice! Now we just need our column names. Recall that we saved this information. 
 
 ```{r}
 colnames_crime
@@ -1876,9 +1876,9 @@ cat(DAWpaper_p_62)
 ```
 
 
-We can see that this is one continuous character string. We can sparate into lines based on the presence of `"\n"` in the string using the `str_split()` function of the `stringr` package. We need to unlist the data first, as the output of `str_split()` is a list. Finally, we can convert it to a tibble using the `as.tibble()` function of the `tibble` package.  We also see that we don't need the first line about the table. We can remove this with the `slice()` function of the `dplyr` package. We can also use this to remove the colnames so that we can replace them. Thus we will use `slice(-(1:2))` to remove the first two lines.
+We can see that this is one continuous character string. We can separate into lines based on the presence of `"\n"` in the string using the `str_split()` function of the `stringr` package. We need to unlist the data first, as the output of `str_split()` is a list. Finally, we can convert it to a tibble using the `as.tibble()` function of the `tibble` package.  We also see that we don't need the first line about the table. We can remove this with the `slice()` function of the `dplyr` package. We can also use this to remove the column names so that we can replace them. Thus we will use `slice(-(1:2))` to remove the first two lines.
 
-So we will split and unlist() the data.
+So we will split and unlit() the data.
 ```{r}
 p_62 <- DAWpaper_p_62 %>%
     str_split("\n") %>%
@@ -1962,7 +1962,7 @@ cat(DAWpaper_p_62)
 ```
 
 
-So we will replace white spaces with more than 40 consecutive spaces with `NA`. Let's also remove the leading white spaces that varies infront of the state names, as DC does not have any and this could cause a problem later. We will also replace any white spaces of 2 consecutive spaces or more , but less than 15 white spaces with "|" so that we can split the data based on this symbol. Thus we will also put these around the `NA` value that we are using replace the white spaces made of 40+ spaces. 
+So we will replace white spaces with more than 40 consecutive spaces with `NA`. Let's also remove the leading white spaces that varies in front of the state names, as DC does not have any and this could cause a problem later. We will also replace any white spaces of 2 consecutive spaces or more , but less than 15 white spaces with "|" so that we can split the data based on this symbol. Thus we will also put these around the `NA` value that we are using replace the white spaces made of 40+ spaces. 
 ```{r}
 
 p_62b <-p_62 %>%
@@ -2089,11 +2089,11 @@ checkyear <- function(x) { x %<>% distinct(YEAR) %>% tally() %>% pull(n) }
 map(data_list, checkyear)
 ```
 
-Avocado bind_rows will make na values for the later years beyond 2010 for the datasets that have them... not sure why we are adding these... maybe there is more about that later?
+Avocado bind_rows will make `NA` values for the later years beyond 2010 for the datasets that have them... not sure why we are adding these... maybe there is more about that later?
 
 ## Donohue, et al.
 
-We will now bind the demogrpahic data that we made for the Donohue-like analysis called `dem_DONOHUE`, as well as all the other datasets that we have wrangled. This is possible because we have the same colnames for each dataset. We will also use the `pivot_wider()` function of the `tidyr` package to change the shape of the data. This will make the data have more columns. Each unique value in the column called `VARIABLE` will be used to make new columns. and the values for each will come from the column called `VALUE`.
+We will now bind the demographic data that we made for the Donohue-like analysis called `dem_DONOHUE`, as well as all the other datasets that we have wrangled. This is possible because we have the same column names for each dataset. We will also use the `pivot_wider()` function of the `tidyr` package to change the shape of the data. This will make the data have more columns. Each unique value in the column called `VARIABLE` will be used to make new columns. and the values for each will come from the column called `VALUE`.
 
 ```{r}
 DONOHUE_DF <- bind_rows(dem_DONOHUE,
@@ -2116,7 +2116,7 @@ DONOHUE_DF %>%
   glimpse()
 ```
 
-We will also add the Right to Carry Law data using the `left_join()` function of the `dplyr` package. Which will place the `DONOHUE_DF` data on the left of the `RTC` data.  Values will be matched by STATE. Then we will create a new variable called `RTC_LAW` using the `mutate()` function and the `case_when()` function of the `dplyr` package  that will have the value `TRUE` if the current year data is equal to or greater than the year that a more premisive RTC law was adopted, otherwise the value will be `FALSE`.
+We will also add the Right to Carry Law data using the `left_join()` function of the `dplyr` package. Which will place the `DONOHUE_DF` data on the left of the `RTC` data.  Values will be matched by STATE. Then we will create a new variable called `RTC_LAW` using the `mutate()` function and the `case_when()` function of the `dplyr` package  that will have the value `TRUE` if the current year data is equal to or greater than the year that a more permissive RTC law was adopted, otherwise the value will be `FALSE`.
 
 ```{r}
 
@@ -2134,7 +2134,7 @@ DONOHUE_DF %>%
 
 Since we have differing numbers of years for each data set, we can use the `drop_na()` function of the `tidyr` package. to remove years that have incomplete data. Thus any row with NA values will be removed.
 
-For example, we can see that for 1977, althouth we have most of the data, we do not have the poverty rate. 
+For example, we can see that for 1977, although we have most of the data, we do not have the poverty rate. 
 ```{r}
 DONOHUE_DF %>%
   filter(YEAR == 1977) %>%
@@ -2143,7 +2143,7 @@ DONOHUE_DF %>%
 
 ```
 
-Another example, in 2018 we only have infromation about unemployment rates, poverty rates, and RTC laws.
+Another example, in 2018 we only have information about unemployment rates, poverty rates, and RTC laws.
 
 ```{r}
 DONOHUE_DF %>%
@@ -2192,7 +2192,7 @@ setdiff(distinct(population_data, STATE),
         distinct(DONOHUE_DF, STATE))
 ```
 
-We will also calculate a violent crime rate relative to the population in that state at that time, now that we have data for both crime count and population.  Will will also calcuate the log value of this rate and the population.
+We will also calculate a violent crime rate relative to the population in that state at that time, now that we have data for both crime count and population.  Will will also calculate the log value of this rate and the population.
 
 ```{r}
 DONOHUE_DF %<>%
@@ -2251,7 +2251,7 @@ length(summary(droplevels(as.factor(DONOHUE_DF$STATE))))
 
 ## Lott and Mustard
 
-We will now bind the demogrpahic data that we made for the Lott-like analysis called `dem_Lott`, as well as all the other datasets that we have wrangled just as we did for the Donohue-like analysis. Again, this is possible because we have the same colnames for each dataset. 
+We will now bind the demographic data that we made for the Lott-like analysis called `dem_Lott`, as well as all the other datasets that we have wrangled just as we did for the Donohue-like analysis. Again, this is possible because we have the same column names for each dataset. 
 
 ```{r}
 LOTT_DF <- bind_rows(dem_LOTT,
@@ -2359,8 +2359,20 @@ summary(droplevels(as.factor(LOTT_DF$STATE)))
 length(summary(droplevels(as.factor(LOTT_DF$STATE))))
 ```
 
+
+```{r, echo = FALSE, eval = FALSE}
+save(LOTT_DF, DONOHUE_DF, file = here::here("data", "Wrangled_data.rda"))
+```
+
+
 # **Data Exploration**
 ***
+
+```{r, echo = FALSE, eval = TRUE}
+# For instructors that want to start here, we will load the data
+load( file = here::here("data", "Wrangled_data.rda"))
+```
+
  Let's do some quick visualizations to get a sense of our outcome of interest, the violent crime data. 
  
 First we will plot the rate of violent crime over time to get a sense of the general trend.
@@ -2372,7 +2384,7 @@ Then we will use the `ggplot2` package to plot the data. The first step in creat
 
 We can use the `scale_x_continuous()` and `scale_y_continuous()` functions to  modify the axis labels.
 
-The `labs()` function can be used to add labels to the plot, while the `theme()` function allows for manipulation of the detials of the labels, like size and angle. 
+The `labs()` function can be used to add labels to the plot, while the `theme()` function allows for manipulation of the details of the labels, like size and angle. 
 
 All of these functions are part of the `ggplot2` package.
  
@@ -2402,7 +2414,7 @@ Interesting! It appears that there was an overall national peak in violent crime
 
 Now let's take a look at each state.
 
-We will use the `ggrepel` package to add text to the plot using the `geom_text_repel()` function. This is especially useful when there is alot of text, as this function reduces the overlap of text labels. Again see [this case study](https://opencasestudies.github.io/ocs-bp-co2-emissions/){target="_blank"}  for more details on how to add labels to elements of plots.
+We will use the `ggrepel` package to add text to the plot using the `geom_text_repel()` function. This is especially useful when there is a lot of text, as this function reduces the overlap of text labels. Again see [this case study](https://opencasestudies.github.io/ocs-bp-co2-emissions/){target="_blank"}  for more details on how to add labels to elements of plots.
  
 ```{r}
 
@@ -2473,6 +2485,8 @@ skimr::skim(DONOHUE_DF)
 skimr::skim(LOTT_DF)
 
 ```
+We can see from this function, that we have the number of variables of the class types that we expect for each tibble. We can also see that the mean of the variables that should be the same for each tibble are in fact the same. 
+We can also tell that the values for the variables are in general what we would expect.
 
 # **Data Analysis**
 ***
@@ -2481,7 +2495,7 @@ skimr::skim(LOTT_DF)
 
 OK! We are now ready to start analyzing our data!. 
 
-We have what is called [panel data](https://en.wikipedia.org/wiki/Panel_data){target="_blank"} . This is a special type of longitundinal data. Longitudinal data are data measurments taken over time. Panel data are data repeatidly measured for for multiple panel members or individuals over time. This is in contrast with time series data, which measures one individual over time and cross sectional data, which measures multiple individuals at one point in time.  In otherwords, panel data is a combination of both, in this case we measure multiple individuals over multiple time periods.  In our case, we have measurements of violent crime and other variables for each state over many years. Therefore we are using measurements about the same states over time.  
+We have what is called [panel data](https://en.wikipedia.org/wiki/Panel_data){target="_blank"} . This is a special type of longitudinal data. Longitudinal data are data measurements taken over time. Panel data are data repeatedly measured for for multiple panel members or individuals over time. This is in contrast with time series data, which measures one individual over time and cross sectional data, which measures multiple individuals at one point in time.  In other words, panel data is a combination of both, in this case we measure multiple individuals over multiple time periods.  In our case, we have measurements of violent crime and other variables for each state over many years. Therefore we are using measurements about the same states over time.  
 
 In a panel analysis there are $N$ individual panel members and $T$ time points.  
 
@@ -2490,7 +2504,7 @@ There are two types of panels:
 
 Time Points ($T$)  | Individuals ($N$)                                                                      
 ---------- |-------------
-1977  | Navada 
+1977  | Nevada 
 1977  | Alabama
 1977  | Kansas
 1978 | Nevada
@@ -2500,11 +2514,11 @@ Time Points ($T$)  | Individuals ($N$)
 1979 | Alabama
 1979 | Kansas
 
-2. **Unbalanced** - There may be data points missing for some inidividuals ($N$) at some time points ($T$).
+2. **Unbalanced** - There may be data points missing for some individuals ($N$) at some time points ($T$).
 
 Time Points ($T$)  | Individuals ($N$)                                                                         
 ---------- |-------------
-1977  | Navada 
+1977  | Nevada 
 1977  | Alabama
 1978 | Nevada
 1978 | Alabama
@@ -2533,40 +2547,39 @@ We will be performing a **panel linear regression model analysis**.
 
 In such an analysis we will model our data according to this generic model:
 
-$$Y_{it} = a + B'X_{it} +  u_{it},\\ u_{it}=\mu _{i}+v_{it}$$
+$$Y_{it}=β_{0}+β_{1}X_{1it}+...+β_{K}X_{Kit}$$
+
 Where $i$ is the individual dimension (in our case individual states) and $t$ is the time dimension.
 
-Some independent variables or regressors $X_{it}$ will vary across individuals and time, while others will be fixed across the time of the study (or don't change over time), while others still will be fixed across individuals but vary across time periods.
-
-$\mu _{i}$ are individual effects that are time independent (aka. fixed over time).  
-
-$v_{it}$ are random effects that vary with time  
+Some explanatory/independent variables or regressors $X_{it}$ will vary across individuals and time, while others will be fixed across the time of the study (or don't change over time), while others still will be fixed across individuals but vary across time periods.
 
 
-There are three general subtypes of [panel regression analysis](https://en.wikipedia.org/wiki/Panel_analysis){target="_blank"}.
+There are three general sub-types of [panel regression analysis](https://en.wikipedia.org/wiki/Panel_analysis){target="_blank"}.
 
 Overall, they assume that the different individuals are independent, however the same data for the same individual may be correlated across time.
 
-The main difference between the three subtypes are the assumptions about unobserved differences between individuals.
+The main difference between the three sub-types are the assumptions about unobserved differences between individuals.
 
 avocado: update formulas like this? https://bookdown.org/ccolonescu/RPoE4/panel-data-models.html
-pooled: $$Y_{it}=β{0}+β{1}x_{1it}+...+β_KX_{Kit}$$
-like this for fixed effect: $$Y_{it}=β_{0i}+β_{1i}X_{1it}+β_{2i}X_{2it}+e_it$$
+pooled:
+like this for fixed effect: 
 random: $$yit=β⎯⎯⎯1+β2x2it+νit$$
 
 
 
-1) **independently pooled panels**  - assumes that there are no individual effects that are independent of time and also no effect of time on all the individuals. In otherwords, the independent variables are not correlated with any error term. This is essentially an ordinary least squares linear regression. This type of panel regression makes the most assumptions and is therefore typically not used for panel data.
+1) **independently pooled panels**  - assumes that there are no individual effects that are independent of time and also no effect of time on all the individuals. In other words, the independent variables are not correlated with any error term. This is essentially an ordinary least squares linear regression. This type of panel regression makes the most assumptions and is therefore typically not used for panel data.
 
-2) **fixed effects** - assumes that there are unknown or unobserved unique aspects about the individuals  or heterogeneity among indivudals $a_i$ that are not explained by the independent variables but influence the outcome variable of interest. They do not vary with time or in otherwords are fixed over time but may be **correlated** with independent variables $X_{it}$.  
+ $$Y_{it}=\beta_{0}+\beta_{1}x_{1it}+...+\beta__KX_{Kit} + e_{it}$$
+Where the intercept $\beta_0it=\beta_0$for all $i,t$ and slope $\beta_kit=\beta_k$ for all $i,t$.
 
-In this case the intercept can be different for each indivudual ${a_i}$, but the slope is the same across all the individuals.
+2) **fixed effects** - assumes that there are unknown or unobserved unique aspects about the individuals  or heterogeneity among individuals $B_0i$ that are not explained by the independent variables but influence the outcome variable of interest. They do not vary with time or in other words are fixed over time but may be **correlated** with independent variables $X_{it}$.  
 
+In this case the intercept can be different for each individual $\beta_{0i}$, but the slope is the same across all the individuals.
 
 
 These individual $a_i$ effects can be correlated with the independent variables $X$.
 
-$$Y_{it} = a_i + B'X_{it} + u_{it},\\ u_{it}=\mu _{i}+v_{it}$$
+$$Y_{it}=\beta_{0i}+\beta_{1}X_{1it}+...\beta_{k}X_{kit}+e_it$$
 This type of panel regression makes the least assumptions.
 
 
@@ -2574,19 +2587,14 @@ This type of panel regression makes the least assumptions.
 
 Thus, the random effects model actually makes **more assumptions** than the fixed effect model.
 
-$$Y_{it} =  B'X_{it} + (a_i + e_{it})$$
-So each indivual has the sampe slope and the same overall error term (a_i + e_{it}). 
+$$Y_{it} =\beta_0 X_{it} +\beta_{1}X_{1it}+... \beta_k X_{kt} + e_{t}$$
+So each individual has the same slope and the same overall error term ($\beta + e_{t}$). 
 
 
-See [here](https://www.bauer.uh.edu/rsusmel/phd/ec1-15.pdf) and [here](https://sites.google.com/site/econometricsacademy/econometrics-models/panel-data-models) for more information about these different models.
+See [here](https://www.bauer.uh.edu/rsusmel/phd/ec1-15.pdf) and [here](https://sites.google.com/site/econometricsacademy/econometrics-models/panel-data-models) and [here](https://cran.r-project.org/web/packages/plm/vignettes/plmPackage.htm) for more information about these different models.
 
 We will be performing a fixed effect panel regression analysis, as we do in fact think that some of the unobserved qualities about the different states that may be correlated with some of our independent variables. For example, the level of economic opportunity might be an unobserved feature about the states that influences violent crime rate and would be possibly correlated with poverty rate and unemployment. 
 
-
-avocado:We assume that data for the same individual may be correlated, but we assume that the different indivudals are independent.
-
-
-avocado from Michael:Some code taken from http://karthur.org/2019/implementing-fixed-effects-panel-models-in-r.html
 
 To perform our analysis we will be using the `plm` package. This stands for Panel Linear Model.
 
@@ -2594,7 +2602,7 @@ We need to use a special type of data to use this package, called a `pdata.frame
 
 We need to indicate variable should be used to identify the individuals in our panel, and what variable should be used to identify the time periods in our panel. In our case the `STATE` variable identifies the individuals and the `YEAR` variable identifies the time periods.
 
-We can specify this structure using the `pdata.frame()` function of the `plm` package, by using the `index` argument, where the individual variale is specified first followed by the time variable, like so: `index=c("Individual_Variable_NAME", "Time_Period_Variable_NAME").
+We can specify this structure using the `pdata.frame()` function of the `plm` package, by using the `index` argument, where the individual variable is specified first followed by the time variable, like so: `index=c("Individual_Variable_NAME", "Time_Period_Variable_NAME").
 
 ```{r}
 d_panel_DONOHUE <- pdata.frame(DONOHUE_DF, index=c("STATE", "YEAR"))
@@ -2613,7 +2621,7 @@ To do so we will use the `plm()` function and we will specify the formula for ou
 We also need to specify what type of `effect` we would like to model and what type of `model` we would like to use.
 
 There are three main options for the `effect` argument:
-1) individual  - model for the effect of indivudal identity
+1) individual  - model for the effect of individual identity
 2) time - model for the effect of time
 3) twoways - meaning modeling for the effect of both individual identity and time  
 
@@ -2627,7 +2635,7 @@ Typically it is best to think about what you are trying to evaluate with your da
 
 We are interested in how violence in each state varied over time, thus we are interested in within `STATE`variation, so we will perform our plm with the `model = within` argument to perform this particular type of fixed effects model. 
 
-We also speculate that there is an effect of individual `STATE` identity and time on violent crime rate. In otherwords, we expect some states to have high rates of crime, and others to have low rates of crime. We also expect crime to change over time. 
+We also speculate that there is an effect of individual `STATE` identity and time on violent crime rate. In other words, we expect some states to have high rates of crime, and others to have low rates of crime. We also expect crime to change over time. 
 
 If we were to perform this type of analysis we would use the `effect = "twoways"` argument in our `plm()` function like so:
 
@@ -2651,7 +2659,7 @@ DONOHUE_OUTPUT <- plm(Viol_crime_rate_1k_log ~
 
 To see the results we can use the base `summary()` function. We can view this output in tidy format using the `tidy()` function of the `broom` package.
 
-avocado I think the `analysis` variable is a lable for plots
+avocado I think the `analysis` variable is a label for plots
 
 ```{r}
 summary(DONOHUE_OUTPUT)
@@ -2683,7 +2691,7 @@ pooltest(Viol_crime_rate_1k_log ~
 
 ```
 
-The `p-value` is less than a significance threshold of .05, thus we reject the null that our coeffients are all equal. Thus the `within` fixed effects model fit the data better.
+The `p-value` is less than a significance threshold of .05, thus we reject the null that our coefficients are all equal. Thus the `within` fixed effects model fit the data better.
 
 
 We can also perform a test to evaluate if there is indeed an individual effect and a time effect in our model.
@@ -2782,7 +2790,7 @@ According to the documentation for the [PLM package](https://cran.r-project.org/
 
 Ok, now we will do the same for the Lott-like analysis. In this case we would have a very large formula to write. So instead, we can use the `as.formula()` function of the `stats` package and the base `paste()` function to combine all of our explanatory variables into one formula without making a mistake. First we will create an object where we select only for the explanatory variables. 
 
-avocado I tried using glue or dplyr::collapse to make this tidyverse but this didnt work
+avocado I tried using glue or dplyr::collapse to make this tidyverse but this didn't work
 
 ```{r}
 LOTT_variables <- LOTT_DF %>%
@@ -2806,7 +2814,7 @@ LOTT_fmla
 
 That is quite the formula!
 
-Ok, now again we will make a panel data frame and we will perform fit a fixed effect two-way model for time and individuals (`STATE`) with this data as well.
+OK, now again we will make a panel data frame and we will perform fit a fixed effect two-way model for time and individuals (`STATE`) with this data as well.
 
 ```{r}
 
@@ -2827,7 +2835,7 @@ LOTT_OUTPUT_TIDY$Analysis <- "Analysis 2"
 
 ## RTC coefficient comparison
 
-Now let's make a plot to compare the coeffecient estimate for the Right-to-carry law adoption variable in each model.
+Now let's make a plot to compare the coefficient estimate for the Right-to-carry law adoption variable in each model.
 
 First we will combine model fit information for this coefficient for each model.
 
@@ -2839,15 +2847,13 @@ comparing_analyses <- DONOHUE_OUTPUT_TIDY %>%
 comparing_analyses
 ```
 
-We can see that for the first analysis (similar to the [Donohue et al.](https://www.nber.org/papers/w23510.pdf) {target="_blank"} study) the coefficient estimate for the presence of a permissive Right-to-carry law is positive, while for the second analysis (similar to the [Lott and Mustard](https://chicagounbound.uchicago.edu/cgi/viewcontent.cgi?article=1150&context=law_and_economics){target="_blank"} study) the coefficient estimate is negative. Thus in the first analysi we could conclude that the effect of adopting permissive right-to-carry laws  may be associated with increases in violent crime (although this was not a significant result (in contrast with the real [Donohue et al.](https://www.nber.org/papers/w23510.pdf) {target="_blank"} study )); while in the other analysis we could conclude that the laws may be associated with decreases in violent crime.
+We can see that for the first analysis (similar to the [Donohue et al.](https://www.nber.org/papers/w23510.pdf) {target="_blank"} study) the coefficient estimate for the presence of a permissive Right-to-carry law is positive, while for the second analysis (similar to the [Lott and Mustard](https://chicagounbound.uchicago.edu/cgi/viewcontent.cgi?article=1150&context=law_and_economics){target="_blank"} study) the coefficient estimate is negative. Thus in the first analysis we could conclude that the effect of adopting permissive right-to-carry laws  may be associated with increases in violent crime (although this was not a significant result (in contrast with the real [Donohue et al.](https://www.nber.org/papers/w23510.pdf) {target="_blank"} study )); while in the other analysis we could conclude that the laws may be associated with decreases in violent crime.
 
-Let's make a plot of this finding. We will show errorbars for the coefficient estimates for both analyses using the `geom_errorbar()` function of the `ggplot2` package. This requires specifying the minimum and maximum for our errorbar, which in our case we would like to be the low and high values of our confidence intervals for the coefficient estimates. We will also add a horizontal line at y = 0 using the `geom_hline()` function of the `ggplot2` package. 
+Let's make a plot of this finding. We will show error bars for the coefficient estimates for both analyses using the `geom_errorbar()` function of the `ggplot2` package. This requires specifying the minimum and maximum for our error bar, which in our case we would like to be the low and high values of our confidence intervals for the coefficient estimates. We will also add a horizontal line at y = 0 using the `geom_hline()` function of the `ggplot2` package. 
 
-Finally we will add arrows to emphasize the difference in the direction of the findings using the `geom_segment()` function of the `ggplot2` package. Using the `arrow()` function, we can specify detials about the arrow we would like to add.
+Finally we will add arrows to emphasize the difference in the direction of the findings using the `geom_segment()` function of the `ggplot2` package. Using the `arrow()` function, we can specify details about the arrow we would like to add.
 
 ```{r}
-#library(grid)
-
 comparing_analyses_plot <- ggplot(comparing_analyses) + 
   geom_point(aes(x = Analysis, y = estimate)) +
   geom_errorbar(aes(x = Analysis, ymin = conf.low, ymax = conf.high), width = 0.25) + 
@@ -2869,9 +2875,9 @@ comparing_analyses_plot <- ggplot(comparing_analyses) +
                linejoin = "mitre") +
   theme_minimal() + 
   theme(axis.title.x = element_blank(),
-        axis.text = element_text(size = 12)) +
+        axis.text = element_text(size = 8, color = "black")) +
   labs(title = "Effect estimate on ln(violent crimes per 100,000 people)",
-       y = "Effect estimate (95% CI)")
+       y = "  Effect estimate (95% CI)")
 
 comparing_analyses_plot
 ```
@@ -2883,7 +2889,7 @@ We can see that most of the possible range of values for the estimate in analysi
 
 How did the above happen?
 
-The analysis dataframes are very similar yet rendered very different results. 
+The analysis data frames are very similar yet rendered very different results. 
 
 Recall that the only difference is the number of demographic variables. The number of rows or observations is the same. We can use the `all_equal()` function of the `dplyr` package to compare the number of columns of our Donohue-like data and our Lott-like data.
 
@@ -2894,14 +2900,14 @@ all_equal(target = DONOHUE_DF,
           ignore_row_order = TRUE)
 ```
 
-Using the base `dim()` function we can also look at the number of rows for each and see that the number of observatiosn is the same for both datasets.
+Using the base `dim()` function we can also look at the number of rows for each and see that the number of observations is the same for both datasets.
 
 ```{r}
 dim(DONOHUE_DF)[1]
 dim(LOTT_DF)[1]
 ```
 
-The only difference between the two dataframes rests in how the demographic variables were parameterized.
+The only difference between the two data frames rests in how the demographic variables were parameterized.
 
 ```{r}
 DONOHUE_DF %>%
@@ -2915,13 +2921,13 @@ LOTT_DF %>%
 
 Clearly, this had an effect on the results of the analysis. 
 
-Let's explore how this occured. 
+Let's explore how this occurred. 
 
 When seemingly independent variables are highly related to one another, the relationships estimated in an analysis may be distorted. 
 
 In regression analysis, this distortion is often a by-product of a violation of the independence assumption. This distortion, if large enough, can impact statistical inference. 
 
-The phenomona called multicollinearity occurs when independent variables are highly related to one another
+The phenomena called multicollinearity occurs when independent variables are highly related to one another
 
 There are several ways we can diagnose multicollinearity.
 
@@ -2934,12 +2940,32 @@ div.blue { background-color:#e6f0ff; border-radius: 5px; padding: 20px;}
 </style>
 <div class = "blue">
 
-It is important to note that multicollinearity and correlation are not one and the same. Correlation can be thought of as the strength of the relationship between variables. On the other hand, multicollinearity can be thought of as the the violation of the independence assumption that can be a consequence of variable correlation in a regression analysis. 
+It is important to note that multicollinearity and correlation are not one and the same. [Correlation](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5079093/) can be thought of as the strength of a linear relationship between variables. On the other hand, collinearity can be thought of as two independent variables having a linear relationship or association. Multicollinearity can be thought of as collinearity among multiple (3+) regressors (independent variables) in a regression analysis, which can occur when regressors are highly correlated.
 
 </div>
 
 
-#### Scatterplots
+According to [Wikipedia](https://en.wikipedia.org/wiki/Multicollinearity){target="_blank"}:
+
+> multicollinearity (also collinearity) is a phenomenon in which one predictor variable in a multiple regression model can be linearly predicted from the others with a substantial degree of accuracy. 
+
+Thus collinearity describes linear prediction or association. Often those variables will be highly correlated.
+
+The issue with this in linear regression, is that linear regression aims to determine how a one unit change in a regressor influences a one unit change in the dependent variable. In fact, this is what the coefficient estimates aim to tell us for each regressor.
+
+However, if our regressors are also linearly related, than it becomes difficult to determine the effect of each regressor on the dependent variable and multicollinearity can cause instability in the estimation of [coefficient estimates](https://statisticsbyjim.com/glossary/regression-coefficient/){target="_blank"}, making them unreliable. Coefficients may be inflated, deflated, or their signs may change.
+
+avocado... what if the regressors have a nonlinear relationship??
+
+
+avocado: I really liked these explanations - not sure if we want to include these as resources:
+https://blog.clairvoyantsoft.com/correlation-and-collinearity-how-they-can-make-or-break-a-model-9135fbe6936a
+
+https://medium.com/swlh/multicollinearity-and-variance-inflation-factor-bc74af36b1c9
+
+#### Scatter plots
+
+One of the ways to diagnose multicollinearity in a regression model is to first see if there are regressors that are highly correlated. If so, this suggests that we should investigate further to see if these variables are in fact linearly predicting one another.
 
 One way to look at correlation across pairs of variables is to use the `ggpairs()` function of the `GGally` package.
 
@@ -2966,11 +2992,13 @@ We can see that for the non-demographic variables, there is very little correlat
 
 Another way to look at correlation if we have many variables is to use heatmaps.
 
-Let's to this now for the deomographic variables for each analysis.
+Let's to this now for the demographic variables for each analysis.
 
 The `ggcorrplot()` function of the `ggpcorplot` package is one way to create such a heatmap.
 
-This requires first calculating the correaltion values using the `cor()` function of the `stats` package.
+This requires first calculating the correlation values using the `cor()` function of the `stats` package.
+
+We will add a legend title to include $\rho$ by using the base `expression()` function, which will convert the written for of `"rho"` to the Greek symbol.
 
 ```{r}
 cor_DONOHUE_dem <- cor(DONOHUE_DF %>% dplyr::select(contains("_years")))
@@ -2983,7 +3011,8 @@ corr_mat_DONOHUE <- ggcorrplot(cor_DONOHUE_dem,
                       "red"),
            outline.color = "transparent",
            title = "Correlation Matrix, Analysis 1",
-           legend.title = TeX("$\\rho$"))
+           legend.title = expression(rho))
+
 
 corr_mat_DONOHUE
 
@@ -2997,23 +3026,23 @@ corr_mat_LOTT <- ggcorrplot(cor_LOTT_dem,
                       "red"),
            outline.color = "transparent",
            title = "Correlation Matrix, Analysis 2",
-           legend.title = TeX("$\\rho$"))
+           legend.title = expression(rho))
 
 corr_mat_LOTT
 ```
 We can see that many of the demographic variables are highly correlated with one another. 
 
 
-The presence of correlation bewteen variables suggests that we might have multicollinearity. However it does not necessarily mean that we do. So how can we assess this?
+The presence of correlation between variables suggests that we might have multicollinearity. However it does not necessarily mean that we do. So how can we assess this?
 
 
 ### Coefficient estimate instability
 
-One way to look at the possible influence of multicollinearit is to look at the stability of the coefficient estimates.
+One way to look at the possible influence of multicollinearity is to look at the stability of the coefficient estimates.
 
 We will focus on the `RTC_LAW` variable coefficient estimate, as this is of particular interest in our case.
 
-To do so we will perform a process called [resampling](https://en.wikipedia.org/wiki/Resampling_(statistics)){target="_blank"}. This invovles peforming multiple iterations of our analysis, but with only a subset or subsample of our orignial data.  In our case we will remove **one** observation and see if that changes our coefficient estimate results. 
+To do so we will perform a process called [resampling](https://en.wikipedia.org/wiki/Resampling_(statistics)){target="_blank"}. This involves performing multiple iterations of our analysis, but with only a subset or sub-sample of our original data.  In our case we will remove **one** observation and see if that changes our coefficient estimate results. 
 
 
 To do this we will use some functions in the `rsample` package which is very useful for splitting data in various ways.
@@ -3027,7 +3056,7 @@ To actually get the remaining data after the removal of the observation that is 
 
 <details> <summary> Click here to see an example of how this works. </summary>
 
-First we will make a toy dataset that is very simle called test using the `tibble()` function of the `tidyr` package:
+First we will make a toy dataset that is very simple called test using the `tibble()` function of the `tidyr` package:
 ```{r}
 test <-tidyr::tibble(x = c(1,2,3))
 test
@@ -3045,9 +3074,9 @@ We can take a look at one individual split using the `pull()` function:
 pull(test_samples, splits)
 ```
 
-Here you can see that 2 values are intended for the training set (aslo called Analysis set), 1 value is intended for the testing set (also called Assessment set), and 3 values were present initially.
+Here you can see that 2 values are intended for the training set (also called Analysis set), 1 value is intended for the testing set (also called Assessment set), and 3 values were present initially.
 
-Now we will use the `training()` function to get the data without the obersvation that is set aside. Here is the data for the first subset:
+Now we will use the `training()` function to get the data without the observation that is set aside. Here is the data for the first subset:
 ```{r}
 training(pull(test_samples, splits)[[1]])
 ```
@@ -3059,7 +3088,7 @@ test_subsets <- map(pull(test_samples, splits), training)
 test_subsets
 ```
 
-We can see that there are 3 possible subsets that leave one value out. All 3 possible subsets are created using this method. This method will always create the same number of subsets as there are unqiue values or rows in the data.
+We can see that there are 3 possible subsets that leave one value out. All 3 possible subsets are created using this method. This method will always create the same number of subsets as there are unique values or rows in the data.
 
 </details>
 
@@ -3085,7 +3114,7 @@ length(DONOHUE_subsets)
 
 As expected the first subset has 1,394 rows and there are 1395 subsets.
 
-Let's see what obsevation was left out in the first subset:
+Let's see what observation was left out in the first subset:
 
 ```{r}
 d_panel_DONOHUE %>%
@@ -3151,7 +3180,7 @@ fit_nls_on_bootstrap_DONOHUE <- function(subset){
 
 Now we can apply this function to each of our subsets simultaneously using the `map()` function of the `purrr` package.  
 
-```{r}
+```{r, eval = FALSE}
 
 subsets_models_DONOHUE <- map(DONOHUE_subsets, fit_nls_on_bootstrap_DONOHUE)
 
@@ -3159,6 +3188,16 @@ subsets_models_DONOHUE <- subsets_models_DONOHUE %>%
   map(tidy)
 
 ```
+
+```{r, eval = FALSE, echo = FALSE}
+save(subsets_models_DONOHUE, 
+     file = here::here("data", "DONOHUE_simulations.rda"))
+```
+
+```{r, echo = FALSE}
+load(here::here("data", "DONOHUE_simulations.rda"))
+```
+
 
 
 Great! Now we want to do the same thing for the Lott data.
@@ -3182,13 +3221,27 @@ fit_nls_on_bootstrap_LOTT <- function(split){
       model = "within",
       effect = "twoways")
 }
+```
 
 
+
+```{r, eval = FALSE}
 subsets_models_LOTT <- map(LOTT_subsets, fit_nls_on_bootstrap_LOTT)
 
 subsets_models_LOTT <- subsets_models_LOTT %>%
   map(tidy)
 ```
+
+
+```{r, eval = FALSE, echo = FALSE}
+save(subsets_models_LOTT, 
+     file = here::here("data", "LOTT_simulations.rda"))
+```
+
+```{r, echo = FALSE}
+load(here::here("data", "LOTT_simulations.rda"))
+```
+
 
 Now we will combine the output so that we can make a plot to visualize the results that we obtained. First let's name each subset that we created.
 
@@ -3225,12 +3278,12 @@ tail(simulations)
 
 Now we will make a jitter plot using the `geom_jitter()` function of the coefficient estimates of the `RTC_LAWTRUE` variable for each simulation.
 
-Since there are many variables in both analyses, we will use the `facet_grid()` function of the `ggplot2` package to allow us to separate the data for each analysis into subplots. The argument `scale = "free_x"` and `drop = TRUE` allow us to only include the variables that were present in Analysis 1, as opposed to empty spots for the variables that were in Analysis 2 but not in Analysis 1. The `space = "free"` argument removes the extra space from the dropped varaibles. 
+Since there are many variables in both analyses, we will use the `facet_grid()` function of the `ggplot2` package to allow us to separate the data for each analysis into subplots. The argument `scale = "free_x"` and `drop = TRUE` allow us to only include the variables that were present in Analysis 1, as opposed to empty spots for the variables that were in Analysis 2 but not in Analysis 1. The `space = "free"` argument removes the extra space from the dropped variables. 
 
 #### {.question_block}
 <b><u> Question Opportunity </u></b>
 
-What happens if dont use the `drop = TRUE` argument or the `space = "free"` argument? 
+What happens if don't use the `drop = TRUE` argument or the `space = "free"` argument? 
 
 ####
 
@@ -3254,11 +3307,11 @@ simulation_plot
 
 ```
 
-We can see that the range of coeffecient estimates when only one observation is removed is much larger in Analysis 2 for nearly all variables, but particularly for many of the additional demographic variables.
+We can see that the range of coefficient estimates when only one observation is removed is much larger in Analysis 2 for nearly all variables, but particularly for many of the additional demographic variables.
 
-Let's make a plot showing the summary of the overall coeffecient instability.
+Let's make a plot showing the summary of the overall coefficient instability.
 
-To do this we will calculate the standard deviation of coeffecient estimates for each variable across all of the simulations. Thus  we will group  by  the `Analysis` and  the `term` variables now that our data is in long format. We will use the `sd()` function of the `stats` package to calculate the standard deviation.
+To do this we will calculate the standard deviation of coefficient estimates for each variable across all of the simulations. Thus  we will group  by  the `Analysis` and  the `term` variables now that our data is in long format. We will use the `sd()` function of the `stats` package to calculate the standard deviation.
 
 ```{r}
 coeff_sd <-simulations %>% 
@@ -3278,20 +3331,19 @@ simulation_plot <- coeff_sd %>%
   ggplot(aes(x = Analysis, y = SD)) + 
  geom_jitter(width = 0.1, alpha = 0.5, size = 2) + 
   labs(title = "Coefficient instability",
-       subtitle = "Coefficient estimates may be more unstable",
+       subtitle = "Coefficient estimates are unstable",
        x = "Term",
-       y = "Standard deviation of coefficient estimates",
+       y = "Coefficient Estimate \n Standard Deviations",
        caption = "Results from simulations") + 
-  theme_linedraw() +
+  theme_minimal() +
   theme(axis.title.x = element_blank(),
-        axis.text.x = element_text(size = 12, hjust = 1),
-        strip.text.x = element_text(size = 14))
-
+         axis.text.x = element_text(size = 8, color = "black"),
+         axis.text.y = element_text(color = "black"))
 simulation_plot
 
 ```
 
-Here we can clearly see that overall the coefficient estimates are much less stable in Analysis 2. This is a clear indication that we have multicolinearity.
+Here we can clearly see that overall the coefficient estimates are much less stable in Analysis 2. This is a clear indication that we have multicollinearity.
 
 from Michael
 ```{r, eval = FALSE}
@@ -3381,16 +3433,17 @@ simulation_plot
 
 ### VIF
 
-Another way of evaluating the presence and severity of multicolinearity is to calculate the [variance inflation factor (VIF)](https://en.wikipedia.org/wiki/Variance_inflation_factor){target="_blank"} . 
+Another way of evaluating the presence and severity of multicollinearity is to calculate the [variance inflation factor (VIF)](https://en.wikipedia.org/wiki/Variance_inflation_factor){target="_blank"} . 
 
 According to [Wikipedia](https://en.wikipedia.org/wiki/Variance_inflation_factor){target="_blank"}:
 
 >It provides an index that measures how much the variance (the square of the estimate's standard deviation) of an estimated regression coefficient is increased because of collinearity. 
+
 > The variance inflation factor (VIF) is the **quotient of the variance in a model with multiple terms by the variance of a model with one term alone**.
 
 VIF values can be calculated for each explanatory variable in a model by performing the following calculation:
 
-1) Run another ordinary least squares (OLS) linear regression with one of the explanatory  variables of your model of interest ($Xi$) as the dependent variable and keep the ramaining explanatory variables as explanatory variables.
+1) Run another ordinary least squares (OLS) linear regression with one of the explanatory  variables of your model of interest ($Xi$) as the dependent variable and keep the remaining explanatory variables as explanatory variables.
 
 So generically speaking say this is our model:
 
@@ -3401,7 +3454,7 @@ If we want to calculate the VIF value for $X_1$ we would need to perform another
 
 $$X_1 = β_0 +  β_2X_2 + β_3X_3 $$
 
-The [$R^2$ coefficient of determination](https://en.wikipedia.org/wiki/Coefficient_of_determination){target="_blank"} also called R squared value from this regression is then used to calcuate the VIF as follows:
+The [$R^2$ coefficient of determination](https://en.wikipedia.org/wiki/Coefficient_of_determination){target="_blank"} also called R squared value from this regression is then used to calculate the VIF as follows:
 
 $$\frac{1}{1-R^{2}}$$
 
@@ -3410,31 +3463,32 @@ The $R^2$ value is in this case the proportion of variance in $X_1$ explained by
 
 VIF values are typically calculated for each explanatory variable when evaluating multicollinearity of a model.
 
-Thus overall the calculaion is:
+Thus overall the calculation is:
 $$VIF_i = \frac{1}{1-R_i^{2}}$$
-Where $i$ corresponds to each explanatory varaible.
+Where $i$ corresponds to each explanatory variable.
 
 
 Recall that according to [Wikipedia](https://en.wikipedia.org/wiki/Variance_inflation_factor){target="_blank"}:
 
 > The variance inflation factor (VIF) is the **quotient of the variance in a model with multiple terms by the variance of a model with one term alone**.
 
-The $R^2$ value ranges from 0 to 1. Thus, if a variation of a variable is highly explained by the other variables, the $R^2$ will approach 1. Thus the denominator in the VIF calculation $1-R_i^{2}$ (which is sometimes refered to as tolerance) will be smaller and the VIF value will be larger.
+The $R^2$ value ranges from 0 to 1. Thus, if a variation of a variable is highly explained by the other variables, the $R^2$ will approach 1. Thus the denominator in the VIF calculation $1-R_i^{2}$ (which is sometimes referred to as tolerance) will be smaller and the VIF value will be larger.
 
-Thus, **higher VIF vales** indicate **more severe multicolinearity**. Typically a threshold of a tolerance of less than 0.10 and/or a VIF of 10 and above is used as a rule of thumb to determine if the presence of multicollinearity might be problematic.
+Thus, **higher VIF vales** indicate **more severe multicollinearity**. Typically a threshold of a tolerance of less than 0.10 and/or a VIF of 10 and above is used as a rule of thumb to determine if the presence of multicollinearity might be problematic.
 
-Please see this [article](https://link.springer.com/content/pdf/10.1007/s11135-006-9018-6.pdf){target="_blank"} for a thorough explanation of how to interpret VIF values and how to decide what to do if your model has high multicolinearity.
+Please see this [article](https://link.springer.com/content/pdf/10.1007/s11135-006-9018-6.pdf){target="_blank"} for a thorough explanation of how to interpret VIF values and how to decide what to do if your model has high multicollinearity.
 
 So how do we calculate VIF values in R?
 
-We could do this manually creating many linear regressions, but that would obviously be time consuming. Luckily, the `car` package has a function called `vif()` that will calcuate VIF values.
+We could do this manually creating many linear regressions, but that would obviously be time consuming. Luckily, the `car` package has a function called `vif()` that will calculate VIF values.
 
 
 avocado: Idk if this is true or if we need to do what Michael did?
 https://stackoverflow.com/questions/20281055/test-for-multicollinearity-in-panel-data-r
 
-Since VIF values are calculated using only the independent variables, we don't need to worry about the effect of time and indiviuals in our calculation, thus we will use the pooled model. Otherwise, the `vif()` function is incompatible with the output from the `plm()` function.
-Then we will create nicer looking output of the data using the `as_tibble()`function of the `tibble` package to create a tibble and add the varaible names as another column.
+Since VIF values are calculated using only the independent variables, we don't need to worry about the effect of time and individuals in our calculation, thus we will use the pooled model. Otherwise, the `vif()` function is incompatible with the output from the `plm()` function.
+
+Then we will create nicer looking output of the data using the `as_tibble()`function of the `tibble` package to create a tibble and add the variable names as another column.
 
 ```{r}
 
@@ -3476,10 +3530,10 @@ We can see that some of the VIF values are very high!
 
 
 
-From Michael: he caclualted the time-demeaned response variable based on this link:
+avocado:From Michael: he calculated the time-demeaned response variable based on this link:
 http://karthur.org/2019/implementing-fixed-effects-panel-models-in-r.html
 
-Idk if we need to/should do this. The values are different.- lower in general.
+Idk if we need to/should do this. The values are different.- lower in general.If so though this is how one would do it.
 
 This `vif()` function is not compatible with the `plm` package panel data frames and linear model outputs, thus we need to create a design matrix with the `plm` package using the `Within()` function and then use the `lm()` function of the `stats` package to fit the model.
 
@@ -3573,19 +3627,20 @@ vif_plot <- vif_df %>%
                      limits = c(1,1000)) +
   labs(title = "Variance inflation factors") + 
   theme_minimal() +
-  theme(axis.title.x = element_blank())
+  theme(axis.title.x = element_blank(),
+         axis.text.x = element_text(color = "black"),
+         axis.text.y = element_text(color = "black"))
 
 vif_plot
 ```
-We can see that both analyses have some variables with relatively high multicolinearity, however analysis 2 has variables with very high multicolinearity.
+We can see that both analyses have some variables with relatively high multicollinearity, however analysis 2 has variables with very high multicollinearity.
 
 In many cases it would be advisable to remove one or more of these variables and reassess the VIF values. There are also other options, such as [ridge regression](https://en.wikipedia.org/wiki/Tikhonov_regularization){target="_blank"}. However, both of these options need to be done with care as they can also introduce bias into the model.
 
-In any case the presence of multicolinearity should encourage further investigation about the design of the model, as the results may not be reliable due to the increased level of instability of the coeffecients estimates.
+In any case the presence of multicollinearity should encourage further investigation about the design of the model, as the results may not be reliable due to the increased level of instability of the coefficients estimates.
 
 See this this [article](https://link.springer.com/content/pdf/10.1007/s11135-006-9018-6.pdf){target="_blank"} for a detailed discussion about what to consider when your model has variables with high VIF values. 
 
-avocado  maybe add somewhere that pml drops perfectly colinear variables automatically.. they will not be in the output
 
 # **Data Visualization**
 *** 
@@ -3597,7 +3652,6 @@ We will use the `cowplot` package to put our plots together.
 We will use the `ggdraw()` function of this package. This allows you to add labels and other plot aspects on top of existing plots. Thus if we want to add a title element to our overall plot that we will add to a combined plot of our existing plots we can use `ggdraw()` to start and then the `draw_label()` function to add text.
 
 
-
 ```{r, fig.height=10, echo=FALSE, message=FALSE, warning=FALSE}
 title_plots <- ggdraw() + 
   draw_label(
@@ -3605,7 +3659,7 @@ title_plots <- ggdraw() +
     fontface = 'bold',
     size=18,
     x = 0,
-    hjust = 0
+    hjust = -0.01
   ) +
   theme(
     plot.margin = margin(0, 0, 0, 0)
@@ -3627,7 +3681,7 @@ forward <- ggdraw() +
     fontface = 'bold',
     size=10,
     x = 0,
-    hjust = 0
+    hjust = -0.02
   ) +
   theme(
     plot.margin = margin(0, 0, 0, 0)
@@ -3644,51 +3698,22 @@ Note that because we are layering ggplot2 objects we can't use the `%>%` pipe to
 
 corr_mat_DONOHUE <- corr_mat_DONOHUE +
   theme_void() + 
-  theme(plot.title= element_text(size=8)) +
+  theme(plot.title= element_text(size = 8, color = "black")) +
   labs(title = "Analysis 1") 
 
 corr_mat_LOTT <- corr_mat_LOTT +
   theme_void() + 
-  theme(plot.title= element_text(size=8)) +
+  theme(plot.title= element_text(size = 8,color = "black")) +
   labs(title = "Analysis 2") 
-
-
-# corr_mat_DONOHUE <- ggcorrplot(cor_DONOHUE_dem,
-#                                tl.cex = 6,
-#                                hc.order = TRUE,
-#                                outline.color = "transparent",
-#                                colors = c("red",
-#                                           "white",
-#                                           "red"),
-#                             legend.title = TeX("$\\rho$")) +
-#   theme_void() + 
-#   theme(plot.title= element_text(size=8)) +
-#   labs(title = "Analysis 1") 
-
-# corr_mat_LOTT <- ggcorrplot(cor_LOTT_dem,
-#                             tl.cex = 6,
-#                             hc.order = TRUE,
-#                             outline.color = "transparent",
-#                             colors = c("red",
-#                                        "white",
-#                                        "red"),
-#                             legend.title = TeX("$\\rho$")) +
-#   theme_void() + 
-#   theme(plot.title = element_text(size=8)) +
-#   labs(title = "Analysis 2") 
 ```
 
-Ok we want to arrange our correlation plots to be in the top row of our larger plot. Now we will use the `plot_grid()` function to arrange the plots.
+OK we want to arrange our correlation plots to be in the top row of our larger plot. Now we will use the `plot_grid()` function to arrange the plots.
 
 ```{r}
-
 row_A <- plot_grid(corr_mat_DONOHUE,
                    corr_mat_LOTT,
                    nrow = 1)
 row_A
-
-
-
 ```
 
 
@@ -3705,7 +3730,7 @@ title_A <- ggdraw() +
     fontface = 'bold',
     size=14,
     x = 0,
-    hjust = 0
+    hjust = -0.01
   ) +
   theme(
     plot.margin = margin(0, 0, 0, 0)
@@ -3718,26 +3743,26 @@ plot_A <- plot_grid(title_A,
 ```
 
 
-For our second row in our larger plot we want to have the formula for cacluating VIF values on the left and the plot that we created previously showing VIF values on the right.
+For our second row in our larger plot we want to have the formula for calculating VIF values on the left and the plot that we created previously showing VIF values on the right.
 
-First we will create a plot object that just has the forumla.
+First we will create a plot object that just has the formula.
 
 To do so we are going to create a plot with a large label in the middle containing the formula. Then we will use the `theme_void()` function again to remove the axis labels and background.
 
 To create our plot we will first plot values from 1-10 for both the x and y axis, allowing us to center the formula at x and y values of 5.
 
-To type the formla we need to use [LaTeX mathematical notation](https://www.calvin.edu/~rpruim/courses/s341/S17/from-class/MathinRmd.html){target="_blank"}.
+To type the formal we need to use [LaTeX mathematical notation](https://www.calvin.edu/~rpruim/courses/s341/S17/from-class/MathinRmd.html){target="_blank"}.
 
-The start and end of innline mathematical formulas are specified using dollar signs (`$`).   
+The start and end of inline mathematical formulas are specified using dollar signs (`$`).   
 Subscripts are written by using an underscore (`_`) and brackets (`{}`) indicate the start and end of the subscript.   
 
 Fractions are indicated using `\frac{nominator}{denominator}`.
 
 Superscripts are created using the carrot symbol (`^`) and brackets (`{}`) indicate the start and end of the superscript.   
 
-Greek letters  are created by using `\alpha`
+Greek letters  are created by using `\beta`
 
-In the case of the fraction and greek letters an additional `\` is needed in the `Tex()` function.
+In the case of the fraction and Greek letters an additional `\` is needed in the `Tex()` function.
 
 We will use the `TeX()` function of the `latex2exp` package to convert our LaTeX string to a [plotmath expression](https://stat.ethz.ch/R-manual/R-devel/library/grDevices/html/plotmath.html){target="_blank"} (a mathematical notation in R to be used in plots.)
 
@@ -3751,24 +3776,24 @@ plot_B1 <- ggplot(empty_df, aes(x = X, y = Y)) +
    annotate("text",
            x=5,
            y=8,
-           label = TeX("$X_{1} = \\alpha_{0} + \\alpha_{2}X_{2} + \\alpha_{3}X_{3}...+\\alpha_{k}X_{k}$"),
-           size = 8)+ ylim(0,10)+xlim(0,10)+
+           label = TeX("$X_{1} = \\beta_{0} + \\beta_{2}X_{2} + \\beta_{3}X_{3}...+\\beta_{k}X_{k}$"),
+           size = 7)+ ylim(0,10)+xlim(0,10)+
    annotate("text",
            x=5.9,
-           y=6.5,
+           y=5.5,
            label = TeX("$R^{2}$"),
-           size = 8)+ ylim(0,10)+xlim(0,10)+
-geom_segment(aes(x = 5, y = 7.5, xend = 5, yend = 6),
+           size = 7)+ ylim(0,10)+xlim(0,10)+
+geom_segment(aes(x = 5, y = 6, xend = 5, yend = 4.5),
                arrow = arrow(angle = 45, ends = "last", type = "open"),
-               size = 2,
+               size = 1.8,
                color = "black",
                lineend = "butt",
                linejoin = "mitre") +
   annotate("text",
            x=5,
-           y=4,
+           y=2,
            label = TeX("$VIF_{i} = \\frac{1}{1-R_{i}^{2}}$"),
-           size = 8)
+           size = 7)
 
   
  
@@ -3785,7 +3810,7 @@ Now we will combine this with the VIF plot.
 
 ```{r}
 plot_B2 <- vif_plot +
-  theme(axis.title.x = element_text(size=8))
+  theme(axis.text.x = element_text(size=8))
 
 row_B <- plot_grid(plot_B1,
                    plot_B2,
@@ -3795,9 +3820,9 @@ title_B <- ggdraw() +
   draw_label(
     "Variance inflation factors can be used to identify multicollinearity when present",
     fontface = 'bold',
-    size=14,
+    size = 14,
     x = 0,
-    hjust = 0
+    hjust = -.01,
   ) +
   theme(
     plot.margin = margin(0, 0, 0, 0)
@@ -3834,7 +3859,7 @@ title_C <- ggdraw() +
     fontface = 'bold',
     size=14,
     x = 0,
-    hjust = 0
+    hjust = -0.01
   ) +
   theme(
     plot.margin = margin(0, 0, 0, 0)
@@ -3887,7 +3912,7 @@ title_A <- ggdraw() +
     fontface = 'bold',
     size=14,
     x = 0,
-    hjust = 0
+    hjust = -.01
   ) +
   theme(
     plot.margin = margin(0, 0, 0, 0)
@@ -3997,25 +4022,25 @@ ggsave(here::here("img", "mainplot.png"))
 # **Summary**
 *** 
 
-This case study has introduced the concept of multicolinearity by exploring data related to violent crimes and right-to-carry gun laws. We also intrudced the topic of panel data as a special type of longitinal data that includes data of 2 or more individuals or groups over 2 or more time points. We learned that we can use the `plm` package to perform panel linear regression analysis. We learned that the fixed effect model in panel analysis actually makes the least assumptions, and is therefore often the most appropriate test.
+This case study has introduced the concept of multicollinearity by exploring data related to violent crimes and right-to-carry gun laws. We also introduced the topic of panel data as a special type of longitudinal data that includes data of 2 or more individuals or groups over 2 or more time points. We learned that we can use the `plm` package to perform panel linear regression analysis. We learned that the fixed effect model in panel analysis actually makes the least assumptions, and is therefore often the most appropriate test.
 
-By evaluating two analyses that were identical except for the inclusion of extra demographic variables, analysis 1 included 6, while analysis 2 included 36, we discovered that redudant and colinear variables can change the directionality and magnitude of our findings. 
+By evaluating two analyses that were identical except for the inclusion of extra demographic variables, analysis 1 included 6, while analysis 2 included 36, we discovered that redundant and collinear variables can change the directionality and magnitude of our findings. 
 
-We learned that by looking at the correlation between pairs of explanatory variabels we can get a sense about whether multicolinearity may exist in our data. We also learned that correaltion does not necessarily imply multicolinearity. Nor does multicolinearity imply correlation.
+We learned that by looking at the correlation between pairs of explanatory variables we can get a sense about whether multicollinearity may exist in our data.
 
-We learned that we can evaluate the stability of our coeffecient estimates across subsamples or cacluate variance inflation factor (VIF) values to get a sense of the presence and severity of multicolinearity.
+We learned that we can evaluate the stability of our coefficient estimates across sub-samples or calculate variance inflation factor (VIF) values to get a sense of the presence and severity of multicollinearity.
 
-We learned that often a rule of thumb of >10 is used as a threshold for raising concern about the severity of multicolinearity. However, we also learned that (as often is the case with thersholds) more care may be required. 
+We learned that often a rule of thumb of >10 is used as a threshold for raising concern about the severity of multicollinearity. However, we also learned that (as often is the case with thresholds) more care may be required. 
 
-Overall we learned that multicolineartiy can bias our regression findings and it is good practice to check for multicolinearity when performing regession analysis.  It is something to keep in mind when we encounter coefficient estimates that are unexpected. 
+Overall we learned that multicollinearity can bias our regression findings and it is good practice to check for multicollinearity when performing regression analysis.  It is something to keep in mind when we encounter coefficient estimates that are unexpected. 
 
-Importantly this case study showcases how methodolgical details, like how we decide to parse our demographic variables can have great consequences on the results of our analyses. 
+Importantly this case study showcases how methodological details, like how we decide to parse our demographic variables can have great consequences on the results of our analyses. 
 
 
 # **Suggested Homework**
 *** 
 
-Ask the students to remove one or more of the demographic variables with high VIF values from the LOTT- like panel data and perform the panel linear regression analysis again, as well as cacluate the VIF values. 
+Ask students to remove one or more of the demographic variables with high VIF values from the Lott-like panel data and perform the panel linear regression analysis again, as well as calculate the VIF values. 
 
 Ask the students to discuss how this possibly changed the results.
 
@@ -4023,42 +4048,44 @@ Ask the students to discuss how this possibly changed the results.
 # **Additional Information**
 ***
 
-## *Helpful Links*
+## Helpful Links
 
 [Tidyverse](https://www.tidyverse.org/){target="_blank"}  
-[Writing functions](https://r4ds.had.co.nz/functions.html){target="_blank"}
-Also see [this case study](https://opencasestudies.github.io/ocs-bloomberg-vaping-case-study/){target="_blank"}  for more information on writing functions.   
-Please see [this case study](https://opencasestudies.github.io/ocs-bp-co2-emissions/){target="_blank"}  for more details on using `ggplot2`.   
+[Writing functions](https://r4ds.had.co.nz/functions.html){target="_blank"}   
+Also see [this case study](https://opencasestudies.github.io/ocs-bloomberg-vaping-case-study/){target="_blank"} for more information on writing functions      
+Please see [this case study](https://opencasestudies.github.io/ocs-bp-co2-emissions/){target="_blank"}  for more details on using `ggplot2`     
 [Longitudinal studies](https://www.bmj.com/about-bmj/resources-readers/publications/epidemiology-uninitiated/7-longitudinal-studies){target="_blank"}   
 [Panel data](https://en.wikipedia.org/wiki/Panel_data){target="_blank"}    
 [Confidence intervals](https://en.wikipedia.org/wiki/Confidence_interval){target="_blank"}   
 [Linear regression](https://en.wikipedia.org/wiki/Linear_regression){target="_blank"}  
 [panel regression analysis](https://en.wikipedia.org/wiki/Panel_analysis){target="_blank"}   
 [Hausmen test](https://en.wikipedia.org/wiki/Durbin%E2%80%93Wu%E2%80%93Hausman_test){target="_blank"} 
-[resampling](https://en.wikipedia.org/wiki/Resampling_(statistics)){target="_blank"}   
+[Resampling](https://en.wikipedia.org/wiki/Resampling_(statistics)){target="_blank"}   
 [Variance inflation factor (VIF)](https://en.wikipedia.org/wiki/Variance_inflation_factor){target="_blank"}   
 [$R^2$ coefficient of determination](https://en.wikipedia.org/wiki/Coefficient_of_determination){target="_blank"}   
-[ridge regression](https://en.wikipedia.org/wiki/Tikhonov_regularization){target="_blank"}  
+[Ridge regression](https://en.wikipedia.org/wiki/Tikhonov_regularization){target="_blank"}  
 [LaTeX mathematical notation](https://www.calvin.edu/~rpruim/courses/s341/S17/from-class/MathinRmd.html)target="_blank"}   
 
 For more information on linear regression see this [book](https://rafalab.github.io/dsbook/linear-models.html#linear-regression-in-the-tidyverse){target="_blank"} and this [case study](https://opencasestudies.github.io/ocs-bp-diet/){target="_blank"}.
 
 For more information on the different types of panel regression models see this [book](https://bookdown.org/ccolonescu/RPoE4/panel-data-models.html),  [here](https://www.bauer.uh.edu/rsusmel/phd/ec1-15.pdf), and [here](https://sites.google.com/site/econometricsacademy/econometrics-models/panel-data-models).
 
-For more information on implementing panel regession in R using the `plm` package, see [here](https://cran.r-project.org/web/packages/plm/vignettes/plmPackage.html){target="_blank"}  and [here](http://www.princeton.edu/~otorres/Panel101R.pdf){target="_blank"}.
+For more information on implementing panel regression in R using the `plm` package, see [here](https://cran.r-project.org/web/packages/plm/vignettes/plmPackage.html){target="_blank"}  and [here](http://www.princeton.edu/~otorres/Panel101R.pdf){target="_blank"}.
 
-For more information on multioclinearity and VIF, see this [article](https://link.springer.com/content/pdf/10.1007/s11135-006-9018-6.pdf){target="_blank"}.DOI 10.1007/s11135-006-9018-6
+For more information on multicollinearity and VIF, see this [article](https://link.springer.com/content/pdf/10.1007/s11135-006-9018-6.pdf){target="_blank"}.DOI 10.1007/s11135-006-9018-6
 
-The articles used to motivate this case study are:
+The articles used to motivate this case study are:   
 [Lott and Mustard](https://chicagounbound.uchicago.edu/cgi/viewcontent.cgi?article=1150&context=law_and_economics){target="_blank"}  
-[Donohue, et al.](https://www.nber.org/papers/w23510.pdf){target="_blank"}  
+[Donohue, et al.](https://www.nber.org/papers/w23510.pdf){target="_blank"}     
 [See here for a list of studies on this topic ](https://en.wikipedia.org/wiki/More_Guns,_Less_Crime){target="_blank"}  
-
 
 avocadoPossible tutorials about plm: (not sure if we want to include or not)  
 https://rpubs.com/rslbliss/fixed_effects  
 http://karthur.org/2019/implementing-fixed-effects-panel-models-in-r.html  
 
+
+avocado possible discussion about if and when high vif values are a problem:
+https://statisticalhorizons.com/multicollinearity
 
 ## Session Info
 
