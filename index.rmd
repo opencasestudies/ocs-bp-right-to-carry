@@ -1351,7 +1351,7 @@ ps_data %<>%
 head(ps_data)
 ```
 
-Avocado not sure why the lag?- could use inside plm function...- conceptually I get why you might want to know how staffing has changed recently... but this does not seem to calculate that...hmmmm
+Avocado not sure why Michael wanted the lag?- could use inside plm function...- conceptually I get why you might want to know how staffing has changed recently... but this does not seem to calculate that...hmmmm
 
 ```{r}
 ps_data %<>%
@@ -2002,7 +2002,7 @@ RTC <-p_62
 RTC
 ```
 
-avocado why inf?
+avocado why inf? is there are reason? Might need to ask Michael
 
 from Michael
 ```{r, eval = FALSE}
@@ -2560,12 +2560,6 @@ Overall, they assume that the different individuals are independent, however the
 
 The main difference between the three sub-types are the assumptions about unobserved differences between individuals.
 
-avocado: update formulas like this? https://bookdown.org/ccolonescu/RPoE4/panel-data-models.html
-pooled:
-like this for fixed effect: 
-random: $$yit=β⎯⎯⎯1+β2x2it+νit$$
-
-
 
 1) **independently pooled panels**  - assumes that there are no individual effects that are independent of time and also no effect of time on all the individuals. In other words, the independent variables are not correlated with any error term. This is essentially an ordinary least squares linear regression. This type of panel regression makes the most assumptions and is therefore typically not used for panel data.
 
@@ -2659,7 +2653,7 @@ DONOHUE_OUTPUT <- plm(Viol_crime_rate_1k_log ~
 
 To see the results we can use the base `summary()` function. We can view this output in tidy format using the `tidy()` function of the `broom` package.
 
-avocado I think the `analysis` variable is a label for plots
+We will add an `analysis` variable is a label for plots.
 
 ```{r}
 summary(DONOHUE_OUTPUT)
