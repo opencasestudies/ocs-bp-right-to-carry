@@ -3592,6 +3592,12 @@ avocado  maybe add somewhere that pml drops perfectly colinear variables automat
 
 Now lets make a plot that summarizes all of our findings.
 
+We will use the `cowplot` package to put our plots together. 
+
+We will use the `ggdraw()` function of this package. This allows you to add labels and other plot aspects on top of existing plots. Thus if we want to add a title element to our overall plot that we will add to a combined plot of our existing plots we can use `ggdraw()` to start and then the `draw_label()` function to add text.
+
+
+
 ```{r, fig.height=10, echo=FALSE, message=FALSE, warning=FALSE}
 title_plots <- ggdraw() + 
   draw_label(
@@ -3605,6 +3611,16 @@ title_plots <- ggdraw() +
     plot.margin = margin(0, 0, 0, 0)
   )
 
+title_plots
+class(title_plots)
+```
+
+As you can see we know have plot object that just has the text `"Multicollinearity and its effects"`.
+
+Now we will create a subtitle in the same way.
+
+```{r}
+
 forward <- ggdraw() + 
   draw_label(
     "Analysis 1: 6 demographic variables\nAnalysis 2: 36 demographic variables",
@@ -3617,30 +3633,246 @@ forward <- ggdraw() +
     plot.margin = margin(0, 0, 0, 0)
   )
 
-corr_mat_DONOHUE <- ggcorrplot(cor_DONOHUE_dem,
-                               tl.cex = 6,
-                               hc.order = TRUE,
-                               outline.color = "transparent",
-                               colors = c("red",
-                                          "white",
-                                          "red"),
-                            legend.title = TeX("$\\rho$")) +
+forward
+```
+
+Now we will recreate our correlation plots with some slight alterations. We want to remove our labels, because they will be too small to see when we combine our plots. To do this we will use the `theme_void()` function of the `ggplot2` package.
+
+Note that because we are layering ggplot2 objects we can't use the `%>%` pipe to start with the existing correlation plots.
+
+```{r}
+
+corr_mat_DONOHUE <- corr_mat_DONOHUE +
   theme_void() + 
   theme(plot.title= element_text(size=8)) +
   labs(title = "Analysis 1") 
 
-corr_mat_LOTT <- ggcorrplot(cor_LOTT_dem,
-                            tl.cex = 6,
-                            hc.order = TRUE,
-                            outline.color = "transparent",
-                            colors = c("red",
-                                       "white",
-                                       "red"),
-                            legend.title = TeX("$\\rho$")) +
+corr_mat_LOTT <- corr_mat_LOTT +
   theme_void() + 
-  theme(plot.title = element_text(size=8)) +
+  theme(plot.title= element_text(size=8)) +
   labs(title = "Analysis 2") 
 
+
+# corr_mat_DONOHUE <- ggcorrplot(cor_DONOHUE_dem,
+#                                tl.cex = 6,
+#                                hc.order = TRUE,
+#                                outline.color = "transparent",
+#                                colors = c("red",
+#                                           "white",
+#                                           "red"),
+#                             legend.title = TeX("$\\rho$")) +
+#   theme_void() + 
+#   theme(plot.title= element_text(size=8)) +
+#   labs(title = "Analysis 1") 
+
+# corr_mat_LOTT <- ggcorrplot(cor_LOTT_dem,
+#                             tl.cex = 6,
+#                             hc.order = TRUE,
+#                             outline.color = "transparent",
+#                             colors = c("red",
+#                                        "white",
+#                                        "red"),
+#                             legend.title = TeX("$\\rho$")) +
+#   theme_void() + 
+#   theme(plot.title = element_text(size=8)) +
+#   labs(title = "Analysis 2") 
+```
+
+Ok we want to arrange our correlation plots to be in the top row of our larger plot. Now we will use the `plot_grid()` function to arrange the plots.
+
+```{r}
+
+row_A <- plot_grid(corr_mat_DONOHUE,
+                   corr_mat_LOTT,
+                   nrow = 1)
+row_A
+
+
+
+```
+
+
+Nice! We have combined plots!
+
+
+Now let's add a title for these plots.
+
+```{r}
+
+title_A <- ggdraw() + 
+  draw_label(
+    "Correlation between variables can induce multicollinearity",
+    fontface = 'bold',
+    size=14,
+    x = 0,
+    hjust = 0
+  ) +
+  theme(
+    plot.margin = margin(0, 0, 0, 0)
+  )
+
+plot_A <- plot_grid(title_A,
+                    row_A,
+                    ncol = 1,
+                    rel_heights = c(0.1,1))
+```
+
+
+For our second row in our larger plot we want to have the formula for cacluating VIF values on the left and the plot that we created previously showing VIF values on the right.
+
+First we will create a plot object that just has the forumla.
+
+To do so we are going to create a plot with a large label in the middle containing the formula. Then we will use the `theme_void()` function again to remove the axis labels and background.
+
+To create our plot we will first plot values from 1-10 for both the x and y axis, allowing us to center the formula at x and y values of 5.
+
+To type the formla we need to use [LaTeX mathematical notation](https://www.calvin.edu/~rpruim/courses/s341/S17/from-class/MathinRmd.html){target="_blank"}.
+
+The start and end of innline mathematical formulas are specified using dollar signs (`$`).   
+Subscripts are written by using an underscore (`_`) and brackets (`{}`) indicate the start and end of the subscript.   
+
+Fractions are indicated using `\frac{nominator}{denominator}`.
+
+Superscripts are created using the carrot symbol (`^`) and brackets (`{}`) indicate the start and end of the superscript.   
+
+Greek letters  are created by using `\alpha`
+
+In the case of the fraction and greek letters an additional `\` is needed in the `Tex()` function.
+
+We will use the `TeX()` function of the `latex2exp` package to convert our LaTeX string to a [plotmath expression](https://stat.ethz.ch/R-manual/R-devel/library/grDevices/html/plotmath.html){target="_blank"} (a mathematical notation in R to be used in plots.)
+
+```{r}
+empty_df <- cbind(c(1:10),c(1:10)) %>%
+  as.data.frame()
+
+colnames(empty_df) <- c("X", "Y")
+
+plot_B1 <- ggplot(empty_df, aes(x = X, y = Y)) +
+   annotate("text",
+           x=5,
+           y=8,
+           label = TeX("$X_{1} = \\alpha_{0} + \\alpha_{2}X_{2} + \\alpha_{3}X_{3}...+\\alpha_{k}X_{k}$"),
+           size = 8)+ ylim(0,10)+xlim(0,10)+
+   annotate("text",
+           x=5.9,
+           y=6.5,
+           label = TeX("$R^{2}$"),
+           size = 8)+ ylim(0,10)+xlim(0,10)+
+geom_segment(aes(x = 5, y = 7.5, xend = 5, yend = 6),
+               arrow = arrow(angle = 45, ends = "last", type = "open"),
+               size = 2,
+               color = "black",
+               lineend = "butt",
+               linejoin = "mitre") +
+  annotate("text",
+           x=5,
+           y=4,
+           label = TeX("$VIF_{i} = \\frac{1}{1-R_{i}^{2}}$"),
+           size = 8)
+
+  
+ 
+  
+plot_B1
+
+plot_B1 <-plot_B1+
+  theme_void()
+
+plot_B1
+```
+
+Now we will combine this with the VIF plot.
+
+```{r}
+plot_B2 <- vif_plot +
+  theme(axis.title.x = element_text(size=8))
+
+row_B <- plot_grid(plot_B1,
+                   plot_B2,
+                   nrow = 1)
+
+title_B <- ggdraw() + 
+  draw_label(
+    "Variance inflation factors can be used to identify multicollinearity when present",
+    fontface = 'bold',
+    size=14,
+    x = 0,
+    hjust = 0
+  ) +
+  theme(
+    plot.margin = margin(0, 0, 0, 0)
+  )
+
+plot_B <- plot_grid(title_B,
+                    row_B,
+                    ncol = 1,
+                    rel_heights = c(0.1,1))
+
+plot_B
+```
+
+
+Now for the third row we want to include the `comparing_analyses_plot` and the `simulation_plot`.
+
+```{r}
+plot_C1 <- comparing_analyses_plot + 
+  theme(axis.text.x = element_text(size = 8),
+        axis.title.x = element_blank()) +
+  labs(title = "Introduces bias to estimates",
+       subtitle = "Bias introduced can change direction of estimate")
+
+plot_C2 <- simulation_plot +
+  labs(title = "Reduces precision in estimates")
+
+row_C <- plot_grid(plot_C1,
+                   plot_C2,
+                   nrow = 1)
+
+title_C <- ggdraw() + 
+  draw_label(
+    "Multicollinearity can have a negative effect on statistical inference",
+    fontface = 'bold',
+    size=14,
+    x = 0,
+    hjust = 0
+  ) +
+  theme(
+    plot.margin = margin(0, 0, 0, 0)
+  )
+
+plot_C <- plot_grid(title_C,
+                    row_C,
+                    ncol = 1,
+                    rel_heights = c(0.1,1))
+
+plot_C
+```
+
+
+Now that we have all of our rows we can combine everything together.
+
+```{r}
+plots <- plot_grid(plot_A,
+                   plot_B,
+                   plot_C,
+          ncol = 1,
+          rel_heights = c(1,1,1))
+
+mainplot <- plot_grid(title_plots,
+                       forward,
+                       plots,
+                       ncol = 1,
+                       rel_heights = c(0.05,
+                                       0.05,
+                                       1))
+
+mainplot
+
+
+```
+
+from Michael
+```{r, eval = FALSE}
 plot_A1 <- corr_mat_DONOHUE
 
 plot_A2 <- corr_mat_LOTT
@@ -3806,7 +4038,8 @@ Please see [this case study](https://opencasestudies.github.io/ocs-bp-co2-emissi
 [resampling](https://en.wikipedia.org/wiki/Resampling_(statistics)){target="_blank"}   
 [Variance inflation factor (VIF)](https://en.wikipedia.org/wiki/Variance_inflation_factor){target="_blank"}   
 [$R^2$ coefficient of determination](https://en.wikipedia.org/wiki/Coefficient_of_determination){target="_blank"}   
-[ridge regression](https://en.wikipedia.org/wiki/Tikhonov_regularization){target="_blank"}   
+[ridge regression](https://en.wikipedia.org/wiki/Tikhonov_regularization){target="_blank"}  
+[LaTeX mathematical notation](https://www.calvin.edu/~rpruim/courses/s341/S17/from-class/MathinRmd.html)target="_blank"}   
 
 For more information on linear regression see this [book](https://rafalab.github.io/dsbook/linear-models.html#linear-regression-in-the-tidyverse){target="_blank"} and this [case study](https://opencasestudies.github.io/ocs-bp-diet/){target="_blank"}.
 
