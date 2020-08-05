@@ -1,6 +1,5 @@
 ---
 title: "Open Case Studies: Examination of Multicollinearity Influence on Inference Using Right-to-Carry Gun Law and Violent Crime Data"
-author: "Michael Ontiveros, Carrie Wright, PhD."
 css: style.css
 output:
   html_document:
@@ -29,6 +28,7 @@ output:
 
 ---
 
+AVOCADO: the title seems really long? previous titles have been mostly a few words focusing around the context (not so much the)
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(include = TRUE, comment = NA, echo = TRUE,
@@ -70,31 +70,38 @@ This case study will introduce the topic of multicollinearity. We will do so by 
 
 We will focus on two articles:
 
-1) The first analysis by [Lott and Mustard](https://chicagounbound.uchicago.edu/cgi/viewcontent.cgi?article=1150&context=law_and_economics){target="_blank"} published in 1996 suggests that RTC laws reduce violent crime. Lott authored a book extending these findings in 1998 called [***More Guns, Less Crime***](https://en.wikipedia.org/wiki/More_Guns,_Less_Crime){target="_blank"}.
+1. The first analysis by [Mustard and Lott](https://chicagounbound.uchicago.edu/cgi/viewcontent.cgi?article=1150&context=law_and_economics){target="_blank"} published in 1996 suggests that RTC laws reduce violent crime. Lott authored a book extending these findings in 1998 called [***More Guns, Less Crime***](https://en.wikipedia.org/wiki/More_Guns,_Less_Crime){target="_blank"}.
 
 ```{r, echo=FALSE, out.height = '100%', out.width = '100%', fig.align='center'}
 knitr::include_graphics(here("img", "Lott.png"))
 ```
 
-2) The second analysis is a recent article by [Donohue, et al.](https://www.nber.org/papers/w23510.pdf){target="_blank"} published in 2017 that suggests that RTC laws increase violent crime. Donohue has also published previous articles with titles such as [***"Shooting down the "More Guns, Less Crime" Hypothesis***](https://www.jstor.org/stable/1229603?seq=1){target="_blank"} 
+##### [[source]]((https://chicagounbound.uchicago.edu/cgi/viewcontent.cgi?article=1150&context=law_and_economics){target="_blank"}
+
+2. The second analysis is a recent article by [Donohue, et al.](https://www.nber.org/papers/w23510.pdf){target="_blank"} published in 2017 that suggests that RTC laws increase violent crime. Donohue has also published previous articles with titles such as [***Shooting down the "More Guns, Less Crime" Hypothesis***](https://www.jstor.org/stable/1229603?seq=1){target="_blank"} 
 
 ```{r, echo=FALSE, out.height = '100%', out.width = '100%', fig.align='center'}
 knitr::include_graphics(here("img", "Donohue.png"))
 ```
 
+##### [[source]](https://www.nber.org/papers/w23510.pdf){target="_blank"}
+
 This has been a controversial topic as many other articles also had conflicting results. See [here](https://en.wikipedia.org/wiki/More_Guns,_Less_Crime){target="_blank"} for a list of studies.
 
 The [Donohue, et al.](https://www.nber.org/papers/w23510.pdf){target="_blank"} article discusses how there are many other important methodological aspects besides multicollinearity that could account for the historically conflicting results in these previous papers.
 
-In fact, nearly every aspect of the data analysis process was different between the [Donohue, et al.](https://www.nber.org/papers/w23510.pdf){target="_blank"} analysis and the [Lott and Mustard](https://chicagounbound.uchicago.edu/cgi/viewcontent.cgi?article=1150&context=law_and_economics){target="_blank"} analysis.
+AVOCADO: I think this is the first time use the word "multicollinearity" outside the intro and citation. Should we define it here? 
+
+In fact, nearly every aspect of the data analysis process was different between the [Donohue, et al.](https://www.nber.org/papers/w23510.pdf){target="_blank"} analysis and the [Mustard and Lott](https://chicagounbound.uchicago.edu/cgi/viewcontent.cgi?article=1150&context=law_and_economics){target="_blank"} analysis.
 
 ```{r, echo=FALSE, out.height = '75%', out.width = '75%', fig.align='center'}
 knitr::include_graphics(here("img", "Educational_Graphic1.jpg"))
 ```
 
-However, we will focus particularly on multicollinearity and we will explore how it can influence linear regression analyses and result in different conclusions. 
+AVOCADO: I like the graphic! Should we mention this process is actually investigating the replicability (e.g. this paper https://www.nature.com/articles/s41562-019-0629-z) of the study as starting with the data are different? 
 
-This analysis will demonstrate how methodological details can be critically influential for our overall conclusions and can result in important policy related consequences. This [article]((https://www.nber.org/papers/w23510.pdf){target="_blank"}) will provide a basis for the motivation. 
+However, we will focus particularly on multicollinearity and how it can influence the results we get from linear regression. 
+Specifically, this analysis will demonstrate how methodological details can be critically influential for our overall conclusions and can result in important policy related consequences. The [Donohue, et al. article]((https://www.nber.org/papers/w23510.pdf){target="_blank"}) will provide a basis for the motivation. 
 
 #### {.reference_block}
 
@@ -105,18 +112,19 @@ David B. Mustard & John Lott. Crime, Deterrence, and Right-to-Carry Concealed Ha
 ####
 
 
-Here you can see the differences in the data used in the featured RTC articles:
+Before we leave this section, we provide a high-level overview of what variables were (or were not) included in the [Donohue, Aneja and Weber](https://www.nber.org/papers/w23510.pdf){target="_blank"}) (DAW) paper and the [Mustard and Lott](https://chicagounbound.uchicago.edu/cgi/viewcontent.cgi?article=1150&context=law_and_economics){target="_blank"} (ML) paper:
 
+AVOCADO: In the table below it says "DAW" and "LM". Should "LM" be "ML"? 
 
 ```{r, echo=FALSE, out.height = '100%', out.width = '100%', fig.align='center'}
 knitr::include_graphics(here("img",'Donohue_Table2.png'))
 ```
 
+##### [[source]](){target="_blank"}
 
-We will perform analyses similar to those in these articles, however **we will not try to recreate them**, instead we will simplify our analysis to allow us to focus on multicollinearity.
+AVOCADO: Could you add source for the screenshot above? I added the code for it, just not sure what the link is. 
 
-
-Therefore we will use a subset of the listed explanatory variables and they will be consistent for both analyses that we will perform, with the exception that one analysis will have 6 demographic variables like the analysis in the [Donohue, et al.](https://www.nber.org/papers/w23510.pdf){target="_blank"} article and the other will have 36 demographic variables like the analysis in the [Lott and Mustard](https://chicagounbound.uchicago.edu/cgi/viewcontent.cgi?article=1150&context=law_and_economics){target="_blank"} article.
+**Note**: We are not attempting to re-create the analyses from the original authors. Instead, we aim to use a subset of the listed explanatory variables in this case study to demonstrate multicollinearity. These variables will be consistent for both analyses that we will perform, with the exception that one analysis will have 6 demographic variables like the analysis in the [Donohue, et al.](https://www.nber.org/papers/w23510.pdf){target="_blank"} article and the other will have 36 demographic variables like the analysis in the [Mustard and Lott](https://chicagounbound.uchicago.edu/cgi/viewcontent.cgi?article=1150&context=law_and_economics){target="_blank"} article.
 
 
 # **Main Question**
@@ -125,10 +133,11 @@ Therefore we will use a subset of the listed explanatory variables and they will
 #### {.main_question_block}
 <b><u> Our main question: </u></b>
 
-1) How does the inclusion of different numbers of age groups influence the results of an analysis of right to carry laws and violence rates?
+What is the effect of multicollinearity on linear regression models when analyzing right to carry laws and violence rates?
 
 ####
 
+Specifically, we will consider the two ways to define the demographic variables (as described above) and investigate how the inclusion of different numbers of age groups influence the results of an analysis of right to carry laws and violence rates.
 
 
 # **Learning Objectives** 
@@ -136,25 +145,24 @@ Therefore we will use a subset of the listed explanatory variables and they will
 
 <u>**Statistical Learning Objectives:**</u> 
 
-1) what multicollinearity is and how it can influence linear regression coefficients  
-2) how to look for the presence of multicollinarity and determine the severity
-3) the difference between multicollinearity and correlation 
-4) implementation of panel regression analysis (`plm`)
-5) calculation of VIF (`car`)
+1. What multicollinearity is and how it can influence linear regression coefficients?
+2. How to look for the presence of multicollinarity and determine the severity?
+3. The difference between multicollinearity and correlation.
+4. Implementation of panel regression analysis (`plm`).
+5. Calculation of VIF (`car`).
 
 <u>**Data science Learning Objectives:**</u>
 
-1) data import of many different file types with special cases (`readr`, `readxl`, `pdftools`)
-2) joining data from multiple sources (`dplyr`)  
-3) working with character strings (`stringr`)
-4) data comparisons (`dplyr` and `janitor`)
-5) reshaping data into different formats (`tidyr`)  
-6) visualizations (`ggplot2`) 
-7) perform iterative simulations (`rsample`)
+1. Data import of many different file types with special cases (`readr`, `readxl`, `pdftools`).
+2. Joining data from multiple sources (`dplyr`).
+3. Working with character strings (`stringr`).
+4. Data comparisons (`dplyr` and `janitor`).
+5. Reshaping data into different formats (`tidyr`).
+6. Data visualizations (`ggplot2`).
+7. Sampling subsets of data (`rsample`).
 
 
-We will especially focus on using packages and functions from the [`Tidyverse`](https://www.tidyverse.org/){target="_blank"}, such as `dplyr` and `ggplot2`. The tidyverse is a library of packages created by RStudio. While some students may be familiar with previous R programming packages, these packages make data science in R especially efficient.
-
+We will especially focus on using packages and functions from the [`tidyverse`](https://www.tidyverse.org/){target="_blank"}, such as `dplyr` and `ggplot2`. The tidyverse is a library of packages created by RStudio. While some students may be familiar with previous R programming packages, these packages make data science in R especially efficient.
 
 ```{r, out.width = "20%", echo = FALSE, fig.align ="center"}
 include_graphics("https://tidyverse.tidyverse.org/logo.png")
@@ -165,7 +173,7 @@ include_graphics("https://tidyverse.tidyverse.org/logo.png")
 
 So what exactly is a **right-to-carry law**?
 
-It is a law that specifies if and how citizens are allowed to have a firearm on their person or nearby (for example in the citizen's car) in public. 
+It is a law that specifies _if_ and _how_ citizens are allowed to have a firearm on their person or nearby (for example, in a citizen's car) in public. 
 
 The [Second Amendment](https://en.wikipedia.org/wiki/Second_Amendment_to_the_United_States_Constitution){target="_blank"} to the United States Constitution guarantees the right to "keep and bear arms". The amendment was ratified in 1791 as part of the [Bill of Rights](https://en.wikipedia.org/wiki/United_States_Bill_of_Rights){target="_blank"}.
 
@@ -173,36 +181,47 @@ The [Second Amendment](https://en.wikipedia.org/wiki/Second_Amendment_to_the_Uni
 knitr::include_graphics("https://upload.wikimedia.org/wikipedia/commons/7/79/Bill_of_Rights_Pg1of1_AC.jpg")
 ```
 
+##### [[source]](https://upload.wikimedia.org/wikipedia/commons/7/79/Bill_of_Rights_Pg1of1_AC.jpg){target="_blank"}
+
 However, there are no federal laws about carrying firearms in public. 
 
-These laws are created and enforced at the state level. Sates vary greatly in their laws about the right to carry firearms. Some require extensive effort to obtain a permit to legally carry a firearm, while other states require very minimal effort to legally carry a firearm.
+These laws are created and enforced at the US state level. 
+States vary greatly in their laws about the right to carry firearms. 
+Some require extensive effort to obtain a permit to legally carry a firearm, while other states require very minimal effort to legally carry a firearm.
 
+<details> <summary> Click here for more information on history of right-to-carry policies in the US. </summary>
 
-According to Wikipedia about the history of right-to-carry policies in the United States:
+According to [Wikipedia](https://en.wikipedia.org/wiki/History_of_concealed_carry_in_the_U.S.){target="_blank"} about the history of right-to-carry policies in the United States:
 
 > Public perception on concealed carry vs open carry has largely flipped. In the early days of the United States, open carrying of firearms, long guns and revolvers was a common and well-accepted practice. Seeing guns carried openly was not considered to be any cause for alarm. Therefore, anyone who would carry a firearm but attempt to conceal it was considered to have something to hide, and presumed to be a criminal. For this reason, concealed carry was denounced as a detestable practice in the early days of the United States.
 
 > Concealed weapons bans were passed in Kentucky and Louisiana in 1813. (In those days open carry of weapons for self-defense was considered acceptable; concealed carry was denounced as the practice of criminals.) By 1859, Indiana, Tennessee, Virginia, Alabama, and Ohio had followed suit. By the end of the nineteenth century, similar laws were passed in places such as Texas, Florida, and Oklahoma, which protected some gun rights in their state constitutions. Before the mid 1900s, most U.S. states had passed concealed carry laws rather than banning weapons completely. Until the late 1990s, many Southern states were either "No-Issue" or "Restrictive May-Issue". Since then, these states have largely enacted "Shall-Issue" licensing laws, with numerous states legalizing "Unrestricted concealed carry".
 
-See [here](https://en.wikipedia.org/wiki/History_of_concealed_carry_in_the_U.S.){target="_blank"} for more information.
+</details>
 
-Here are the general categories of Right to Carry Laws:
+There are five broad categories of right-to-carry laws:
 
 ```{r, echo=FALSE, out.height = '100%', out.width = '100%', fig.align='center'}
 knitr::include_graphics(here("img", "RTC.png"))
 ```
-[source](https://www.nraila.org/gun-laws/){target="_blank"}
 
+##### [[source]](https://www.nraila.org/gun-laws/){target="_blank"}
 
 ```{r, echo=FALSE, out.height = '100%', out.width = '100%', fig.align='center'}
 knitr::include_graphics(here("img", "RTC_map.png"))
 ```
 
-[source](https://www.nraila.org/gun-laws/){target="_blank"}
+##### [[source]](https://www.nraila.org/gun-laws/){target="_blank"}
 
-You can see that none of the fifty states have no-issue laws currently (the gray category), meaning that all states allow the right to carry firearms at least in some way, however the level of restrictions is dramatically different from one state to another.
+You can see that no state in the US currently has a "Rights Infringed/Non-Issue" law (the gray category) -- meaning that all 50 states in the US allow the right to carry firearms at least in some way. 
+However the level of restrictions is dramatically different from one state to another.
 
-Here you can see how these laws have changed over time around the country:
+
+AVOCADO: I put this next section in a details clickable box. My sense is that we should delete this information entirely from the case study, but keeping it for now and will come back and decide at the end if we want to keep it after I look through the whole thing. 
+
+<details> <summary> Click here for more information on right-to-carry policies over time. </summary>
+
+Here, you can see how these laws have changed over time around the country:
 ```{r, echo=FALSE, out.height = '100%', out.width = '100%', fig.align='center'}
 knitr::include_graphics("https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Right_to_Carry%2C_timeline.gif/620px-Right_to_Carry%2C_timeline.gif")
 ```
@@ -211,13 +230,13 @@ There is variation from state to state even within the same general category:
 
 For example here are the [current carry laws in Idaho](https://www.nraila.org/gun-laws/state-gun-laws/idaho/) which is considered an "Unrestricted - no permit required" state:
 
->Idaho permits the open carrying of firearms.
+> Idaho permits the open carrying of firearms.
 
->Idaho law permits both residents and non-residents who are at least 18 years old to carry concealed weapons, without a carry license, outside the limits of or confines of any city, provided the person is not otherwise disqualified from being issued a license to carry.
+> Idaho law permits both residents and non-residents who are at least 18 years old to carry concealed weapons, without a carry license, outside the limits of or confines of any city, provided the person is not otherwise disqualified from being issued a license to carry.
 
->A person may also carry concealed weapons on or about his or her person, without a license, in the person’s own place of abode or fixed place of business, on property in which the person has any ownership or leasehold interest, or on private property where the person has permission to carry from any person who has an ownership or leasehold interest in that property. 
+> A person may also carry concealed weapons on or about his or her person, without a license, in the person’s own place of abode or fixed place of business, on property in which the person has any ownership or leasehold interest, or on private property where the person has permission to carry from any person who has an ownership or leasehold interest in that property. 
 
->State law also allows any resident of Idaho or a current member of the armed forces of the United States to carry a concealed handgun without a license to carry, provided the person is over 18 years old and not disqualified from being issued a license to carry concealed weapons under state law. An amendment to state law that takes effect on July 1, 2020 changes the reference in the above law from “a resident of Idaho” to “any citizen of the United States.”  
+> State law also allows any resident of Idaho or a current member of the armed forces of the United States to carry a concealed handgun without a license to carry, provided the person is over 18 years old and not disqualified from being issued a license to carry concealed weapons under state law. An amendment to state law that takes effect on July 1, 2020 changes the reference in the above law from “a resident of Idaho” to “any citizen of the United States.”  
 
 
 And here are the [current carry laws in Arizona](https://www.nraila.org/gun-laws/state-gun-laws/arizona/) which is also considered an "Unrestricted - no permit required" state:
@@ -229,7 +248,7 @@ And here are the [current carry laws in Arizona](https://www.nraila.org/gun-laws
 Notice that citizens in Idaho only need to be 18 to carry a firearm, whereas they must be 21 in Arizona. 
 
 
-In contrast here is an example of [current carry laws in Maryland](https://www.nraila.org/gun-laws/state-gun-laws/maryland/) which is considered a "Rights Restricted-Very Limited Issue" state:
+In contrast, here is an example of [current carry laws in Maryland](https://www.nraila.org/gun-laws/state-gun-laws/maryland/) which is considered a "Rights Restricted-Very Limited Issue" state:
 
 > Carrying and Transportation in Vehicles
 It is unlawful for any person without a permit to wear or carry a handgun, openly or concealed, upon or about his person.  It is also unlawful for any person to knowingly transport a handgun in any vehicle traveling on public roads, highways, waterways or airways, or upon roads or parking lots generally used by the public. This does not apply to any person wearing, carrying or transporting a handgun within the confines of real estate owned or leased by him, or on which he resides, or within the confines of a business establishment owned or leased by him.
@@ -237,19 +256,23 @@ It is unlawful for any person without a permit to wear or carry a handgun, openl
 > Permit To Carry
 Application for a permit to carry a handgun is made to the Secretary of State Police. In addition to the printed application form, the applicant should submit a notarized letter stating the reasons why he is applying for a permit.
 
+</details>
+
 
 # **Limitations**
 *** 
+
 There are some important considerations regarding this data analysis to keep in mind: 
 
-1) We do not use all of the data used by either the [Lott and Mustard](https://chicagounbound.uchicago.edu/cgi/viewcontent.cgi?article=1150&context=law_and_economics){target="_blank"} or [Donohue, et al.](https://www.nber.org/papers/w23510.pdf){target="_blank"} analyses, nor do we perform the same analysis of each article. We instead perform a much simpler analysis with less variables for the purposes of illustration of the concept of multicollinearity and its influence on regression coefficients, not to reproduce either analysis.
+1. We do not use all of the data used by either the [Mustard and Lott](https://chicagounbound.uchicago.edu/cgi/viewcontent.cgi?article=1150&context=law_and_economics){target="_blank"} or [Donohue, et al.](https://www.nber.org/papers/w23510.pdf){target="_blank"} analyses, nor do we perform the same analysis of each article. We instead perform a much simpler analysis with less variables for the purposes of illustration of the concept of multicollinearity and its influence on regression coefficients, not to reproduce either analysis.
 
-2) Our analysis accounts for either the adoption or lack of adoption of a permissive right-to-carry law in each state, but does not account for differences in the level of permissiveness of the laws.
+2. Our analysis accounts for either the adoption or lack of adoption of a permissive right-to-carry law in each state, but does not account for differences in the level of permissiveness of the laws.
 
 Recall that these are the categories of right to carry laws:
 ```{r, echo=FALSE, out.height = '100%', out.width = '100%', fig.align='center'}
 knitr::include_graphics(here("img", "RTC.png"))
 ```
+
 ```{r, echo=FALSE, out.height = '100%', out.width = '100%', fig.align='center'}
 knitr::include_graphics(here("img", "RTC_map.png"))
 ```
@@ -307,7 +330,7 @@ The first time we use a function, we will use the `::` to indicate which package
 # **What are the data?**
 ***
 
-Below is a table from the [Donohue, et al.](https://www.nber.org/papers/w23510.pdf){target="_blank"} paper that shows the data used in both analyses, where DAW stands for [Donohue, et al.](https://www.nber.org/papers/w23510.pdf){target="_blank"} and LM stands for [Lott and Mustard](https://chicagounbound.uchicago.edu/cgi/viewcontent.cgi?article=1150&context=law_and_economics){target="_blank"}.
+Below is a table from the [Donohue, et al.](https://www.nber.org/papers/w23510.pdf){target="_blank"} paper that shows the data used in both analyses, where DAW stands for [Donohue, et al.](https://www.nber.org/papers/w23510.pdf){target="_blank"} and ML stands for [Mustard and Lott](https://chicagounbound.uchicago.edu/cgi/viewcontent.cgi?article=1150&context=law_and_economics){target="_blank"}.
 
 
 ```{r, echo=FALSE, out.height = '100%', out.width = '100%', fig.align='center'}
@@ -1120,7 +1143,7 @@ knitr::include_graphics(here("img",'Donohue_Table2.png'))
 
 So, in this analysis there were 36 variables covering percentages of individuals from 10 to over 65, three  race groups and both males and females. This table is misprinted and does not include the word "Other" for the third race group that was used. 
 
-First we will filter out the age groups that were not included. Then we will collapse the age groups to those that were used by Lott et al. again using the `fct_collpase()` function of the `forcats` package. 
+First we will filter out the age groups that were not included. Then we will collapse the age groups to those that were used by Mustard and Lott again using the `fct_collpase()` function of the `forcats` package. 
 
 Also we will again combine the values across the variables to create a new demographic variable with 36 levels. 
 
@@ -2060,7 +2083,7 @@ head(p_62)
 ## Joining Data
 
 
-Now we will join the data from the different data sets together to create a tibble of data for an analysis that will be similar to the data used by [Donohue et al.](https://www.nber.org/papers/w23510.pdf) {target="_blank"} and [Lott and Mustard](https://chicagounbound.uchicago.edu/cgi/viewcontent.cgi?article=1150&context=law_and_economics){target="_blank"}.
+Now we will join the data from the different data sets together to create a tibble of data for an analysis that will be similar to the data used by [Donohue et al.](https://www.nber.org/papers/w23510.pdf) {target="_blank"} and [Mustard and Lott](https://chicagounbound.uchicago.edu/cgi/viewcontent.cgi?article=1150&context=law_and_economics){target="_blank"}.
 
 First we need to check that our data is indeed ready to be joined. We need to make sure that the column names are the same for each dataset that we intend to combine together. 
 
@@ -2249,9 +2272,9 @@ length(summary(droplevels(as.factor(DONOHUE_DF$STATE))))
 
 ```
 
-## Lott and Mustard
+## Mustard and Lott
 
-We will now bind the demographic data that we made for the Lott-like analysis called `dem_Lott`, as well as all the other datasets that we have wrangled just as we did for the Donohue-like analysis. Again, this is possible because we have the same column names for each dataset. 
+We will now bind the demographic data that we made for the Mustard and Lott analysis called `dem_Lott`, as well as all the other datasets that we have wrangled just as we did for the Donohue-like analysis. Again, this is possible because we have the same column names for each dataset. 
 
 ```{r}
 LOTT_DF <- bind_rows(dem_LOTT,
@@ -2478,7 +2501,7 @@ LOTT_DF %>%
 ```
 Same for the `LOTT_DF`.
 
-We can use the `skim()` of the `skimr` package to get a better sense of the data. This also shows missingingness, as well as standard deviations, spread, and means for our data. Also notice that there is a histogram of each variable.
+We can use the `skim()` of the `skimr` package to get a better sense of the data. This also shows missingness, as well as standard deviations, spread, and means for our data. Also notice that there is a histogram of each variable.
 
 ```{r}
 skimr::skim(DONOHUE_DF)
@@ -2780,9 +2803,9 @@ According to the documentation for the [PLM package](https://cran.r-project.org/
 >In the mixed models literature, on the contrary, fixed effect indicates a parameter that is assumed constant, while random effects are parameters that vary randomly around zero according to a joint multivariate normal distribution.
 
 
-## Lott and Mustard
+## Mustard and Lott
 
-Ok, now we will do the same for the Lott-like analysis. In this case we would have a very large formula to write. So instead, we can use the `as.formula()` function of the `stats` package and the base `paste()` function to combine all of our explanatory variables into one formula without making a mistake. First we will create an object where we select only for the explanatory variables. 
+Ok, now we will do the same for the Mustard and Lott analysis. In this case we would have a very large formula to write. So instead, we can use the `as.formula()` function of the `stats` package and the base `paste()` function to combine all of our explanatory variables into one formula without making a mistake. First we will create an object where we select only for the explanatory variables. 
 
 avocado I tried using glue or dplyr::collapse to make this tidyverse but this didn't work
 
@@ -2841,7 +2864,7 @@ comparing_analyses <- DONOHUE_OUTPUT_TIDY %>%
 comparing_analyses
 ```
 
-We can see that for the first analysis (similar to the [Donohue et al.](https://www.nber.org/papers/w23510.pdf) {target="_blank"} study) the coefficient estimate for the presence of a permissive Right-to-carry law is positive, while for the second analysis (similar to the [Lott and Mustard](https://chicagounbound.uchicago.edu/cgi/viewcontent.cgi?article=1150&context=law_and_economics){target="_blank"} study) the coefficient estimate is negative. Thus in the first analysis we could conclude that the effect of adopting permissive right-to-carry laws  may be associated with increases in violent crime (although this was not a significant result (in contrast with the real [Donohue et al.](https://www.nber.org/papers/w23510.pdf) {target="_blank"} study )); while in the other analysis we could conclude that the laws may be associated with decreases in violent crime.
+We can see that for the first analysis (similar to the [Donohue et al.](https://www.nber.org/papers/w23510.pdf) {target="_blank"} study) the coefficient estimate for the presence of a permissive Right-to-carry law is positive, while for the second analysis (similar to the [Mustard and Lott](https://chicagounbound.uchicago.edu/cgi/viewcontent.cgi?article=1150&context=law_and_economics){target="_blank"} study) the coefficient estimate is negative. Thus in the first analysis we could conclude that the effect of adopting permissive right-to-carry laws  may be associated with increases in violent crime (although this was not a significant result (in contrast with the real [Donohue et al.](https://www.nber.org/papers/w23510.pdf) {target="_blank"} study )); while in the other analysis we could conclude that the laws may be associated with decreases in violent crime.
 
 Let's make a plot of this finding. We will show error bars for the coefficient estimates for both analyses using the `geom_errorbar()` function of the `ggplot2` package. This requires specifying the minimum and maximum for our error bar, which in our case we would like to be the low and high values of our confidence intervals for the coefficient estimates. We will also add a horizontal line at y = 0 using the `geom_hline()` function of the `ggplot2` package. 
 
@@ -2885,7 +2908,7 @@ How did the above happen?
 
 The analysis data frames are very similar yet rendered very different results. 
 
-Recall that the only difference is the number of demographic variables. The number of rows or observations is the same. We can use the `all_equal()` function of the `dplyr` package to compare the number of columns of our Donohue-like data and our Lott-like data.
+Recall that the only difference is the number of demographic variables. The number of rows or observations is the same. We can use the `all_equal()` function of the `dplyr` package to compare the number of columns of our Donohue-like data and our Mustard and Lott-like data.
 
 ```{r}
 all_equal(target = DONOHUE_DF,
@@ -3194,7 +3217,7 @@ load(here::here("data", "DONOHUE_simulations.rda"))
 
 
 
-Great! Now we want to do the same thing for the Lott data.
+Great! Now we want to do the same thing for the Mustard and Lott data.
 
 ```{r}
 set.seed(124)
@@ -3378,7 +3401,7 @@ simulations_DONOHUE <- samps_models_DONOHUE %>%
   bind_rows(.id = "ID") %>%
   mutate(Analysis = "Analysis 1")
 
-## LOTT
+## Mustard and Lott
 
 samps_LOTT <- lapply(rep(round(dim(LOTT_DF)[1]/2), sims),
        function(x) LOTT_DF[sample(nrow(LOTT_DF),
@@ -3498,7 +3521,7 @@ colnames(vif_DONOHUE) <- c("VIF", "Variable")
 vif_DONOHUE
 ```
 
-Now we will do the same for the Lott data:
+Now we will do the same for the Mustard and Lott data:
 
 ```{r}
 LOTT_pool_model <-plm(LOTT_fmla,
@@ -4031,10 +4054,10 @@ Overall we learned that multicollinearity can bias our regression findings and i
 Importantly this case study showcases how methodological details, like how we decide to parse our demographic variables can have great consequences on the results of our analyses. 
 
 
-# **Suggested Homework**
+# **Homework**
 *** 
 
-Ask students to remove one or more of the demographic variables with high VIF values from the Lott-like panel data and perform the panel linear regression analysis again, as well as calculate the VIF values. 
+Ask students to remove one or more of the demographic variables with high VIF values from the Mustard and Lott-like panel data and perform the panel linear regression analysis again, as well as calculate the VIF values. 
 
 Ask the students to discuss how this possibly changed the results.
 
@@ -4069,7 +4092,7 @@ For more information on implementing panel regression in R using the `plm` packa
 For more information on multicollinearity and VIF, see this [article](https://link.springer.com/content/pdf/10.1007/s11135-006-9018-6.pdf){target="_blank"}.DOI 10.1007/s11135-006-9018-6
 
 The articles used to motivate this case study are:   
-[Lott and Mustard](https://chicagounbound.uchicago.edu/cgi/viewcontent.cgi?article=1150&context=law_and_economics){target="_blank"}  
+[Mustard and Lott](https://chicagounbound.uchicago.edu/cgi/viewcontent.cgi?article=1150&context=law_and_economics){target="_blank"}  
 [Donohue, et al.](https://www.nber.org/papers/w23510.pdf){target="_blank"}     
 [See here for a list of studies on this topic ](https://en.wikipedia.org/wiki/More_Guns,_Less_Crime){target="_blank"}  
 
