@@ -28,7 +28,7 @@ output:
 
 ---
 
-AVOCADO: the title seems really long? previous titles have been mostly a few words focusing around the context (not so much the)
+AVOCADO: the title seems really long? previous titles have been mostly a few words focusing around the context (not so much the). How about something like "Influence of Multicollinearity on Measured Impact of Right-to-Carry Gun Laws"?  
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(include = TRUE, comment = NA, echo = TRUE,
@@ -264,7 +264,7 @@ Application for a permit to carry a handgun is made to the Secretary of State Po
 
 There are some important considerations regarding this data analysis to keep in mind: 
 
-1. We do not use all of the data used by either the [Mustard and Lott](https://chicagounbound.uchicago.edu/cgi/viewcontent.cgi?article=1150&context=law_and_economics){target="_blank"} or [Donohue, et al.](https://www.nber.org/papers/w23510.pdf){target="_blank"} analyses, nor do we perform the same analysis of each article. We instead perform a much simpler analysis with less variables for the purposes of illustration of the concept of multicollinearity and its influence on regression coefficients, not to reproduce either analysis.
+1. We do not use all of the data used by either the [Mustard and Lott](https://chicagounbound.uchicago.edu/cgi/viewcontent.cgi?article=1150&context=law_and_economics){target="_blank"} or [Donohue, et al.](https://www.nber.org/papers/w23510.pdf){target="_blank"} analyses, nor do we perform the same analysis as in each article. We instead perform a much simpler analysis with fewer variables for the purposes of illustration of the concept of multicollinearity and its influence on regression coefficients, not to reproduce either analysis.
 
 2. Our analysis accounts for either the adoption or lack of adoption of a permissive right-to-carry law in each state, but does not account for differences in the level of permissiveness of the laws.
 
@@ -320,10 +320,32 @@ set.seed(999)
  Package   | Use                                                                         
 ---------- |-------------
 [here](https://github.com/jennybc/here_here){target="_blank"}       | to easily load and save data
+[readxl](https://readxl.tidyverse.org/){target="_blank"}      | to import the data in the excel files 
 [readr](https://readr.tidyverse.org/){target="_blank"}      | to import the CSV file data
-[car]  | to calculate VIF values
-[purrr] | to combine multiple tibbles within a list of tibbles
-[forcats] | to collapse levels of factors into more summarized versions
+[pdftools](https://github.com/ropensci/pdftools){target="_blank"} | to import data from a pdf file
+[dplyr](https://dplyr.tidyverse.org/){target="_blank"}      | to arrange/filter/select/compare specific subsets of the data  
+[magrittr](https://cran.r-project.org/web/packages/magrittr/vignettes/magrittr.html){target="_blank"} | to use the compound assignment pipe operator `%<>%`
+[tidyr](https://tidyr.tidyverse.org/){target="_blank"}      | to rearrange data in wide and long formats 
+[stringr](https://stringr.tidyverse.org/articles/stringr.html){target="_blank"}    | to manipulate the character strings within the data  
+[purrr](https://purrr.tidyverse.org/){target="_blank"}   | to import the data in all the different excel and csv files efficiently
+[forcats](https://forcats.tidyverse.org/){target="_blank"}    | to allow for reordering of factors in plots
+[tibble](https://tibble.tidyverse.org/){target="_blank"}     | to create data objects that we can manipulate with `dplyr`/`stringr`/`tidyr`/`purrr`
+[car](https://cran.r-project.org/web/packages/car/vignettes/embedding.pdf){target="_blank"}  | to calculate VIF values on linear model output
+[plm](https://cran.r-project.org/web/packages/plm/vignettes/plmPackage.html){target="_blank"} | to work with panel data fitting fixed effects and linear regression models
+[broom](https://cran.r-project.org/web/packages/broom/vignettes/broom.html){target="_blank"} | to create nicely formatted model output
+[cowplot](https://cran.r-project.org/web/packages/cowplot/vignettes/introduction.html){target="_blank"} | to allow plots to be combined 
+[GGally](https://github.com/ggobi/ggally){target="_blank"} | to extend ggplot2 functionality to easily create more complex plots
+[ggrepel](https://cran.r-project.org/web/packages/ggrepel/vignettes/ggrepel.html){target="_blank"}    | to allow labels in figures not to overlap
+[scales](https://cran.r-project.org/web/packages/scales/scales.pdf){target="_blank"}    | to allow us to look at the colors within the viridis package and to override some ggplot2 defaults for scales and legends
+[latex2exp](https://cran.r-project.org/web/packages/latex2exp/vignettes/using-latex2exp.html){target="_blank"} | to convert latex math formulas to R's plotmath expressions
+[viridis](https://cran.r-project.org/web/packages/viridis/vignettes/intro-to-viridis.html){target="_blank"}    | to make plots with a color palette that is compatible with color blindness
+[ggcorrplot](https://www.rdocumentation.org/packages/ggcorrplot/versions/0.1.3){target="_blank"} | to easily visualize a correlation matrix
+[rsample](https://rsample.tidymodels.org){target="_blank"} | a tidyverse package for easily resampling data 
+
+
+
+AVOCADO: I have pulled from other case studies for many of these, but they may need to be double checked
+
 The first time we use a function, we will use the `::` to indicate which package we are using. Unless we have overlapping function names, this is not necessary, but we will include it here to be informative about where the functions we will use come from.
 
 
