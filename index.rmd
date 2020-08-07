@@ -1,5 +1,5 @@
 ---
-title: "Open Case Studies: Examination of Multicollinearity Influence on Inference Using Right-to-Carry Gun Law and Violent Crime Data"
+title: "Open Case Studies: Influence of Multicollinearity on Measured Impact of Right-to-Carry Gun Laws"
 css: style.css
 output:
   html_document:
@@ -28,7 +28,6 @@ output:
 
 ---
 
-AVOCADO: the title seems really long? previous titles have been mostly a few words focusing around the context (not so much the). How about something like "Influence of Multicollinearity on Measured Impact of Right-to-Carry Gun Laws"?  
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(include = TRUE, comment = NA, echo = TRUE,
@@ -66,7 +65,9 @@ Wright, Carrie, and Ontiveros, Michael and Jager, Leah and Taub, Margaret and Hi
 # **Motivation**
 *** 
 
-This case study will introduce the topic of multicollinearity. We will do so by showcasing a real world example where multicollinearity in part resulted in historically controversial and conflicting findings about the influence of the adoption of right-to-carry (RTC) concealed handgun laws on violent crime rates in the United States. 
+This case study will introduce the topic of [multicollinearity](https://en.wikipedia.org/wiki/Multicollinearity){target="_blank"}, which occurs in regression when one or more independent variable can be predicted by other independent varaibles. 
+
+We will do so by showcasing a real world example where multicollinearity in part resulted in historically controversial and conflicting findings about the influence of the adoption of right-to-carry (RTC) concealed handgun laws on violent crime rates in the United States. 
 
 We will focus on two articles:
 
@@ -76,9 +77,9 @@ We will focus on two articles:
 knitr::include_graphics(here("img", "Lott.png"))
 ```
 
-##### [[source]]((https://chicagounbound.uchicago.edu/cgi/viewcontent.cgi?article=1150&context=law_and_economics){target="_blank"}
+##### [[source]](https://chicagounbound.uchicago.edu/cgi/viewcontent.cgi?article=1150&context=law_and_economics){target="_blank"}
 
-2. The second analysis is a recent article by [Donohue, et al.](https://www.nber.org/papers/w23510.pdf){target="_blank"} published in 2017 that suggests that RTC laws increase violent crime. Donohue has also published previous articles with titles such as [***Shooting down the "More Guns, Less Crime" Hypothesis***](https://www.jstor.org/stable/1229603?seq=1){target="_blank"} 
+2. The second analysis is a recent article by [Donohue, et al.](https://www.nber.org/papers/w23510.pdf){target="_blank"} published in 2017 that suggests that RTC laws increase violent crime. Donohue has also published previous articles with titles such as [***Shooting down the "More Guns, Less Crime" Hypothesis***](https://www.jstor.org/stable/1229603?seq=1){target="_blank"}. 
 
 ```{r, echo=FALSE, out.height = '100%', out.width = '100%', fig.align='center'}
 knitr::include_graphics(here("img", "Donohue.png"))
@@ -88,9 +89,7 @@ knitr::include_graphics(here("img", "Donohue.png"))
 
 This has been a controversial topic as many other articles also had conflicting results. See [here](https://en.wikipedia.org/wiki/More_Guns,_Less_Crime){target="_blank"} for a list of studies.
 
-The [Donohue, et al.](https://www.nber.org/papers/w23510.pdf){target="_blank"} article discusses how there are many other important methodological aspects besides multicollinearity that could account for the historically conflicting results in these previous papers.
-
-AVOCADO: I think this is the first time use the word "multicollinearity" outside the intro and citation. Should we define it here? 
+The [Donohue, et al.](https://www.nber.org/papers/w23510.pdf){target="_blank"} article discusses how there are many other important methodological aspects besides [multicollinearity](https://en.wikipedia.org/wiki/Multicollinearity){target="_blank"} (which occurs when independent varaibles are highly related in a regression analysis) that could account for the historically conflicting results in these previous papers.
 
 In fact, nearly every aspect of the data analysis process was different between the [Donohue, et al.](https://www.nber.org/papers/w23510.pdf){target="_blank"} analysis and the [Mustard and Lott](https://chicagounbound.uchicago.edu/cgi/viewcontent.cgi?article=1150&context=law_and_economics){target="_blank"} analysis.
 
@@ -114,15 +113,15 @@ David B. Mustard & John Lott. Crime, Deterrence, and Right-to-Carry Concealed Ha
 
 Before we leave this section, we provide a high-level overview of what variables were (or were not) included in the [Donohue, Aneja and Weber](https://www.nber.org/papers/w23510.pdf){target="_blank"}) (DAW) paper and the [Mustard and Lott](https://chicagounbound.uchicago.edu/cgi/viewcontent.cgi?article=1150&context=law_and_economics){target="_blank"} (ML) paper:
 
-AVOCADO: In the table below it says "DAW" and "LM". Should "LM" be "ML"? 
 
 ```{r, echo=FALSE, out.height = '100%', out.width = '100%', fig.align='center'}
-knitr::include_graphics(here("img",'Donohue_Table2.png'))
+knitr::include_graphics(here("img",'Donohue_Table2_edited.png'))
 ```
 
-##### [[source]](){target="_blank"}
+##### [[source]](https://www.nber.org/papers/w23510.pdf){target="_blank"}
 
-AVOCADO: Could you add source for the screenshot above? I added the code for it, just not sure what the link is. 
+
+###### *ML is abbreviated as LM in the source article
 
 **Note**: We are not attempting to re-create the analyses from the original authors. Instead, we aim to use a subset of the listed explanatory variables in this case study to demonstrate multicollinearity. These variables will be consistent for both analyses that we will perform, with the exception that one analysis will have 6 demographic variables like the analysis in the [Donohue, et al.](https://www.nber.org/papers/w23510.pdf){target="_blank"} article and the other will have 36 demographic variables like the analysis in the [Mustard and Lott](https://chicagounbound.uchicago.edu/cgi/viewcontent.cgi?article=1150&context=law_and_economics){target="_blank"} article.
 
@@ -342,9 +341,6 @@ set.seed(999)
 [ggcorrplot](https://www.rdocumentation.org/packages/ggcorrplot/versions/0.1.3){target="_blank"} | to easily visualize a correlation matrix
 [rsample](https://rsample.tidymodels.org){target="_blank"} | a tidyverse package for easily resampling data 
 
-
-
-AVOCADO: I have pulled from other case studies for many of these, but they may need to be double checked
 
 The first time we use a function, we will use the `::` to indicate which package we are using. Unless we have overlapping function names, this is not necessary, but we will include it here to be informative about where the functions we will use come from.
 
@@ -2812,7 +2808,7 @@ We reject the null hypothesis, that there are no inconsistencies, and are confir
 
 For more information on these tests and this package, see [here](https://cran.r-project.org/web/packages/plm/vignettes/plmPackage.html){target="_blank"}  and [here](http://www.princeton.edu/~otorres/Panel101R.pdf){target="_blank"}.
 
-avocado- stephanie- what do you think about referencing these slides from Princeton?
+avocado-  what do you think about referencing these slides from Princeton?
 
 
 A final note about the fixed and random effects terminology and how this is slightly different than other definitions:
